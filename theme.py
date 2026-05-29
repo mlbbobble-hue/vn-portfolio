@@ -195,16 +195,6 @@ a[data-testid="stPageLink-NavLink"] span {
     font-size: 14px;
 }
 
-/* 強制側邊欄的兩欄佈局（語言按鈕）在手機上不折行 */
-[data-testid="stSidebarUserContent"] [data-testid="stHorizontalBlock"] {
-    flex-wrap: nowrap !important;
-    gap: 8px !important;
-}
-[data-testid="stSidebarUserContent"] [data-testid="column"] {
-    min-width: 0 !important;
-    width: 50% !important;
-    flex: 1 1 50% !important;
-}
 
 .badge-up {
     background-color: rgba(0, 163, 82, 0.1);
