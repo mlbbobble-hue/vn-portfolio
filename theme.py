@@ -137,9 +137,9 @@ html, body, [class*="css"] {
 }
 
 .stButton>button[kind="secondary"] {
-    background-color: white !important;
+    background-color: var(--bg-card) !important;
     color: var(--cathay-green) !important;
-    border: 1px solid var(--cathay-green) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 50px !important;
     font-weight: 600 !important;
     padding: 8px 24px !important;
@@ -149,7 +149,7 @@ html, body, [class*="css"] {
     color: var(--cathay-green) !important;
 }
 .stButton>button[kind="secondary"]:hover {
-    background-color: rgba(0, 163, 82, 0.05) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
 }
 .stButton>button:active {
     transform: scale(0.98);
