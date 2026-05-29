@@ -163,12 +163,13 @@ dividends_page = st.Page("pages/03_dividends.py", title=t("nav_dividends"), icon
 watchlist_page = st.Page("pages/04_watchlist.py", title=t("nav_watchlist"), icon=":material/notifications_active:")
 analytics_page = st.Page("pages/05_analytics.py", title=t("nav_analytics"), icon=":material/monitoring:")
 
-pg = st.navigation([
-    dashboard_page,
-    portfolio_page,
-    transactions_page,
-    dividends_page,
-    watchlist_page,
-    analytics_page
-])
+admin_page = st.Page("pages/06_admin.py", title="管理員後台", icon=":material/admin_panel_settings:")
+
+
+nav_pages = [dashboard_page, portfolio_page, transactions_page, dividends_page, watchlist_page, analytics_page]
+if st.session_state.get("is_admin", False):
+    nav_pages.insert(0, admin_page)
+
+pg = st.navigation(nav_pages)
+
 pg.run()

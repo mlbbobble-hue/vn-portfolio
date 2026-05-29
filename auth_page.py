@@ -167,6 +167,16 @@ def render_auth_page():
             if reset_password(login_email.strip()):
                 st.info("📧 重設密碼連結已發送至您的 Email" if get_lang()=="zh" else "📧 Đã gửi link đặt lại mật khẩu đến email của bạn")
 
+        
+        st.markdown('<div class="divider">OR</div>', unsafe_allow_html=True)
+        if st.button("🚀 使用 Google 帳號一鍵登入", use_container_width=True):
+            from supabase_db import sign_in_with_google
+            res = sign_in_with_google()
+            if res.get("success"):
+                st.markdown(f'<meta http-equiv="refresh" content="0;url={res["url"]}">', unsafe_allow_html=True)
+            else:
+                st.error(t("login_fail"))
+
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ── 註冊 Tab ──────────────────────────────────────────────
@@ -210,11 +220,26 @@ def render_auth_page():
 
 def check_auth() -> bool:
     """
-    檢查當前 session 是否已驗證。
+    檢查當前 session 是否已驗證與審核。
     若未驗證，渲染登入頁並回傳 False。
-    若已驗證，回傳 True（App 繼續渲染）。
+    若已驗證但未審核，顯示等待開通頁面並回傳 False。
+    若已驗證且已審核，回傳 True（App 繼續渲染）。
     """
-    from supabase_db import is_supabase_available
+    from supabase_db import is_supabase_available, exchange_code, sb_check_approval
+
+    # 攔截 Google OAuth 回傳的 code
+    if "code" in st.query_params:
+        code = st.query_params.get("code")
+        st.query_params.clear()
+        with st.spinner("驗證 Google 登入中..."):
+            res = exchange_code(code)
+            if res.get("success"):
+                user = res["user"]
+                st.session_state["authenticated"] = True
+                st.session_state["user_id"]       = user.id
+                st.session_state["user_email"]    = user.email
+                st.session_state["user_name"]     = (user.user_metadata or {}).get("full_name", user.email)
+                st.session_state["access_token"]  = res["session"].access_token
 
     # 本機開發模式（無 Supabase 設定）：自動以訪客身份登入
     if not is_supabase_available():
@@ -223,15 +248,54 @@ def check_auth() -> bool:
             st.session_state["user_id"]    = "local_dev_user"
             st.session_state["user_email"] = "dev@localhost"
             st.session_state["user_name"]  = "本機開發者"
+            st.session_state["is_admin"]   = True
         return True
 
-    # 已登入
-    if st.session_state.get("authenticated") and st.session_state.get("user_id"):
-        return True
+    # 尚未登入
+    if not st.session_state.get("authenticated") or not st.session_state.get("user_id"):
+        render_auth_page()
+        return False
 
-    # 未登入 → 顯示登入頁
-    render_auth_page()
-    return False
+    # 已經登入，檢查審核狀態
+    user_id = st.session_state["user_id"]
+    email = st.session_state["user_email"]
+    
+    # 避免每次重新整理都去資料庫查，使用 session 暫存
+    if "is_approved" not in st.session_state:
+        appr = sb_check_approval(user_id, email)
+        if appr.get("is_new"):
+            # 發送通知信
+            try:
+                from notifier import send_admin_notification
+                send_admin_notification(email)
+            except Exception:
+                pass
+                
+        st.session_state["is_approved"] = appr.get("is_approved", False)
+        st.session_state["is_admin"] = appr.get("is_admin", False)
+
+    if not st.session_state["is_approved"]:
+        st.markdown("""
+        <div style='max-width: 500px; margin: 100px auto; text-align: center; background: var(--cathay-white); padding: 40px; border-radius: 20px; box-shadow: var(--shadow-soft); border: 1px solid rgba(0,163,82,0.3);'>
+            <div style='font-size: 4rem; margin-bottom: 20px;'>⏳</div>
+            <h2 style='color: var(--text-primary); margin-bottom: 10px;'>等待管理員開通</h2>
+            <p style='color: var(--text-secondary); line-height: 1.6;'>
+                您的帳號已經成功登入，但由於系統採用白名單制，<br>
+                目前需要等待管理員審核並開通權限。<br><br>
+                系統已經發送通知信給管理員，開通後請重新整理網頁。
+            </p>
+            <br>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("🚪 登出", type="secondary"):
+            from supabase_db import sign_out
+            sign_out()
+            for key in ["authenticated", "user_id", "user_email", "user_name", "access_token", "is_approved", "is_admin"]:
+                st.session_state.pop(key, None)
+            st.rerun()
+        return False
+
+    return True
 
 
 def render_user_info_sidebar():

@@ -78,6 +78,76 @@ def sign_in(email: str, password: str) -> dict:
         return {"success": False, "session": None, "user": None, "error": err}
 
 
+
+def sign_in_with_google():
+    """取得 Google 登入網址"""
+    try:
+        client = _get_client()
+        res = client.auth.sign_in_with_oauth({
+            "provider": "google",
+            "options": {
+                "query_params": {"prompt": "select_account"}
+            }
+        })
+        return {"success": True, "url": res.url}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+def exchange_code(code: str) -> dict:
+    """用 URL 中的 code 交換 session"""
+    try:
+        client = _get_client()
+        res = client.auth.exchange_code_for_session({"auth_code": code})
+        if res.session:
+            return {"success": True, "session": res.session, "user": res.user}
+        return {"success": False, "error": "登入失敗"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+# ══════════════════════════════════════════════════════════════
+#  審核機制 (Admin Approval)
+# ══════════════════════════════════════════════════════════════
+
+def sb_check_approval(user_id: str, email: str) -> dict:
+    """
+    檢查用戶是否通過審核。
+    如果資料庫沒這筆資料，代表是新用戶，自動新增一筆並發信通知管理員。
+    回傳: {"is_approved": bool, "is_admin": bool, "is_new": bool}
+    """
+    try:
+        client = _get_client()
+        res = client.table("users_approval").select("*").eq("user_id", user_id).execute()
+        data = res.data
+        if not data:
+            # 新用戶，自動新增
+            client.table("users_approval").insert({
+                "user_id": user_id,
+                "email": email,
+                "is_approved": False,
+                "is_admin": False
+            }).execute()
+            return {"is_approved": False, "is_admin": False, "is_new": True}
+        
+        return {
+            "is_approved": data[0].get("is_approved", False),
+            "is_admin": data[0].get("is_admin", False),
+            "is_new": False
+        }
+    except Exception as e:
+        # 如果發生錯誤 (可能表單還沒建)，為了不要卡死，暫時回傳 false
+        return {"is_approved": False, "is_admin": False, "is_new": False, "error": str(e)}
+
+def sb_get_all_users_approval(admin_id: str):
+    """取得所有用戶的審核狀態 (限管理員)"""
+    res = _table("users_approval").select("*").order("created_at", desc=True).execute()
+    import pandas as pd
+    return pd.DataFrame(res.data) if res.data else pd.DataFrame()
+
+def sb_update_user_approval(admin_id: str, target_user_id: str, is_approved: bool):
+    """管理員更新用戶審核狀態"""
+    _table("users_approval").update({"is_approved": is_approved}).eq("user_id", target_user_id).execute()
+
+
 def sign_out():
     """登出"""
     try:
