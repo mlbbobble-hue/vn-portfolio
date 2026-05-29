@@ -57,7 +57,7 @@ with tab_ov:
                 </div>""", unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("📊 歷史實際獲得配息/配股統計")
+        st.subheader(t("div_hist_stats_title"))
         
         # 1. 取得實際領取的配息資訊
         _, stock_rec_dict, details = compute_received_dividends()
@@ -103,15 +103,15 @@ with tab_ov:
         st.markdown(f"""
 <div style="display: flex; gap: 16px; margin-bottom: 24px;">
     <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
-        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">今年已領股利總額</div>
+        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">{t("div_total_cash_year")}</div>
         <div style="color: #10b981; font-size: 24px; font-weight: 700;">+{total_received_this_year:,.0f} <span style="font-size:14px;">VNĐ</span></div>
     </div>
     <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
-        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">在途待領股利總額</div>
+        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">{t("div_pending_cash")}</div>
         <div style="color: #fbbf24; font-size: 24px; font-weight: 700;">+{total_pending:,.0f} <span style="font-size:14px;">VNĐ</span></div>
     </div>
     <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
-        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">歷年累計總股利</div>
+        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">{t("div_accum_cash")}</div>
         <div style="color: #f8fafc; font-size: 24px; font-weight: 700;">+{total_received_all_time:,.0f} <span style="font-size:14px;">VNĐ</span></div>
     </div>
 </div>
@@ -122,32 +122,32 @@ with tab_ov:
         if not merged_divs.empty:
             years = sorted(merged_divs["ex_year"].dropna().unique().astype(int).tolist(), reverse=True)
             
-        tabs_list = ["全部"] + [f"{y}年" for y in years] + ["按個股聚合"]
+        tabs_list = [t("div_filter_all")] + [t("div_year_filter", y=y) for y in years] + [t("div_filter_group")]
         tabs = st.tabs(tabs_list)
         
         for i, tab in enumerate(tabs):
             with tab:
                 selection = tabs_list[i]
                 
-                if selection == "全部":
+                if selection == t("div_filter_all"):
                     filtered_df = merged_divs
-                elif selection == "按個股聚合":
+                elif selection == t("div_filter_group"):
                     filtered_df = merged_divs
                 else:
-                    y_str = selection.replace("年", "")
-                    filtered_df = merged_divs[merged_divs["ex_year"] == int(y_str)]
+                    target_y = years[i - 1]
+                    filtered_df = merged_divs[merged_divs["ex_year"] == int(target_y)]
                     
-                if selection == "按個股聚合":
+                if selection == t("div_filter_group"):
                     # --- 渲染手風琴聚合列表 ---
                     if filtered_df.empty:
-                        st.markdown('<div style="color:var(--text-muted); text-align:center; padding: 20px;">尚無任何配息紀錄</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div style="color:var(--text-muted); text-align:center; padding: 20px;">{t("no_records")}</div>', unsafe_allow_html=True)
                     else:
                         acc_html = '<div class="acc-table" style="max-height: 400px; overflow-y: auto;">'
                         acc_html += """
 <div class="acc-header" style="grid-template-columns: 1.5fr 1fr 1fr;">
-    <div class="acc-col-left">股票代碼</div>
-    <div class="acc-col-right">累計現金配息</div>
-    <div class="acc-col-right">累計股票配股</div>
+    <div class="acc-col-left">{t("div_sym")}</div>
+    <div class="acc-col-right">{t("div_acc_cash_dist")}</div>
+    <div class="acc-col-right">{t("div_acc_stock_dist")}</div>
 </div>
 """
                         symbols = sorted(filtered_df["symbol"].unique().tolist())
@@ -165,7 +165,7 @@ with tab_ov:
         <div class="acc-row" style="grid-template-columns: 1.5fr 1fr 1fr;">
             <div class="acc-col-left">
                 <span class="tlt-main"><span class="acc-arrow">▶</span>{sym}</span>
-                <span class="tlt-sub" style="margin-left: 16px;">共 {len(sym_df)} 筆紀錄</span>
+                <span class="tlt-sub" style="margin-left: 16px;">{t("total_records", n=len(sym_df))}</span>
             </div>
             <div class="acc-col-right">
                 <span class="tlt-main" style="color: #10b981;">{c_str}</span>
@@ -390,13 +390,13 @@ with tab_lookup:
                         if pd.isna(pay_date) or not pay_date: pay_date = "─"
                         
                         if row["type"] == "CASH":
-                            dtype = "現金股利"
+                            dtype = t("div_cash_lbl")
                             amt_main = f"{row['cash_amount']:,.0f} VNĐ"
                             amt_color = "#f8fafc"
                             badge_bg = "#065f46"
                             badge_text = "#34d399"
                         else:
-                            dtype = "股票股利"
+                            dtype = t("div_stock_lbl")
                             amt_main = f"100 : {row['stock_ratio']*100:g}"
                             amt_color = "#f8fafc"
                             badge_bg = "#1e3a8a"
