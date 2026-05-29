@@ -381,7 +381,7 @@ TRANSLATIONS = {
     "unrealized_pl":        {"vi": "Lãi/lỗ chưa thực hiện", "zh": "未實現損益"},
     "accum_return_rate":    {"vi": "Tỷ suất lợi nhuận tích lũy", "zh": "累積報酬率"},
     "portfolio_chart_title":{"vi": "Danh mục đầu tư", "zh": "投資組合"},
-    "phs_asset_allocation": {"vi": "Phân bổ tài sản (PHS)", "zh": "PHS 越股資產配置"},
+    "phs_asset_allocation": {"vi": "Phân bổ tài sản (PHS)", "zh": "資產配置熱力圖"},
     "portfolio_hover":      {"vi": "<b>%{label}</b><br>Tỷ trọng: %{percentRoot:.2%}<br>Lợi nhuận dự kiến: %{customdata[0]:+.2f}%<extra></extra>", "zh": "<b>%{label}</b><br>持股比例: %{percentRoot:.2%}<br>預估損益: %{customdata[0]:+.2f}%<extra></extra>"},
     "portfolio_empty_desc": {"vi": "Bạn hiện chưa sở hữu cổ phiếu nào.<br>Hãy nhấp vào nút bên dưới để bắt đầu giao dịch đầu tiên!", "zh": "您目前尚未持有任何股票。<br>點擊下方按鈕開始您的第一筆交易紀錄！"},
 
