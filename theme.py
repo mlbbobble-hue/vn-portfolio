@@ -118,9 +118,11 @@ html, body, [class*="css"] {
     font-weight: 600 !important;
     padding: 8px 24px !important;
     transition: background-color 0.2s ease;
+    white-space: nowrap !important;
 }
 .stButton>button * {
     color: white !important;
+    white-space: nowrap !important;
 }
 .stButton>button:hover {
     background-color: var(--cathay-dark-green) !important;

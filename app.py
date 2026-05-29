@@ -58,11 +58,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    render_lang_switcher()
-    st.divider()
-    render_user_info_sidebar()
-    st.divider()
-
     if st.button(t("update_price"), use_container_width=True):
         with st.spinner(t("updating")):
             symbols = get_portfolio_symbols()
@@ -80,7 +75,12 @@ with st.sidebar:
                     upsert_price_cache(p["symbol"], p["price"], p["change_pct"], p.get("volume", 0))
                 st.success(t("updated_count", n=len(all_syms)))
                 st.rerun()
+                
+    st.divider()
 
+    render_lang_switcher()
+    st.divider()
+    render_user_info_sidebar()
     st.divider()
 
     # 提醒狀態
