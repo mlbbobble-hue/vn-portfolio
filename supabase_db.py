@@ -287,7 +287,8 @@ def sb_add_dividend_event(user_id: str, symbol: str, ex_date: str, pay_date: str
                           stock_ratio: float = 0, source: str = "manual") -> int | None:
     res = _table("dividend_events").insert({
         "user_id": user_id, "symbol": symbol.upper(),
-        "ex_date": ex_date, "pay_date": pay_date,
+        "ex_date": ex_date if ex_date else None, 
+        "pay_date": pay_date if pay_date else None,
         "type": dtype, "cash_amount": cash_amount,
         "stock_ratio": stock_ratio, "source": source,
     }).execute()
@@ -313,15 +314,22 @@ def sb_delete_dividend_event(user_id: str, div_id: int):
 def sb_upsert_dividend_events_bulk(user_id: str, rows: list[dict]):
     inserts = []
     for r in rows:
+        ex = r.get("ex_date")
+        pay = r.get("pay_date")
         inserts.append({
             "user_id": user_id, "symbol": r["symbol"],
-            "ex_date": r.get("ex_date", ""), "pay_date": r.get("pay_date", ""),
+            "ex_date": ex if ex else None, 
+            "pay_date": pay if pay else None,
             "type": r["type"], "cash_amount": r.get("cash_amount", 0),
             "stock_ratio": r.get("stock_ratio", 0), "source": "auto",
         })
     if inserts:
         # upsert — 利用 ignore_duplicates 避免重複（需要在 Supabase 設定 unique constraint）
-        _table("dividend_events").upsert(inserts, ignore_duplicates=True).execute()
+        _table("dividend_events").upsert(
+            inserts, 
+            on_conflict="user_id,symbol,ex_date,type", 
+            ignore_duplicates=True
+        ).execute()
 
 
 # ══════════════════════════════════════════════════════════════

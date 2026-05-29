@@ -196,16 +196,26 @@ def get_dividend_history(symbol: str) -> list[dict]:
             if df is not None and not df.empty:
                 for _, row in df.iterrows():
                     row_dict = dict(row)
-                    ex_date = row_dict.get("exright_date", "")
-                    pay_date = row_dict.get("payout_date", "")
-                    cash = float(row_dict.get("value_per_share", 0) or 0)
-                    ratio = float(row_dict.get("exercise_ratio", 0) or 0)
+                    ex_date = row_dict.get("exright_date", None)
+                    pay_date = row_dict.get("payout_date", None)
+                    
+                    if pd.isna(ex_date) or str(ex_date).strip() == "" or str(ex_date) == "NaT":
+                        continue
+
+                    cash = row_dict.get("value_per_share", 0)
+                    if pd.isna(cash): cash = 0
+                    cash = float(cash)
+                    
+                    ratio = row_dict.get("exercise_ratio", 0)
+                    if pd.isna(ratio): ratio = 0
+                    ratio = float(ratio)
+
                     if cash > 0 or ratio > 0:
                         div_type = "STOCK" if (ratio > 0 and cash == 0) else "CASH"
                         results.append({
                             "symbol": symbol,
-                            "ex_date": str(ex_date)[:10] if pd.notnull(ex_date) else "",
-                            "pay_date": str(pay_date)[:10] if pd.notnull(pay_date) else "",
+                            "ex_date": str(ex_date)[:10],
+                            "pay_date": str(pay_date)[:10] if pd.notnull(pay_date) and str(pay_date).strip() != "" and str(pay_date) != "NaT" else None,
                             "type": div_type,
                             "cash_amount": cash,
                             "stock_ratio": ratio,
