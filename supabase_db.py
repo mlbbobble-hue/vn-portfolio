@@ -54,7 +54,11 @@ def sign_up(email: str, password: str, full_name: str = "") -> dict:
             return {"success": True, "user": res.user, "error": ""}
         return {"success": False, "user": None, "error": "未知錯誤"}
     except Exception as e:
-        return {"success": False, "user": None, "error": str(e)}
+        import traceback
+        tb = traceback.format_exc()
+        return {"success": False, "user": None, "error": f"{str(e)}
+
+Traceback: {tb}"}
 
 
 def sign_in(email: str, password: str) -> dict:
