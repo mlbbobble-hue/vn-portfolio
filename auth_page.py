@@ -23,28 +23,32 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     text-align: center;
     margin-bottom: 32px;
 }
-.auth-logo .icon { font-size: 3.5rem; }
+.auth-logo .icon { 
+    display: flex; justify-content: center; margin-bottom: 12px;
+}
+.auth-logo .icon svg {
+    width: 64px; height: 64px; fill: var(--cathay-green);
+}
 .auth-logo .title {
     font-size: 1.5rem; font-weight: 700;
-    background: linear-gradient(90deg, #a78bfa, #60a5fa);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    color: var(--cathay-green);
     margin: 8px 0 4px;
 }
-.auth-logo .sub { font-size: 0.85rem; color: #64748b; }
+.auth-logo .sub { font-size: 0.85rem; color: var(--text-muted); }
 .auth-card {
-    background: var(--cathay-white); box-shadow: var(--shadow-soft);
-    border: 1px solid rgba(0,163,82,0.3);
+    background: var(--card-bg); 
+    border: 1px solid rgba(0,163,82,0.2);
     border-radius: 20px;
     padding: 32px 36px;
     backdrop-filter: blur(20px);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    box-shadow: var(--shadow-soft);
 }
 .auth-title {
     font-size: 1.3rem; font-weight: 600; color: var(--text-primary);
     margin-bottom: 24px; text-align: center;
 }
 .stTextInput > div > div > input {
-    background: rgba(15,15,35,0.8) !important;
+    background: var(--background-main) !important;
     border: 1px solid rgba(0,163,82,0.3) !important;
     border-radius: 10px !important;
     color: var(--text-primary) !important;
@@ -69,11 +73,14 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stButton > button[kind="secondary"] {
     background: transparent !important;
     border: 1px solid rgba(0,163,82,0.4) !important;
-    color: #a78bfa !important;
+    color: var(--cathay-green) !important;
     box-shadow: none !important;
 }
+.stButton > button[kind="secondary"]:hover {
+    background: rgba(0,163,82,0.05) !important;
+}
 .divider {
-    text-align: center; color: #475569; font-size: 0.85rem;
+    text-align: center; color: var(--text-muted); font-size: 0.85rem;
     margin: 16px 0; position: relative;
 }
 .divider::before, .divider::after {
@@ -83,11 +90,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .divider::before { left: 0; }
 .divider::after { right: 0; }
 .footer-note {
-    text-align: center; color: #475569; font-size: 0.75rem; margin-top: 20px;
-}
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #1e1e3a 0%, #16213e 100%);
-    border-right: 1px solid rgba(0,163,82,0.2);
+    text-align: center; color: var(--text-muted); font-size: 0.75rem; margin-top: 20px;
 }
 </style>
 """
@@ -115,7 +118,7 @@ def render_auth_page():
     st.markdown(f"""
     <div class="auth-container">
     <div class="auth-logo">
-        <div class="icon">📈</div>
+        <div class="icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="var(--cathay-green)" xmlns="http://www.w3.org/2000/svg"><path d="M17 12C18.6569 12 20 10.6569 20 9C20 7.34315 18.6569 6 17 6C16.8202 6 16.6441 6.01579 16.4727 6.04618C15.8291 3.75549 13.6895 2 11.1111 2C8.53272 2 6.39308 3.75549 5.74945 6.04618C5.57811 6.01579 5.40194 6 5.22222 6C3.44263 6 2 7.34315 2 9C2 10.6569 3.44263 12 5.22222 12C5.35209 12 5.47955 11.9922 5.60421 11.977C6.07921 13.7277 7.72895 15 9.66667 15H10.5556V20C10.5556 21.1046 11.451 22 12.5556 22H13.4444C13.9967 22 14.4444 21.5523 14.4444 21V15H15.3333C17.2711 15 18.9208 13.7277 19.3958 11.977C19.5205 11.9922 19.6479 12 19.7778 12H17Z"/></svg></div>
         <div class="title">{t('app_name')}</div>
         <div class="sub">{t('app_tagline')}</div>
     </div>
