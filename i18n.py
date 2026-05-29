@@ -8,6 +8,14 @@ import streamlit as st
 #  翻譯字典
 # ══════════════════════════════════════════════════════════════
 TRANSLATIONS = {
+    # ── 導覽列 ──────────────────────────────────────────────────
+    "nav_dashboard":        {"vi": "Tổng quan", "zh": "首頁總覽"},
+    "nav_portfolio":        {"vi": "Danh mục", "zh": "持倉明細"},
+    "nav_transactions":     {"vi": "Giao dịch", "zh": "交易記錄"},
+    "nav_dividends":        {"vi": "Cổ tức", "zh": "配息追蹤"},
+    "nav_watchlist":        {"vi": "Theo dõi", "zh": "觀察清單"},
+    "nav_analytics":        {"vi": "Phân tích", "zh": "圖表分析"},
+
     # ── 通用 ──────────────────────────────────────────────────
     "app_name":             {"vi": "Quản lý Danh mục CK Việt Nam", "zh": "越南股市投資組合系統"},
     "app_tagline":          {"vi": "Theo dõi danh mục từ nhiều CTCK • Cổ tức • Cảnh báo giá",
