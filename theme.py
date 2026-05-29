@@ -335,36 +335,7 @@ p, span, label {
     box-shadow: var(--shadow-soft);
 }
 
-/* Dashboard 左右等高佈局 (Equal Height Flexbox Hack) */
-#dashboard-layout-anchor + div[data-testid="stHorizontalBlock"] {
-    align-items: stretch !important;
-}
 
-#dashboard-layout-anchor + div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-    display: flex;
-    flex-direction: column;
-}
-
-/* 讓右側圖表容器填滿高度並加上 Card 樣式 */
-#dashboard-layout-anchor + div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) > div[data-testid="stVerticalBlock"] {
-    background-color: var(--bg-card);
-    border-radius: 12px;
-    padding: 24px;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-soft);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-#dashboard-layout-anchor + div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) [data-testid="stPlotlyChart"] {
-    flex-grow: 1;
-    height: 100% !important;
-    min-height: 550px;
-}
-#dashboard-layout-anchor + div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) iframe {
-    height: 100% !important;
-}
 
 .custom-table th:first-child, .custom-table td:first-child {
     text-align: left; /* 第一欄 (代號) 靠左對齊 */

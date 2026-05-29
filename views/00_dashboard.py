@@ -55,12 +55,7 @@ else:
     display_roi = f"{abs(roi_pct):.2f}%"
 
 
-# --- 以下為雙欄排版 (Two-Column Layout) ---
-st.markdown('<div id="dashboard-layout-anchor"></div>', unsafe_allow_html=True)
-col_left, col_right = st.columns([1, 1], gap="large")
-
-with col_left:
-    # 1. 頂部總資產橫幅
+# 1. 頂部總資產橫幅
     st.markdown(f'''
     <div class="cathay-app-header" style="margin: 0 0 20px 0;">
         <span class="app-title-small">我的資產總覽</span>
@@ -93,10 +88,7 @@ with col_left:
         </div>
         ''', unsafe_allow_html=True)
         
-
-
-
-with col_right:
+    # 3. 資產分佈圖表 (Treemap) 或 空狀態
     if not holdings.empty:
         st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
         
@@ -121,6 +113,11 @@ with col_right:
                 "(?)": "#1e293b"              
             }
 
+            st.markdown('''
+            <div class="cathay-card" style="padding: 24px; margin-top: 24px;">
+            <h4 style='margin: 0 0 16px 0;'>投資組合</h4>
+            ''', unsafe_allow_html=True)
+            
             fig = px.treemap(
                 df_plot,
                 path=[px.Constant("投資組合"), "symbol"],
@@ -153,6 +150,7 @@ with col_right:
             )
 
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            st.markdown('</div>', unsafe_allow_html=True)
             
     else:
         st.markdown('''
