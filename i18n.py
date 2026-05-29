@@ -55,7 +55,7 @@ TRANSLATIONS = {
     "per_share":            {"vi": "/cổ phiếu", "zh": "/每股"},
     "records":              {"vi": "bản ghi", "zh": "筆記錄"},
     "total_records":        {"vi": "Tổng cộng", "zh": "共"},
-    "update_price":         {"vi": "🔄 Cập nhật giá", "zh": "🔄 立即更新股價"},
+    "update_price":         {"vi": "Cập nhật giá", "zh": "立即更新股價"},
     "updating":             {"vi": "Đang cập nhật giá...", "zh": "正在抓取最新股價..."},
     "updated_count":        {"vi": "Đã cập nhật {n} mã CK", "zh": "已更新 {n} 支股票"},
     "lang_toggle_vi":       {"vi": "🇻🇳 Tiếng Việt", "zh": "🇻🇳 Tiếng Việt"},

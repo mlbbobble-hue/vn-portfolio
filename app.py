@@ -55,13 +55,13 @@ with st.sidebar:
     
     st.markdown(f"""
     <div style='text-align:center; padding:12px 0;'>
-        <div style='font-size:2.5rem'>📈</div>
+        <div style='font-size:2.5rem; color: var(--cathay-green);'><span class="material-symbols-rounded">park</span></div>
         <div style='font-size:1.05rem; font-weight:700; color:var(--cathay-green);'>VN Portfolio</div>
         <div style='font-size:0.75rem; color:#888;'>多券商整合 • 配息追蹤 • 價格提醒</div>
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button(t("update_price"), use_container_width=True):
+    if st.button(t("update_price"), icon=":material/refresh:", use_container_width=True):
         with st.spinner(t("updating")):
             symbols = get_portfolio_symbols()
             wl_syms = []
@@ -103,12 +103,12 @@ with st.sidebar:
 
 
 # ── 主頁面 (Navigation) ──────────────────────────────────────────
-dashboard_page = st.Page("pages/00_dashboard.py", title=t("nav_dashboard"), icon="🌳")
-portfolio_page = st.Page("pages/01_portfolio.py", title=t("nav_portfolio"), icon="💼")
-transactions_page = st.Page("pages/02_transactions.py", title=t("nav_transactions"), icon="📋")
-dividends_page = st.Page("pages/03_dividends.py", title=t("nav_dividends"), icon="💵")
-watchlist_page = st.Page("pages/04_watchlist.py", title=t("nav_watchlist"), icon="🔔")
-analytics_page = st.Page("pages/05_analytics.py", title=t("nav_analytics"), icon="📈")
+dashboard_page = st.Page("pages/00_dashboard.py", title=t("nav_dashboard"), icon=":material/park:")
+portfolio_page = st.Page("pages/01_portfolio.py", title=t("nav_portfolio"), icon=":material/business_center:")
+transactions_page = st.Page("pages/02_transactions.py", title=t("nav_transactions"), icon=":material/receipt_long:")
+dividends_page = st.Page("pages/03_dividends.py", title=t("nav_dividends"), icon=":material/paid:")
+watchlist_page = st.Page("pages/04_watchlist.py", title=t("nav_watchlist"), icon=":material/notifications_active:")
+analytics_page = st.Page("pages/05_analytics.py", title=t("nav_analytics"), icon=":material/monitoring:")
 
 pg = st.navigation([
     dashboard_page,
