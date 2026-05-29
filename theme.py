@@ -8,18 +8,26 @@ def load_css():
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
 
 :root {
-    /* 國泰證券 App 配色 */
-    --cathay-green: #00A352;
-    --cathay-dark-green: #008241;
-    --cathay-red: #E74C3C;
-    --cathay-yellow: #F39C12;
-    --cathay-bg-light: #F6F7F9;
-    --cathay-white: #FFFFFF;
-    --text-primary: #333333;
-    --text-secondary: #888888;
-    --border-color: #EFEFEF;
+    /* 專業金融風配色 (Tailwind CSS 顏色規格) */
+    --bg-main: #0f172a;       /* 深藍黑大背景 */
+    --bg-card: #1e293b;       /* 卡片背景 */
+    --text-primary: #f8fafc;  /* 主文字純白 */
+    --text-secondary: #94a3b8;/* 次要文字淡灰 */
     
-    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --financial-up: #10b981;  /* 獲利：翠綠色 */
+    --financial-down: #ef4444;/* 虧損：內斂紅 */
+    --financial-none: #64748b;/* 平盤：中性灰 */
+
+    /* 相容原本的變數名以確保排版不崩潰 */
+    --cathay-green: var(--financial-up);
+    --cathay-dark-green: #059669;
+    --cathay-red: var(--financial-down);
+    --cathay-yellow: #f59e0b;
+    --cathay-bg-light: var(--bg-main);
+    --cathay-white: var(--bg-card);
+    --border-color: #334155;
+    
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 html, body, [class*="css"] {
@@ -41,27 +49,29 @@ html, body, [class*="css"] {
     padding-top: 0rem !important;
 }
 
-/* 頂部國泰綠 Header 樣式 */
+/* 頂部總資產 Header 樣式 (已改為深色專業風) */
 .cathay-app-header {
-    background-color: var(--cathay-green);
-    color: white;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
     padding: 24px 20px;
     border-bottom-left-radius: 16px;
     border-bottom-right-radius: 16px;
     margin: -1rem -1rem 20px -1rem;
-    box-shadow: 0 4px 10px rgba(0, 163, 82, 0.2);
+    box-shadow: var(--shadow-soft);
     text-align: center;
+    border: 1px solid var(--border-color);
 }
 .cathay-app-header h1 {
-    color: white !important;
+    color: var(--text-primary) !important;
     font-size: 24px;
     margin: 0;
     font-weight: 700;
 }
 .cathay-app-header .total-value {
-    font-size: 36px;
+    font-size: 24px;
     font-weight: 700;
     margin-top: 8px;
+    color: var(--text-primary);
 }
 
 /* 白色卡片 */
@@ -223,12 +233,45 @@ a[data-testid="stPageLink-NavLink"] span {
     color: var(--text-secondary);
 }
 
-/* DataFrame 表格優化 */
+/* DataFrame 表格優化 (HTML 表格渲染專用) */
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.custom-table th, .custom-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    border-left: none;
+    border-right: none;
+    text-align: right;
+    white-space: nowrap;
+}
+.custom-table th {
+    background-color: rgba(255,255,255,0.03);
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+.custom-table td {
+    color: var(--text-primary);
+}
+.custom-table tbody tr:hover td {
+    background-color: rgba(255,255,255,0.05);
+}
+/* 代號與券商保持靠左 */
+.custom-table th:first-child, .custom-table td:first-child,
+.custom-table th:last-child, .custom-table td:last-child {
+    text-align: left;
+}
+
 [data-testid="stDataFrame"] {
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid var(--border-color);
-    background-color: var(--cathay-white);
+    background-color: var(--bg-card);
 }
 
 h1, h2, h3, h4, h5, h6 {

@@ -112,11 +112,11 @@ if not holdings.empty:
         
         # 金融風專業配色
         color_map = {
-            "獲利翻倍 (>50%)": "#059669", # 深綠
-            "穩定獲利 (>0%)": "#34d399",  # 淺綠
-            "微幅虧損 (<0%)": "#f87171",  # 淺紅
-            "平盤或特殊 (0%)": "#94a3b8", # 中性灰
-            "(?)": "#333333"              # 預設
+            "獲利翻倍 (>50%)": "#10b981", # financial-up (Deep green is not specified in new rules, so use the exact up color)
+            "穩定獲利 (>0%)": "#10b981",  # financial-up
+            "微幅虧損 (<0%)": "#ef4444",  # financial-down
+            "平盤或特殊 (0%)": "#64748b", # financial-none
+            "(?)": "#1e293b"              # bg-card
         }
 
         fig = px.treemap(

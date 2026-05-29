@@ -93,12 +93,14 @@ for _, row in portfolio_df.iterrows():
 disp = pd.DataFrame(table_rows)
 def color_cell(val):
     if isinstance(val,str) and ("▲" in val or val.startswith("+")):
-        return "color:#16a34a;font-weight:600"
+        return "color: var(--financial-up); font-weight: 600;"
     if isinstance(val,str) and ("▼" in val or (val.startswith("-") and any(c.isdigit() for c in val))):
-        return "color:#ef4444;font-weight:600"
-    return "color:#475569"
+        return "color: var(--financial-down); font-weight: 600;"
+    return ""
 
-styled = disp.style.map(color_cell, subset=[t("daily_change"), t("roi"), t("unrealized_pl"), t("realized_pl")])
-st.dataframe(styled, use_container_width=True, hide_index=True)
+styled = disp.style.map(color_cell, subset=[t("daily_change"), t("roi"), t("unrealized_pl"), t("realized_pl")])\
+                   .hide(axis="index")
+html_table = styled.to_html(classes="custom-table")
+st.markdown(html_table, unsafe_allow_html=True)
 
 # The ROI and Broker charts have been removed per user request.
