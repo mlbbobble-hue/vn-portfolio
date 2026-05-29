@@ -149,8 +149,8 @@ with tab_import:
                 
                 if st.button("預覽轉換後資料", use_container_width=True):
                     mapped_df = pd.DataFrame()
-                    mapped_df["date"] = snapshot_date
                     mapped_df["symbol"] = df_up[map_sym]
+                    mapped_df["date"] = snapshot_date
                     mapped_df["action"] = "BUY"
                     mapped_df["shares"] = pd.to_numeric(df_up[map_shares].astype(str).str.replace(",",""), errors="coerce")
                     mapped_df["broker"] = snapshot_broker
