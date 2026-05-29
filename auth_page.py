@@ -209,7 +209,10 @@ def render_auth_page():
                     st.session_state["user_name"]     = full_name
                     st.session_state["access_token"]  = result["session"].access_token
                     if remember_me and cookie_ctrl is not None:
-                        cookie_ctrl.set("sb_refresh_token", result["session"].refresh_token, max_age=86400*30)
+                        try:
+                            cookie_ctrl.set("sb_refresh_token", result["session"].refresh_token, max_age=86400*30)
+                        except:
+                            pass
                     st.success(t("login_success", name=full_name))
                     st.rerun()
                 elif result["error"] == "EMAIL_NOT_CONFIRMED":

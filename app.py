@@ -106,15 +106,24 @@ def auto_update_if_needed():
             if all_syms:
                 from market_data import get_multiple_prices
                 from i18n import t
-                with st.spinner(t("updating") if "updating" in t("updating") else "正在同步最新越南股市報價..."):
-                    prices_df = get_multiple_prices(all_syms)
+                prices_df = get_multiple_prices(all_syms)
                 for _, p in prices_df.iterrows():
                     upsert_price_cache(p["symbol"], p["price"], p["change_pct"], p.get("volume", 0))
     except Exception as e:
         pass
 
-# 在背景執行自動檢查與更新
-auto_update_if_needed()
+import threading
+
+def run_bg_update():
+    try:
+        auto_update_if_needed()
+    except:
+        pass
+
+# 在背景執行自動檢查與更新，完全不卡頓前端 UI
+if "bg_update_triggered" not in st.session_state:
+    st.session_state["bg_update_triggered"] = True
+    threading.Thread(target=run_bg_update, daemon=True).start()
 
 # ── 側邊欄 ─────────────────────────────────────────────────────
 with st.sidebar:
