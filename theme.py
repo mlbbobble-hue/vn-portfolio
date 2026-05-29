@@ -2,14 +2,14 @@ import streamlit as st
 
 def load_css():
     """
-    載入全域 CSS 主題 (國泰證券 Cathay Securities 風格)
+    載入全域 CSS 主題 (國泰證券 Cathay Securities 風格 - 強制亮色)
     """
     st.markdown("""<style>
 /* 國泰證券 (Cathay Securities) 專屬字體與色彩變數 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
 
 :root {
-    /* 預設亮色模式 (Light Mode) 參數 - 國泰經典白底綠點綴 */
+    /* 強制亮色模式 (Light Mode) 參數 - 國泰經典白底綠點綴 */
     --cathay-green: #00A850;
     --cathay-dark-green: #008f44;
     --cathay-yellow: #FFB600;
@@ -24,22 +24,6 @@ def load_css():
     
     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        /* 暗色模式 (Dark Mode) 參數 - 國泰專業黑底綠框 */
-        --bg-main: #121212;
-        --bg-sidebar: #1E1E1E;
-        --bg-card: #1E1E1E;
-        
-        --text-primary: #F3F4F6;
-        --text-secondary: #A0A0A0;
-        --border-color: #333333;
-        
-        --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-    }
 }
 
 html, body, [class*="css"] {
