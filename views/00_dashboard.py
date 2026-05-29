@@ -78,27 +78,12 @@ else:
         ''', unsafe_allow_html=True)
 
     with c2:
-# 2. 投資績效 Badges & Cards
-st.markdown(f"<h4 style='margin-left: 8px;'>{t('invest_performance')}</h4>", unsafe_allow_html=True)
-c1, c2 = st.columns(2)
-with c1:
-    badge_class = "badge-up" if total_unrealized > 0 else "badge-down" if total_unrealized < 0 else "badge-neutral"
-    sign = "+" if total_unrealized > 0 else ""
-    st.markdown(f'''
-    <div class="cathay-card">
-        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("unrealized_pl")}</div>
-        <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_unrealized}</div>
-        <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{total_unrealized:,.2f}</span></div>
-    </div>
-    ''', unsafe_allow_html=True)
-
-with c2:
-    badge_class = "badge-up" if roi_pct > 0 else "badge-down" if roi_pct < 0 else "badge-neutral"
-    sign = "+" if roi_pct > 0 else ""
-    st.markdown(f'''
-    <div class="cathay-card">
-        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("accum_return_rate")}</div>
-        <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_roi}</div>
-        <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{roi_pct:.2f}%</span></div>
-    </div>
-    ''', unsafe_allow_html=True)
+        badge_class = "badge-up" if roi_pct > 0 else "badge-down" if roi_pct < 0 else "badge-neutral"
+        sign = "+" if roi_pct > 0 else ""
+        st.markdown(f'''
+        <div class="cathay-card">
+            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("accum_return_rate")}</div>
+            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_roi}</div>
+            <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{roi_pct:.2f}%</span></div>
+        </div>
+        ''', unsafe_allow_html=True)
