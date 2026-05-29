@@ -57,43 +57,182 @@ with tab_ov:
                 </div>""", unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader(t("all_div_records"))
-        html_str = '<div class="timeline-container">'
+        st.subheader("📊 歷史實際獲得配息/配股統計")
         
-        # 按照除權息日降冪排序
-        if not all_divs.empty:
-            timeline_divs = all_divs.sort_values(by="ex_date", ascending=False).copy()
+        # 1. 取得實際領取的配息資訊
+        _, stock_rec_dict, details = compute_received_dividends()
+        
+        # 2. 合併系統除權息表與使用者實際領取紀錄
+        if details:
+            details_df = pd.DataFrame(details)
+            merged_divs = pd.merge(all_divs, details_df, on=["symbol", "ex_date", "type"], how="inner")
         else:
-            timeline_divs = pd.DataFrame()
+            merged_divs = pd.DataFrame()
             
-        for _, row in timeline_divs.iterrows():
-            sym = row["symbol"]
-            dtype = t("cash_div") if row["type"] == "CASH" else t("stock_div")
-            ex_date = row.get("ex_date", "N/A")
-            pay_date = row.get("pay_date", "")
-            pay_str = pay_date if pd.notnull(pay_date) and str(pay_date).strip() else "未定"
-            
-            # 狀態判斷
-            is_done = False
-            if row["type"] == "STOCK":
-                is_done = (row.get("is_applied", 0) == 1)
-            else:
-                if pay_date and pd.notnull(pay_date) and str(pay_date).strip():
-                    try:
-                        is_done = pd.to_datetime(pay_date).date() <= date.today()
-                    except:
-                        is_done = False
-                else:
+        # 3. 計算 Dividend Summary Cards 數據
+        this_year = date.today().year
+        total_received_this_year = 0.0
+        total_pending = 0.0
+        total_received_all_time = 0.0
+        
+        if not merged_divs.empty:
+            merged_divs["ex_year"] = pd.to_datetime(merged_divs["ex_date"], errors="coerce").dt.year
+            for _, row in merged_divs.iterrows():
+                if row["type"] == "CASH":
+                    amt = row.get("cash_received", 0)
+                    pay_date = row.get("pay_date", "")
+                    
                     is_done = False
+                    p_year = 0
+                    if pay_date and pd.notnull(pay_date) and str(pay_date).strip():
+                        try:
+                            pdt = pd.to_datetime(pay_date).date()
+                            is_done = pdt <= date.today()
+                            p_year = pdt.year
+                        except:
+                            pass
+                            
+                    if is_done:
+                        total_received_all_time += amt
+                        if p_year == this_year:
+                            total_received_this_year += amt
+                    else:
+                        total_pending += amt
 
-            if is_done:
-                status_badge = '<span class="badge-status-done">已發放</span>'
-            else:
-                status_badge = '<span class="badge-status-pending">在途 / 處理中</span>'
-                
-            amount_str = f"+{row['cash_amount']:,.0f} VNĐ" if row["type"] == "CASH" else f"+{row['stock_ratio']*100:.1f}% 配股"
+        # 4. 渲染 Summary Cards
+        st.markdown(f"""
+<div style="display: flex; gap: 16px; margin-bottom: 24px;">
+    <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
+        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">今年已領股利總額</div>
+        <div style="color: #10b981; font-size: 24px; font-weight: 700;">+{total_received_this_year:,.0f} <span style="font-size:14px;">VNĐ</span></div>
+    </div>
+    <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
+        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">在途待領股利總額</div>
+        <div style="color: #fbbf24; font-size: 24px; font-weight: 700;">+{total_pending:,.0f} <span style="font-size:14px;">VNĐ</span></div>
+    </div>
+    <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
+        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">歷年累計總股利</div>
+        <div style="color: #f8fafc; font-size: 24px; font-weight: 700;">+{total_received_all_time:,.0f} <span style="font-size:14px;">VNĐ</span></div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+        # 5. 渲染 Filter Tabs
+        years = []
+        if not merged_divs.empty:
+            years = sorted(merged_divs["ex_year"].dropna().unique().astype(int).tolist(), reverse=True)
             
-            html_str += f"""
+        tabs_list = ["全部"] + [f"{y}年" for y in years] + ["按個股聚合"]
+        tabs = st.tabs(tabs_list)
+        
+        for i, tab in enumerate(tabs):
+            with tab:
+                selection = tabs_list[i]
+                
+                if selection == "全部":
+                    filtered_df = merged_divs
+                elif selection == "按個股聚合":
+                    filtered_df = merged_divs
+                else:
+                    y_str = selection.replace("年", "")
+                    filtered_df = merged_divs[merged_divs["ex_year"] == int(y_str)]
+                    
+                if selection == "按個股聚合":
+                    # --- 渲染手風琴聚合列表 ---
+                    if filtered_df.empty:
+                        st.markdown('<div style="color:var(--text-muted); text-align:center; padding: 20px;">尚無任何配息紀錄</div>', unsafe_allow_html=True)
+                    else:
+                        acc_html = '<div class="acc-table" style="max-height: 400px; overflow-y: auto;">'
+                        acc_html += """
+<div class="acc-header" style="grid-template-columns: 1.5fr 1fr 1fr;">
+    <div class="acc-col-left">股票代碼</div>
+    <div class="acc-col-right">累計現金配息</div>
+    <div class="acc-col-right">累計股票配股</div>
+</div>
+"""
+                        symbols = sorted(filtered_df["symbol"].unique().tolist())
+                        for sym in symbols:
+                            sym_df = filtered_df[filtered_df["symbol"] == sym].sort_values(by="ex_date", ascending=False)
+                            t_cash = sym_df[sym_df["type"] == "CASH"]["cash_received"].sum()
+                            t_stock = sym_df[sym_df["type"] == "STOCK"]["stock_received"].sum()
+                            
+                            c_str = f"+{t_cash:,.0f} VNĐ" if t_cash > 0 else "-"
+                            s_str = f"+{t_stock:,.0f} 股" if t_stock > 0 else "-"
+                            
+                            acc_html += f"""
+<details class="acc-details">
+    <summary>
+        <div class="acc-row" style="grid-template-columns: 1.5fr 1fr 1fr;">
+            <div class="acc-col-left">
+                <span class="tlt-main"><span class="acc-arrow">▶</span>{sym}</span>
+                <span class="tlt-sub" style="margin-left: 16px;">共 {len(sym_df)} 筆紀錄</span>
+            </div>
+            <div class="acc-col-right">
+                <span class="tlt-main" style="color: #10b981;">{c_str}</span>
+            </div>
+            <div class="acc-col-right">
+                <span class="tlt-main" style="color: #f59e0b;">{s_str}</span>
+            </div>
+        </div>
+    </summary>"""
+                            for _, r in sym_df.iterrows():
+                                e_date = r.get("ex_date", "N/A")
+                                dtype = t("cash_div") if r["type"] == "CASH" else t("stock_div")
+                                if r["type"] == "CASH":
+                                    a_str = f"+{r.get('cash_received', 0):,.0f} VNĐ"
+                                else:
+                                    a_str = f"+{r.get('stock_received', 0):,.0f} 股"
+                                    
+                                acc_html += f"""
+<div class="acc-sub-row" style="grid-template-columns: 1.5fr 1fr 1fr;">
+    <div class="acc-col-left">
+        <span class="tlt-main" style="font-size:15px; color:#cbd5e1;">└ {e_date}</span>
+        <span class="tlt-sub" style="margin-left: 18px;">{dtype}</span>
+    </div>
+    <div class="acc-col-right">
+        <span class="tlt-main" style="font-size:15px; color:#10b981;">{a_str if r['type'] == 'CASH' else '-'}</span>
+    </div>
+    <div class="acc-col-right">
+        <span class="tlt-main" style="font-size:15px; color:#f59e0b;">{a_str if r['type'] == 'STOCK' else '-'}</span>
+    </div>
+</div>"""
+                            acc_html += "</details>"
+                        acc_html += "</div>"
+                        st.markdown(acc_html, unsafe_allow_html=True)
+                        
+                else:
+                    # --- 渲染一般 Timeline ---
+                    html_str = '<div class="timeline-container" style="max-height: 400px; overflow-y: auto;">'
+                    if not filtered_df.empty:
+                        timeline_divs = filtered_df.sort_values(by="ex_date", ascending=False)
+                        for _, row in timeline_divs.iterrows():
+                            sym = row["symbol"]
+                            dtype = t("cash_div") if row["type"] == "CASH" else t("stock_div")
+                            ex_date = row.get("ex_date", "N/A")
+                            pay_date = row.get("pay_date", "")
+                            pay_str = pay_date if pd.notnull(pay_date) and str(pay_date).strip() else "未定"
+                            
+                            is_done = False
+                            if row["type"] == "STOCK":
+                                is_done = (row.get("is_applied", 0) == 1)
+                            else:
+                                if pay_date and pd.notnull(pay_date) and str(pay_date).strip():
+                                    try:
+                                        is_done = pd.to_datetime(pay_date).date() <= date.today()
+                                    except:
+                                        is_done = False
+
+                            if is_done:
+                                status_badge = '<span class="badge-status-done">已發放</span>'
+                            else:
+                                status_badge = '<span class="badge-status-pending">在途 / 處理中</span>'
+                                
+                            if row["type"] == "CASH":
+                                amount_str = f"+{row.get('cash_received', 0):,.0f} VNĐ"
+                            else:
+                                amount_str = f"+{row.get('stock_received', 0):,.0f} 股"
+                            
+                            html_str += f"""
 <div class="timeline-item">
     <div class="timeline-node"></div>
     <div class="timeline-content">
@@ -111,44 +250,10 @@ with tab_ov:
         </div>
     </div>
 </div>"""
-        
-        if timeline_divs.empty:
-            html_str += '<div style="color:var(--text-muted); text-align:center; padding: 20px;">尚無任何配息紀錄</div>'
-            
-        html_str += "</div>"
-        
-        st.markdown(html_str, unsafe_allow_html=True)
-
-        st.markdown("---")
-        st.subheader("📊 歷史實際獲得配息/配股統計")
-        st.markdown("<span style='color:var(--text-muted);font-size:0.9em;'>此統計會比對您的歷史交易紀錄，只有在除息日（Ex-Date）之前持有的股數才會納入配息計算。</span><br><br>", unsafe_allow_html=True)
-        
-        total_cash_rec, stock_rec_dict, details = compute_received_dividends()
-        
-        if details:
-            # 建立彙整表格
-            summary_rows = []
-            for sym in set([d['symbol'] for d in details]):
-                sym_details = [d for d in details if d['symbol'] == sym]
-                sym_cash = sum(d['cash_received'] for d in sym_details)
-                sym_stock = stock_rec_dict.get(sym, 0.0)
-                if sym_cash > 0 or sym_stock > 0:
-                    summary_rows.append({
-                        "股票代號": sym,
-                        "獲得現金 (VNĐ)": f"{sym_cash:,.0f}",
-                        "獲得配股 (股)": f"{sym_stock:,.0f}" if sym_stock > 0 else "-"
-                    })
-            st.dataframe(pd.DataFrame(summary_rows), use_container_width=True)
-            
-            # 總和顯示
-            total_stock_str = " | ".join([f"{k}: {v:,.0f}股" for k, v in stock_rec_dict.items() if v > 0])
-            st.markdown(f"""
-            <div style='background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:12px;padding:14px 18px;margin-top:8px;'>
-                <div style='font-size:1.1em;'>💰 <b>歷史累計獲得現金配息：</b> <span style='color:var(--cathay-green);font-size:1.3em;font-weight:700;'>{total_cash_rec:,.0f} VNĐ</span></div>
-                <div style='font-size:1.0em;margin-top:8px;'>📦 <b>歷史累計獲得股票配股：</b> <span style='color:#f59e0b;font-weight:600;'>{total_stock_str if total_stock_str else "無"}</span></div>
-            </div>""", unsafe_allow_html=True)
-        else:
-            st.info("目前還沒有實際領到配息的紀錄（可能是剛買入還沒遇到除息日）。")
+                    else:
+                        html_str += '<div style="color:var(--text-muted); text-align:center; padding: 20px;">尚無任何配息紀錄</div>'
+                    html_str += "</div>"
+                    st.markdown(html_str, unsafe_allow_html=True)
 
 # ── Tab 2: 自動抓取 ─────────────────────────────────────────
 with tab_auto:
