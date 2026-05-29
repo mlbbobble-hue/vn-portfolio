@@ -32,39 +32,86 @@ tab_add, tab_import, tab_view = st.tabs([t("add_transaction"), t("tab_import"), 
 with tab_add:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader(t("add_tx_title"))
+    
+    # 資產類型選擇
+    asset_type = st.radio(
+        "📦 資產類型",
+        ["📈 股票 (Stock)", "🏦 債券 (Bond)"],
+        horizontal=True, key="asset_type"
+    )
+    is_bond = "Bond" in asset_type or "債券" in asset_type
+    
     c1, c2, c3 = st.columns(3)
     with c1:
         txn_date   = st.date_input(t("tx_date"), value=date.today(), key="add_date")
         txn_broker = st.selectbox(t("tx_broker"), BROKERS, key="add_broker")
     with c2:
-        txn_symbol = st.text_input(t("tx_symbol"), placeholder="FPT", key="add_sym").upper()
+        if is_bond:
+            txn_symbol = st.text_input("🏦 債券代號 / 名稱", placeholder="CII424002", key="add_sym").upper()
+        else:
+            txn_symbol = st.text_input(t("tx_symbol"), placeholder="FPT", key="add_sym").upper()
         txn_action = st.radio(t("tx_action"), [t("buy_action"), t("sell_action")],
                               horizontal=True, key="add_action")
     with c3:
         txn_shares = st.number_input(t("tx_shares"), min_value=1, step=100, value=100, key="add_shares")
-        txn_price  = st.number_input(t("tx_price"), min_value=100, step=100, value=100000, key="add_price")
-
+        txn_price  = st.number_input(
+            "💰 買入/賣出價格 (VND)" if is_bond else t("tx_price"),
+            min_value=100, step=100, value=100000, key="add_price"
+        )
+    
+    # 債券專屬：手動輸入目前市場價格
+    if is_bond:
+        st.markdown("---")
+        st.markdown("##### 🏦 債券額外資訊")
+        bond_market_price = st.number_input(
+            "📊 目前市場價格 (VND)",
+            min_value=0, step=1000, value=txn_price,
+            help="輸入此債券的目前市場報價，系統會用此價格計算市值與損益。此項目不會透過自動更新股價去抓取。",
+            key="bond_market_price"
+        )
+    
     txn_fee  = st.number_input(t("tx_fee"), min_value=0, value=int(txn_shares*txn_price*0.0015), key="add_fee")
     txn_note = st.text_input(t("tx_note"), key="add_note")
 
     action_code = "BUY" if "BUY" in txn_action or "Mua" in txn_action or "買" in txn_action else "SELL"
     total_val = txn_shares * txn_price
     net_val   = total_val + txn_fee if action_code == "BUY" else total_val - txn_fee
-    st.markdown(f"""
-    <div style='background:rgba(99,102,241,0.1);border-radius:10px;padding:12px 16px;margin:12px 0;border:1px solid rgba(99,102,241,0.3);'>
-        <span style='color:var(--text-muted);font-size:.85rem;'>{t('tx_preview')}　</span>
-        <b style='color:var(--text-primary);font-size:1.1rem;'>{total_val:,.0f} {t('vnd')}</b>
-        <span style='color:#64748b;'> + {txn_fee:,.0f} = </span>
-        <b style='color:#34d399;'>{net_val:,.0f} {t('vnd')}</b>
-    </div>""", unsafe_allow_html=True)
+    
+    if is_bond:
+        st.markdown(f"""
+        <div style='background:rgba(59,130,246,0.1);border-radius:10px;padding:12px 16px;margin:12px 0;border:1px solid rgba(59,130,246,0.3);'>
+            <span style='color:#64748b;font-size:.85rem;'>🏦 債券交易預覽　</span>
+            <b style='color:#1e293b;font-size:1.1rem;'>{total_val:,.0f} {t('vnd')}</b>
+            <span style='color:#64748b;'> + 手續費 {txn_fee:,.0f} = </span>
+            <b style='color:#3b82f6;'>{net_val:,.0f} {t('vnd')}</b>
+            <br><span style='color:#64748b;font-size:.8rem;'>📊 目前市場價格: {bond_market_price:,.0f} VND | ⚠️ 此債券不參與自動股價更新</span>
+        </div>""", unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <div style='background:rgba(99,102,241,0.1);border-radius:10px;padding:12px 16px;margin:12px 0;border:1px solid rgba(99,102,241,0.3);'>
+            <span style='color:var(--text-muted);font-size:.85rem;'>{t('tx_preview')}　</span>
+            <b style='color:var(--text-primary);font-size:1.1rem;'>{total_val:,.0f} {t('vnd')}</b>
+            <span style='color:#64748b;'> + {txn_fee:,.0f} = </span>
+            <b style='color:#34d399;'>{net_val:,.0f} {t('vnd')}</b>
+        </div>""", unsafe_allow_html=True)
 
     if st.button(t("tx_add_confirm"), use_container_width=True):
         if not txn_symbol:
             st.error(t("enter_symbol"))
         else:
+            # 如果是債券，在 note 前面加上 [BOND] 標記
+            final_note = f"[BOND] {txn_note}".strip() if is_bond else txn_note
             add_transaction(str(txn_date), txn_broker, txn_symbol, action_code,
-                            txn_shares, txn_price, txn_fee, txn_note)
-            st.success(f"✅ {action_code} {txn_symbol} × {txn_shares:,} @ {txn_price:,}")
+                            txn_shares, txn_price, txn_fee, final_note)
+            
+            # 如果是債券，手動寫入市場價格到 price_cache
+            if is_bond:
+                from db_router import upsert_price_cache
+                upsert_price_cache(txn_symbol, bond_market_price, 0, 0)
+            
+            emoji = "🏦" if is_bond else "✅"
+            asset_label = "債券" if is_bond else ""
+            st.success(f"{emoji} {action_code} {asset_label} {txn_symbol} × {txn_shares:,} @ {txn_price:,}")
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 

@@ -387,15 +387,20 @@ def sb_load_notification_settings(user_id: str) -> dict:
 # ══════════════════════════════════════════════════════════════
 
 def sb_get_portfolio_symbols(user_id: str) -> list[str]:
-    """取得有庫存的股票代號（使用 SQL RPC 或客戶端計算）"""
-    res = _table("transactions").select("symbol,action,shares")\
+    """取得有庫存的股票代號（排除債券，因為債券不參與自動報價更新）"""
+    res = _table("transactions").select("symbol,action,shares,note")\
           .eq("user_id", user_id).execute()
     if not res.data:
         return []
     holdings: dict[str, float] = {}
+    bond_symbols: set = set()
     for row in res.data:
         sym  = row["symbol"]
         s    = float(row["shares"])
         act  = row["action"]
+        note = row.get("note", "") or ""
         holdings[sym] = holdings.get(sym, 0) + (s if act == "BUY" else -s)
-    return [s for s, cnt in holdings.items() if cnt > 0.01]
+        if "[BOND]" in note.upper():
+            bond_symbols.add(sym)
+    # 回傳有庫存且非債券的股票
+    return [s for s, cnt in holdings.items() if cnt > 0.01 and s not in bond_symbols]
