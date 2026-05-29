@@ -77,16 +77,18 @@ st.subheader(t("detail_holdings"))
 
 html_str = '''
 <style>
-.two-line-table {
-    width: 100%;
-    border-collapse: collapse;
+.acc-table {
+    display: flex;
+    flex-direction: column;
     background-color: var(--bg-card);
     border-radius: 12px;
+    box-shadow: var(--shadow-soft);
     overflow: hidden;
     margin-bottom: 24px;
-    box-shadow: var(--shadow-soft);
 }
-.two-line-table th {
+.acc-header {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
     background-color: rgba(255,255,255,0.03);
     color: #94a3b8;
     font-size: 13px;
@@ -94,86 +96,168 @@ html_str = '''
     padding: 12px 16px;
     border-bottom: 1px solid var(--border-color);
 }
-.two-line-table td {
-    padding: 16px 16px;
+.acc-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+    padding: 16px;
     border-bottom: 1px solid var(--border-color);
+    align-items: center;
+    transition: background-color 0.2s;
 }
-.two-line-table th:nth-child(1), .two-line-table td:nth-child(1) { text-align: left; }
-.two-line-table th:nth-child(n+2), .two-line-table td:nth-child(n+2) { text-align: right; }
+.acc-details summary {
+    list-style: none;
+    cursor: pointer;
+}
+.acc-details summary::-webkit-details-marker {
+    display: none;
+}
+.acc-details summary:hover .acc-row {
+    background-color: rgba(255,255,255,0.02);
+}
+.acc-details[open] summary .acc-arrow {
+    transform: rotate(90deg);
+}
+.acc-arrow {
+    display: inline-block;
+    transition: transform 0.2s;
+    margin-right: 6px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+.acc-sub-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+    padding: 16px 16px 16px 24px;
+    background-color: #0f172a;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+}
+.acc-col-left { text-align: left; }
+.acc-col-right { text-align: right; }
 
 .tlt-main { font-size: 16px; color: #f8fafc; font-weight: 600; display: block; margin-bottom: 4px; }
 .tlt-sub { font-size: 12px; color: #94a3b8; display: block; }
-
 .tlt-pl-up { color: #10b981 !important; font-weight: 700; }
 .tlt-pl-down { color: #ef4444 !important; font-weight: 700; }
 .tlt-pl-neutral { color: #64748b !important; font-weight: 700; }
 </style>
-<table class="two-line-table">
-    <thead>
-        <tr>
-            <th>標的</th>
-            <th>持股</th>
-            <th>市值</th>
-            <th>損益</th>
-        </tr>
-    </thead>
-    <tbody>
+
+<div class="acc-table">
+    <div class="acc-header">
+        <div class="acc-col-left">標的</div>
+        <div class="acc-col-right">持股</div>
+        <div class="acc-col-right">市值</div>
+        <div class="acc-col-right">損益</div>
+    </div>
 '''
 
+def get_pl_classes(pl, roi):
+    if pl > 0:
+        return "tlt-pl-up", f"+{pl:,.0f}", f"+{roi:.2f}%"
+    elif pl < 0:
+        return "tlt-pl-down", f"{pl:,.0f}", f"{roi:.2f}%"
+    else:
+        return "tlt-pl-neutral", "0", "0.00%"
+
 if portfolio_df.empty:
-    html_str += '<tr><td colspan="4" style="text-align:center; padding:24px; color:#94a3b8;">目前無任何持股資料</td></tr>'
+    html_str += '<div style="text-align:center; padding:24px; color:#94a3b8;">目前無任何持股資料</div>'
 else:
     for _, row in portfolio_df.iterrows():
-        # 1. Broker
+        sym = row["symbol"]
         bd = row.get("broker_breakdown", {})
-        broker_str = " | ".join(f"{b}" for b, s in bd.items() if s > 0) if isinstance(bd, dict) and bd else "─"
+        valid_brokers = {b: s for b, s in bd.items() if s > 0}
         
-        # 2. Price/Cost
         cur = row["current_price"]
-        shares = f"{row['total_shares']:,.0f}"
-        avg_cost = f"{row['avg_cost']:,.0f}"
-        mkt_val = f"{row['market_value']:,.0f}"
-        
         cur_str = f"{cur:,.0f}" if cur > 0 else "─"
+        avg_cost_val = row["avg_cost"]
+        avg_cost_str = f"{avg_cost_val:,.0f}"
         
-        # 3. P&L
-        pl = row["unrealized_pl"]
-        roi = row["roi_pct"]
+        shares_total = row['total_shares']
+        mkt_val_total = row['market_value']
+        pl_total = row["unrealized_pl"]
+        roi_total = row["roi_pct"]
         
-        if pl > 0:
-            pl_class = "tlt-pl-up"
-            pl_str = f"+{pl:,.0f}"
-            roi_str = f"+{roi:.2f}%"
-        elif pl < 0:
-            pl_class = "tlt-pl-down"
-            pl_str = f"{pl:,.0f}"
-            roi_str = f"{roi:.2f}%"
-        else:
-            pl_class = "tlt-pl-neutral"
-            pl_str = "0"
-            roi_str = "0.00%"
-
-        html_str += f"""
-<tr>
-    <td>
-        <span class="tlt-main">{row["symbol"]}</span>
-        <span class="tlt-sub">{broker_str}</span>
-    </td>
-    <td>
-        <span class="tlt-main">{shares}</span>
+        pl_class, pl_str, roi_str = get_pl_classes(pl_total, roi_total)
+        
+        if len(valid_brokers) <= 1:
+            # 單筆資料，一般行
+            b_name = list(valid_brokers.keys())[0] if valid_brokers else "─"
+            html_str += f"""
+<div class="acc-row">
+    <div class="acc-col-left">
+        <span class="tlt-main">{sym}</span>
+        <span class="tlt-sub">{b_name}</span>
+    </div>
+    <div class="acc-col-right">
+        <span class="tlt-main">{shares_total:,.0f}</span>
         <span class="tlt-sub">現價: {cur_str}</span>
-    </td>
-    <td>
-        <span class="tlt-main">{mkt_val}</span>
-        <span class="tlt-sub">成本: {avg_cost}</span>
-    </td>
-    <td>
+    </div>
+    <div class="acc-col-right">
+        <span class="tlt-main">{mkt_val_total:,.0f}</span>
+        <span class="tlt-sub">成本: {avg_cost_str}</span>
+    </div>
+    <div class="acc-col-right">
         <span class="tlt-main {pl_class}">{pl_str}</span>
         <span class="tlt-sub {pl_class}">{roi_str}</span>
-    </td>
-</tr>"""
-        
-html_str += "</tbody></table>"
+    </div>
+</div>"""
+        else:
+            # 多筆資料，折疊行
+            html_str += f"""
+<details class="acc-details">
+    <summary>
+        <div class="acc-row">
+            <div class="acc-col-left">
+                <span class="tlt-main"><span class="acc-arrow">▶</span>{sym}</span>
+                <span class="tlt-sub" style="margin-left: 16px;">多券商匯總</span>
+            </div>
+            <div class="acc-col-right">
+                <span class="tlt-main">{shares_total:,.0f}</span>
+                <span class="tlt-sub">現價: {cur_str}</span>
+            </div>
+            <div class="acc-col-right">
+                <span class="tlt-main">{mkt_val_total:,.0f}</span>
+                <span class="tlt-sub">成本: {avg_cost_str}</span>
+            </div>
+            <div class="acc-col-right">
+                <span class="tlt-main {pl_class}">{pl_str}</span>
+                <span class="tlt-sub {pl_class}">{roi_str}</span>
+            </div>
+        </div>
+    </summary>"""
+            
+            # 子明細行
+            for b_name, b_shares in valid_brokers.items():
+                b_mkt = b_shares * cur
+                b_cost = b_shares * avg_cost_val
+                b_pl = b_mkt - b_cost if cur > 0 else 0
+                b_roi = ((cur - avg_cost_val) / avg_cost_val * 100) if avg_cost_val > 0 and cur > 0 else 0
+                
+                b_pl_class, b_pl_str, b_roi_str = get_pl_classes(b_pl, b_roi)
+                
+                html_str += f"""
+    <div class="acc-sub-row">
+        <div class="acc-col-left">
+            <span class="tlt-main" style="font-size:15px; color:#cbd5e1;">└ {sym}</span>
+            <span class="tlt-sub" style="margin-left: 18px;">{b_name}</span>
+        </div>
+        <div class="acc-col-right">
+            <span class="tlt-main" style="font-size:15px;">{b_shares:,.0f}</span>
+            <span class="tlt-sub">現價: {cur_str}</span>
+        </div>
+        <div class="acc-col-right">
+            <span class="tlt-main" style="font-size:15px;">{b_mkt:,.0f}</span>
+            <span class="tlt-sub">成本: {avg_cost_str}</span>
+        </div>
+        <div class="acc-col-right">
+            <span class="tlt-main {b_pl_class}" style="font-size:15px;">{b_pl_str}</span>
+            <span class="tlt-sub {b_pl_class}">{b_roi_str}</span>
+        </div>
+    </div>"""
+            
+            html_str += "</details>"
+            
+html_str += "</div>"
 
 st.markdown(html_str, unsafe_allow_html=True)
 # The ROI and Broker charts have been removed per user request.
