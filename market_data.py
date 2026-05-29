@@ -57,7 +57,15 @@ def get_multiple_prices(symbols: list[str], delay: float = 0.1) -> pd.DataFrame:
         return data
         
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        results = list(executor.map(fetch, symbols))
+        futures = [executor.submit(fetch, sym) for sym in symbols]
+        try:
+            for future in concurrent.futures.as_completed(futures, timeout=15):
+                try:
+                    results.append(future.result())
+                except Exception:
+                    pass
+        except concurrent.futures.TimeoutError:
+            pass
         
     return pd.DataFrame(results)
 
