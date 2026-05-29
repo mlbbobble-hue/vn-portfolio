@@ -67,6 +67,16 @@ def sign_up(email: str, password: str, full_name: str = "") -> dict:
             "options": {"data": {"full_name": full_name}}
         })
         if res.user:
+            try:
+                # 註冊後立刻將使用者加入審核名單，這樣管理員才看得到
+                client.table("users_approval").insert({
+                    "user_id": res.user.id,
+                    "email": email,
+                    "is_approved": False,
+                    "is_admin": False
+                }).execute()
+            except Exception:
+                pass
             return {"success": True, "user": res.user, "error": ""}
         return {"success": False, "user": None, "error": "未知錯誤"}
     except Exception as e:
