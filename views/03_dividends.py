@@ -328,7 +328,20 @@ with tab_lookup:
             filtered_lookup = filtered_lookup.sort_values("ex_date", ascending=False)
             
             # --- 3. 表格改用年度聚合與折疊 (Group by Year) ---
-            html_str = '<div class="acc-table" style="max-height: 500px; overflow-y: auto; box-shadow: none; border: 1px solid var(--border-color);">'
+            html_str = """
+<style>
+.acc-header { display: grid; align-items: center; }
+.acc-row { display: grid; align-items: center; cursor: pointer; }
+.acc-sub-row { display: grid; align-items: center; }
+.acc-col-left { text-align: left; }
+.acc-col-right { text-align: right; }
+.acc-details summary { list-style: none; outline: none; }
+.acc-details summary::-webkit-details-marker { display: none; }
+.acc-details[open] .acc-arrow { transform: rotate(90deg); display: inline-block; transition: 0.2s; }
+.acc-arrow { display: inline-block; transition: 0.2s; margin-right: 8px; font-size: 10px; color: #64748b; }
+</style>
+            """
+            html_str += '<div class="acc-table" style="max-height: 500px; overflow-y: auto; box-shadow: none; border: 1px solid var(--border-color);">'
             
             if filtered_lookup.empty:
                 html_str += '<div style="color:var(--text-muted); text-align:center; padding: 24px;">無符合條件的資料</div>'
@@ -354,21 +367,21 @@ with tab_lookup:
                     
                     html_str += f"""
 <details class="acc-details" open>
-    <summary>
-        <div class="acc-row" style="grid-template-columns: 1fr 1fr 1.5fr; border-bottom: 1px solid #334155; background: rgba(255,255,255,0.02);">
-            <div class="acc-col-left">
-                <span class="tlt-main"><span class="acc-arrow">▶</span>{int(y)} 年度</span>
-            </div>
-            <div class="acc-col-right">
-                <span style="font-size:12px;color:#94a3b8;">累計現金：</span>
-                <span style="color:#10b981;font-weight:600;font-size:15px;">{c_str}</span>
-            </div>
-            <div class="acc-col-right">
-                <span style="font-size:12px;color:#94a3b8;">累計配股：</span>
-                <span style="color:#60a5fa;font-weight:600;font-size:15px;">{s_str}</span>
-            </div>
-        </div>
-    </summary>
+<summary>
+<div class="acc-row" style="grid-template-columns: 1fr 1fr 1.5fr; border-bottom: 1px solid #334155; background: rgba(255,255,255,0.02);">
+<div class="acc-col-left">
+<span class="tlt-main"><span class="acc-arrow">▶</span>{int(y)} 年度</span>
+</div>
+<div class="acc-col-right">
+<span style="font-size:12px;color:#94a3b8;">累計現金：</span>
+<span style="color:#10b981;font-weight:600;font-size:15px;">{c_str}</span>
+</div>
+<div class="acc-col-right">
+<span style="font-size:12px;color:#94a3b8;">累計配股：</span>
+<span style="color:#60a5fa;font-weight:600;font-size:15px;">{s_str}</span>
+</div>
+</div>
+</summary>
                     """
                     
                     for _, row in y_df.iterrows():
@@ -392,15 +405,15 @@ with tab_lookup:
                             badge_text = "#60a5fa"
                             
                         html_str += f"""
-    <div class="acc-sub-row" style="grid-template-columns: 1fr 1fr 1fr 1.2fr 1.2fr; border-bottom: 1px solid #334155; padding: 14px 16px;">
-        <div class="acc-col-right" style="color: #cbd5e1;">{ex_date}</div>
-        <div class="acc-col-right" style="color: #94a3b8;">{rec_date}</div>
-        <div class="acc-col-right" style="color: #94a3b8;">{pay_date}</div>
-        <div class="acc-col-left" style="padding-left:16px;">
-            <span style="background: {badge_bg}; padding: 4px 8px; border-radius: 4px; font-size: 12px; color: {badge_text};">{dtype}</span>
-        </div>
-        <div class="acc-col-right" style="font-weight: 700; color: {amt_color}; font-size: 16px;">{amt_main}</div>
-    </div>
+<div class="acc-sub-row" style="grid-template-columns: 1fr 1fr 1fr 1.2fr 1.2fr; border-bottom: 1px solid #334155; padding: 14px 16px;">
+<div class="acc-col-right" style="color: #cbd5e1;">{ex_date}</div>
+<div class="acc-col-right" style="color: #94a3b8;">{rec_date}</div>
+<div class="acc-col-right" style="color: #94a3b8;">{pay_date}</div>
+<div class="acc-col-left" style="padding-left:16px;">
+<span style="background: {badge_bg}; padding: 4px 8px; border-radius: 4px; font-size: 12px; color: {badge_text};">{dtype}</span>
+</div>
+<div class="acc-col-right" style="font-weight: 700; color: {amt_color}; font-size: 16px;">{amt_main}</div>
+</div>
                         """
                     html_str += "</details>"
                     
