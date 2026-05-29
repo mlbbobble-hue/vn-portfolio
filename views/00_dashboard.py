@@ -114,11 +114,9 @@ else:
 
             st.markdown("<br>", unsafe_allow_html=True)
             
-            df_plot["parent"] = ""
             fig = px.treemap(
                 df_plot,
-                names="symbol",
-                parents="parent",
+                path=["symbol"],
                 values=plot_value_col,
                 color="roi_pct",
                 color_continuous_scale=[
@@ -131,6 +129,13 @@ else:
                 range_color=[-50, 50],
                 custom_data=["roi_pct", "custom_txt"]
             )
+
+            # Disable hover for the root node to prevent the empty tooltip
+            import numpy as np
+            if len(fig.data) > 0:
+                parents = fig.data[0].parents
+                hoverinfos = ["skip" if (p == "" or p is None) else "all" for p in parents]
+                fig.data[0].hoverinfo = hoverinfos
 
             fig.update_layout(
                 title=dict(
