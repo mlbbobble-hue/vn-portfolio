@@ -100,34 +100,58 @@ if not holdings.empty:
     df_plot = holdings[holdings[plot_value_col] > 0]
     
     if not df_plot.empty:
-        fig = px.pie(
-            df_plot, 
-            values=plot_value_col, 
-            names="symbol", 
-            hole=0.65,
-            color_discrete_sequence=px.colors.qualitative.Set3
+        # 定義分類函數與對應顏色
+        def get_performance_category(roi):
+            if roi >= 50: return "獲利翻倍 (>50%)"
+            if roi > 0: return "穩定獲利 (>0%)"
+            if roi < 0: return "微幅虧損 (<0%)"
+            return "平盤或特殊 (0%)"
+
+        df_plot = df_plot.copy()
+        df_plot["performance"] = df_plot["roi_pct"].apply(get_performance_category)
+        
+        # 金融風專業配色
+        color_map = {
+            "獲利翻倍 (>50%)": "#059669", # 深綠
+            "穩定獲利 (>0%)": "#34d399",  # 淺綠
+            "微幅虧損 (<0%)": "#f87171",  # 淺紅
+            "平盤或特殊 (0%)": "#94a3b8", # 中性灰
+            "(?)": "#333333"              # 預設
+        }
+
+        fig = px.treemap(
+            df_plot,
+            path=[px.Constant("我的投資組合"), "symbol"],
+            values=plot_value_col,
+            color="performance",
+            color_discrete_map=color_map,
+            custom_data=["roi_pct"]
         )
+
         fig.update_layout(
-            height=400,
+            height=500,
             margin=dict(t=20, b=20, l=0, r=0),
-            showlegend=True,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            # 將圖例放在圖表右側，增加專業感
             legend=dict(
                 title=None,
                 orientation="v",
                 yanchor="middle",
                 y=0.5,
                 xanchor="left",
-                x=0.85
-            ),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)"
+                x=1.02
+            )
         )
-        # 讓圓餅圖本身顯示百分比（太小的區塊會自動隱藏）
+
+        # 設定字體樣式與 Hover 效果
         fig.update_traces(
-            textposition='inside', 
-            textinfo='percent',
-            hovertemplate="<b>%{label}</b><br>市值: ₫%{value:,.0f}<br>佔比: %{percent}<extra></extra>"
+            texttemplate="<b>%{label}</b><br>%{percentRoot:.2%}",
+            hovertemplate="<b>%{label}</b><br>持股比例: %{percentRoot:.2%}<br>預估損益: %{customdata[0]:+.2f}%<extra></extra>",
+            textfont=dict(color="white", size=15),
+            marker=dict(line=dict(width=2, color='white')) # 增加格子之間的白色間距，提升質感
         )
+
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
         
     st.markdown("<br>", unsafe_allow_html=True)
