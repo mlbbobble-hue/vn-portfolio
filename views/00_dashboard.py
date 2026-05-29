@@ -114,9 +114,11 @@ else:
 
             st.markdown("<br>", unsafe_allow_html=True)
             
+            df_plot["parent"] = ""
             fig = px.treemap(
                 df_plot,
-                path=["symbol"],
+                names="symbol",
+                parents="parent",
                 values=plot_value_col,
                 color="roi_pct",
                 color_continuous_scale=[
