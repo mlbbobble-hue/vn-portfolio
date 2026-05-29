@@ -6,6 +6,7 @@ import requests
 from datetime import datetime, timedelta
 import time
 import logging
+import concurrent.futures
 
 logger = logging.getLogger(__name__)
 
@@ -13,9 +14,12 @@ logger = logging.getLogger(__name__)
 original_request = requests.Session.request
 def custom_request(self, method, url, **kwargs):
     if 'timeout' not in kwargs:
-        kwargs['timeout'] = 3
+        kwargs['timeout'] = 1.5  # 從 3 秒降到 1.5 秒，讓失敗的 source 更快放棄
     return original_request(self, method, url, **kwargs)
 requests.Session.request = custom_request
+
+# 記住每個 symbol 上次成功的 source，下次優先使用
+_source_cache = {}
 
 def get_stock_price(symbol: str) -> dict:
     """
@@ -23,7 +27,18 @@ def get_stock_price(symbol: str) -> dict:
     使用 vnstock.api.quote.Quote，支援多個 source 切換以防止 IP Block
     """
     symbol = symbol.upper().strip()
-    sources = ['vci', 'kbs', 'msn', 'fmp']
+    
+    # 跳過明顯無效的代碼（例如帶有特殊後綴的）
+    if len(symbol) > 10 or any(c in symbol for c in ['/', '\\', ' ']):
+        return {"symbol": symbol, "price": 0, "change_pct": 0, "volume": 0}
+
+    # 把上次成功的 source 排到最前面
+    all_sources = ['vci', 'kbs', 'msn', 'fmp']
+    last_good = _source_cache.get(symbol)
+    if last_good and last_good in all_sources:
+        sources = [last_good] + [s for s in all_sources if s != last_good]
+    else:
+        sources = all_sources
     
     for src in sources:
         try:
@@ -40,6 +55,7 @@ def get_stock_price(symbol: str) -> dict:
                 prev_price = float(prev.get('close', price)) * 1000
                 change_pct = ((price - prev_price) / prev_price * 100) if prev_price else 0
                 volume = float(row.get('volume', 0))
+                _source_cache[symbol] = src  # 記住成功的 source
                 return {"symbol": symbol, "price": price, "change_pct": change_pct, "volume": volume}
         except Exception as e:
             logger.debug(f"vnstock Quote ({src}) failed for {symbol}: {e}")
@@ -47,21 +63,26 @@ def get_stock_price(symbol: str) -> dict:
     return {"symbol": symbol, "price": 0, "change_pct": 0, "volume": 0}
 
 
-import concurrent.futures
-
-def get_multiple_prices(symbols: list[str], delay: float = 0.1) -> pd.DataFrame:
+def get_multiple_prices(symbols: list[str], delay: float = 0.1, progress_callback=None) -> pd.DataFrame:
+    """抓取多檔股價，使用 10 條平行執行緒加速"""
     results = []
+    completed = 0
+    total = len(symbols)
+    
     def fetch(sym):
         data = get_stock_price(sym)
         data["updated_at"] = datetime.now().strftime("%H:%M:%S")
         return data
         
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         futures = [executor.submit(fetch, sym) for sym in symbols]
         try:
-            for future in concurrent.futures.as_completed(futures, timeout=15):
+            for future in concurrent.futures.as_completed(futures, timeout=20):
                 try:
                     results.append(future.result())
+                    completed += 1
+                    if progress_callback:
+                        progress_callback(completed, total)
                 except Exception:
                     pass
         except concurrent.futures.TimeoutError:

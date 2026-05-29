@@ -141,22 +141,29 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     if st.button(t("update_price"), icon=":material/refresh:", use_container_width=True):
-        with st.spinner(t("updating")):
-            symbols = get_portfolio_symbols()
-            wl_syms = []
-            try:
-                wl_df = get_watchlist()
-                if not wl_df.empty:
-                    wl_syms = wl_df["symbol"].tolist()
-            except Exception:
-                pass
-            all_syms = list(set(symbols + wl_syms))
-            if all_syms:
-                prices_df = get_multiple_prices(all_syms)
-                for _, p in prices_df.iterrows():
-                    upsert_price_cache(p["symbol"], p["price"], p["change_pct"], p.get("volume", 0))
-                st.success(t("updated_count", n=len(all_syms)))
-                st.rerun()
+        symbols = get_portfolio_symbols()
+        wl_syms = []
+        try:
+            wl_df = get_watchlist()
+            if not wl_df.empty:
+                wl_syms = wl_df["symbol"].tolist()
+        except Exception:
+            pass
+        all_syms = list(set(symbols + wl_syms))
+        if all_syms:
+            progress_bar = st.progress(0, text=f"🔄 正在更新 0/{len(all_syms)} 檔股票...")
+            
+            def update_progress(done, total):
+                pct = done / total
+                progress_bar.progress(pct, text=f"🔄 已完成 {done}/{total} 檔股票...")
+            
+            prices_df = get_multiple_prices(all_syms, progress_callback=update_progress)
+            for _, p in prices_df.iterrows():
+                upsert_price_cache(p["symbol"], p["price"], p["change_pct"], p.get("volume", 0))
+            progress_bar.progress(1.0, text=f"✅ 已完成更新 {len(prices_df)} 檔股票！")
+            import time as _t
+            _t.sleep(1)
+            st.rerun()
                 
     st.divider()
     render_user_info_sidebar()
