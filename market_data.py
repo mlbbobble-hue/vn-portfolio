@@ -47,13 +47,18 @@ def get_stock_price(symbol: str) -> dict:
     return {"symbol": symbol, "price": 0, "change_pct": 0, "volume": 0}
 
 
+import concurrent.futures
+
 def get_multiple_prices(symbols: list[str], delay: float = 0.1) -> pd.DataFrame:
     results = []
-    for sym in symbols:
+    def fetch(sym):
         data = get_stock_price(sym)
         data["updated_at"] = datetime.now().strftime("%H:%M:%S")
-        results.append(data)
-        time.sleep(delay)
+        return data
+        
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        results = list(executor.map(fetch, symbols))
+        
     return pd.DataFrame(results)
 
 

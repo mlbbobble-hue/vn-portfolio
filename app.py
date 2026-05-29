@@ -105,7 +105,9 @@ def auto_update_if_needed():
             all_syms = list(set(symbols + wl_syms))
             if all_syms:
                 from market_data import get_multiple_prices
-                prices_df = get_multiple_prices(all_syms)
+                from i18n import t
+                with st.spinner(t("updating") if "updating" in t("updating") else "正在同步最新越南股市報價..."):
+                    prices_df = get_multiple_prices(all_syms)
                 for _, p in prices_df.iterrows():
                     upsert_price_cache(p["symbol"], p["price"], p["change_pct"], p.get("volume", 0))
     except Exception as e:
