@@ -120,13 +120,11 @@ else:
                 values=plot_value_col,
                 color="roi_pct",
                 color_continuous_scale=[
-                    [0.0, "#7f1d1d"],     # Extreme loss (Deep Red)
-                    [0.4, "#991b1b"],     # Moderate loss (Mid Red)
-                    [0.48, "#b91c1c"],    # Slight loss (Bright Red)
-                    [0.5, "#334155"],     # Flat (Slate)
-                    [0.52, "#10b981"],    # Slight profit (Bright Green)
-                    [0.6, "#059669"],     # Moderate profit (Mid Green)
-                    [1.0, "#047857"]      # Extreme profit (Deep Green)
+                    [0.0, "#8b2230"],     # -50% (Deep Red)
+                    [0.499, "#d62828"],   # Just below 0% (Bright Red)
+                    [0.5, "#64748b"],     # 0% (Slate Gray)
+                    [0.501, "#4caf50"],   # Just above 0% (Bright Green)
+                    [1.0, "#1b5e20"]      # +50% (Deep Green)
                 ],
                 range_color=[-50, 50],
                 custom_data=["roi_pct", "custom_txt"]
@@ -140,9 +138,9 @@ else:
                     y=0.96
                 ),
                 height=580,
-                margin=dict(t=60, b=0, l=0, r=0),
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
+                margin=dict(t=50, b=0, l=0, r=0),
+                paper_bgcolor="#1e293b",
+                plot_bgcolor="#1e293b",
                 coloraxis_showscale=False
             )
 
