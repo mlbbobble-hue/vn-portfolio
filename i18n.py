@@ -352,7 +352,12 @@ def render_lang_switcher():
     
     col1, col2 = st.columns([2, 3])
     with col1:
-        st.markdown("<div style='margin-top: 8px; font-size: 14px; font-weight: bold; color: #666;'>🌐 更換語言：</div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style='margin-top: 4px; font-size: 14px; font-weight: bold; color: #666;'>
+            🌐 更換語言：<br>
+            <span style='font-size: 11px; font-weight: normal; color: #888; margin-left: 24px;'>Đổi ngôn ngữ</span>
+        </div>
+        """, unsafe_allow_html=True)
     with col2:
         selected = st.selectbox(
             "Language", 
