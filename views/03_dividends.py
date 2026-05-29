@@ -58,17 +58,67 @@ with tab_ov:
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader(t("all_div_records"))
-        # Select and rename only the columns we want (avoid duplicate names)
-        cols_to_show = ["id","symbol","ex_date","pay_date","type",
-                        "cash_amount","stock_ratio","is_applied","source"]
-        cols_exist = [c for c in cols_to_show if c in all_divs.columns]
-        disp = all_divs[cols_exist].rename(columns={
-            "id":"#", "symbol":t("symbol"), "ex_date":t("ex_date"),
-            "pay_date":t("pay_date"), "type":"Type",
-            "cash_amount":t("cash_div"), "stock_ratio":t("stock_ratio_label"),
-            "is_applied":t("applied"), "source":"Source",
-        })
-        st.dataframe(disp, use_container_width=True, height=300)
+        html_str = '<div class="timeline-container">'
+        
+        # 按照除權息日降冪排序
+        if not all_divs.empty:
+            timeline_divs = all_divs.sort_values(by="ex_date", ascending=False).copy()
+        else:
+            timeline_divs = pd.DataFrame()
+            
+        for _, row in timeline_divs.iterrows():
+            sym = row["symbol"]
+            dtype = t("cash_div") if row["type"] == "CASH" else t("stock_div")
+            ex_date = row.get("ex_date", "N/A")
+            pay_date = row.get("pay_date", "")
+            pay_str = pay_date if pd.notnull(pay_date) and str(pay_date).strip() else "未定"
+            
+            # 狀態判斷
+            is_done = False
+            if row["type"] == "STOCK":
+                is_done = (row.get("is_applied", 0) == 1)
+            else:
+                if pay_date and pd.notnull(pay_date) and str(pay_date).strip():
+                    try:
+                        is_done = pd.to_datetime(pay_date).date() <= date.today()
+                    except:
+                        is_done = False
+                else:
+                    is_done = False
+
+            if is_done:
+                status_badge = '<span class="badge-status-done">已發放</span>'
+            else:
+                status_badge = '<span class="badge-status-pending">在途 / 處理中</span>'
+                
+            amount_str = f"+{row['cash_amount']:,.0f} VNĐ" if row["type"] == "CASH" else f"+{row['stock_ratio']*100:.1f}% 配股"
+            
+            html_str += f'''
+            <div class="timeline-item">
+                <div class="timeline-node"></div>
+                <div class="timeline-content">
+                    <div class="tl-left">
+                        <span class="tl-symbol">{sym}</span>
+                        <span class="tl-type">{dtype}</span>
+                    </div>
+                    <div class="tl-middle">
+                        <span>📅 除權息日：{ex_date}</span>
+                        <span>💰 實際發放日：{pay_str}</span>
+                    </div>
+                    <div class="tl-right">
+                        {status_badge}
+                        <span class="tl-amount">{amount_str}</span>
+                    </div>
+                </div>
+            </div>
+            '''
+        
+        if timeline_divs.empty:
+            html_str += '<div style="color:var(--text-muted); text-align:center; padding: 20px;">尚無任何配息紀錄</div>'
+            
+        html_str += "</div>"
+        
+        st.markdown(html_str, unsafe_allow_html=True)
 
         st.markdown("---")
         st.subheader("📊 歷史實際獲得配息/配股統計")

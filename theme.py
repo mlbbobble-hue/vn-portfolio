@@ -341,4 +341,117 @@ p, span, label {
     text-align: left; /* 第一欄 (代號) 靠左對齊 */
 }
 
+    background-color: #78350f;
+    color: #fbbf24;
+    padding: 4px 10px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* 配息時間軸 (Dividends Timeline) */
+.timeline-container {
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--border-color);
+    max-height: 600px;
+    overflow-y: auto;
+}
+/* 自訂捲軸 */
+.timeline-container::-webkit-scrollbar {
+    width: 6px;
+}
+.timeline-container::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+.timeline-item {
+    position: relative;
+    padding-left: 24px;
+    padding-bottom: 16px;
+    border-left: 2px solid #334155;
+}
+.timeline-item:last-child {
+    border-left: 2px solid transparent;
+    padding-bottom: 0;
+}
+.timeline-node {
+    position: absolute;
+    left: -7px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--cathay-green);
+    border: 2px solid var(--bg-card);
+}
+.timeline-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 16px;
+    margin-bottom: 4px;
+}
+.timeline-item:last-child .timeline-content {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+.tl-left {
+    display: flex;
+    flex-direction: column;
+    min-width: 80px;
+}
+.tl-symbol {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.tl-type {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+.tl-middle {
+    display: flex;
+    flex-direction: column;
+    color: #94a3b8;
+    font-size: 13px;
+    gap: 4px;
+    flex-grow: 1;
+    margin-left: 24px;
+}
+.tl-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    min-width: 120px;
+}
+.tl-amount {
+    font-size: 18px;
+    font-weight: 700;
+    color: #10b981;
+}
+.badge-status-done {
+    background-color: #065f46;
+    color: #34d399;
+    padding: 4px 10px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.badge-status-pending {
+    background-color: #78350f;
+    color: #fbbf24;
+    padding: 4px 10px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
 </style>""", unsafe_allow_html=True)
+
