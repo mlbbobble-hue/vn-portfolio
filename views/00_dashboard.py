@@ -104,17 +104,30 @@ if not holdings.empty:
             df_plot, 
             values=plot_value_col, 
             names="symbol", 
-            hole=0.6,
-            color_discrete_sequence=px.colors.qualitative.Set2
+            hole=0.65,
+            color_discrete_sequence=px.colors.qualitative.Set3
         )
         fig.update_layout(
-            margin=dict(t=10, b=10, l=10, r=10),
+            height=400,
+            margin=dict(t=20, b=20, l=0, r=0),
             showlegend=True,
-            legend=dict(orientation="h", yanchor="top", y=-0.1, xanchor="center", x=0.5),
+            legend=dict(
+                title=None,
+                orientation="v",
+                yanchor="middle",
+                y=0.5,
+                xanchor="left",
+                x=0.85
+            ),
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)"
         )
-        fig.update_traces(textinfo='none')
+        # 讓圓餅圖本身顯示百分比（太小的區塊會自動隱藏）
+        fig.update_traces(
+            textposition='inside', 
+            textinfo='percent',
+            hovertemplate="<b>%{label}</b><br>市值: ₫%{value:,.0f}<br>佔比: %{percent}<extra></extra>"
+        )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
         
     st.markdown("<br>", unsafe_allow_html=True)
