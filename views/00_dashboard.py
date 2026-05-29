@@ -24,8 +24,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-with st.sidebar:
-    render_user_info_sidebar()
 
 if not check_auth():
     st.stop()

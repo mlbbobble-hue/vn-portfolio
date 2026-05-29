@@ -13,11 +13,6 @@ st.set_page_config(page_title=f"VN Portfolio | {t('analytics_title')}", page_ico
 from theme import load_css
 load_css()
 
-with st.sidebar:
-    render_lang_switcher()
-    st.divider()
-    render_user_info_sidebar()
-
 if not check_auth():
     st.stop()
 
