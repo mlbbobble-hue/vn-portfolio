@@ -192,14 +192,7 @@ def render_auth_page():
                 st.info("📧 重設密碼連結已發送至您的 Email" if get_lang()=="zh" else "📧 Đã gửi link đặt lại mật khẩu đến email của bạn")
 
         
-        st.markdown('<div class="divider">OR</div>', unsafe_allow_html=True)
-        from supabase_db import sign_in_with_google
-        res = sign_in_with_google()
-        if res.get("success"):
-            st.link_button("🚀 使用 Google 帳號一鍵登入", url=res["url"], use_container_width=True, type="primary")
-        else:
-            if st.button("🚀 使用 Google 帳號一鍵登入 (載入失敗)", use_container_width=True, disabled=True):
-                pass
+        
 
         
 
@@ -252,19 +245,7 @@ def check_auth() -> bool:
     """
     from supabase_db import is_supabase_available, exchange_code, sb_check_approval
 
-    # 攔截 Google OAuth 回傳的 code
-    if "code" in st.query_params:
-        code = st.query_params.get("code")
-        st.query_params.clear()
-        with st.spinner("驗證 Google 登入中..."):
-            res = exchange_code(code)
-            if res.get("success"):
-                user = res["user"]
-                st.session_state["authenticated"] = True
-                st.session_state["user_id"]       = user.id
-                st.session_state["user_email"]    = user.email
-                st.session_state["user_name"]     = (user.user_metadata or {}).get("full_name", user.email)
-                st.session_state["access_token"]  = res["session"].access_token
+
 
     # 本機開發模式（無 Supabase 設定）：自動以訪客身份登入
     if not is_supabase_available():
