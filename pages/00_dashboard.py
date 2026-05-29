@@ -17,6 +17,9 @@ st.markdown("""
 <style>
 /* 針對本頁面的微調 */
 .app-title-small { font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 4px; display:block; }
+.empty-state { text-align: center; padding: 40px 20px; background: white; border-radius: 16px; border: 1px dashed #ccc; margin-top: 20px; }
+.empty-icon { font-size: 48px; margin-bottom: 16px; color: #ccc; }
+.empty-text { color: #888; font-size: 16px; margin-bottom: 24px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -49,8 +52,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 
-
-# 3. 今日報酬與損益 (Badges & Cards)
+# 2. 今日報酬與損益 (Badges & Cards)
 st.markdown("<h4 style='margin-left: 8px;'>投資績效</h4>", unsafe_allow_html=True)
 
 c1, c2 = st.columns(2)
@@ -76,7 +78,7 @@ with c2:
     </div>
     """, unsafe_allow_html=True)
 
-# 4. 資產分佈圖表 (隱藏 Modebar)
+# 3. 資產分佈圖表 (隱藏 Modebar) 或 空狀態
 if not holdings.empty and total_value > 0:
     st.markdown("<h4 style='margin-left: 8px; margin-top: 16px;'>資產分佈</h4>", unsafe_allow_html=True)
     df_plot = holdings[holdings["market_value"] > 0]
@@ -96,3 +98,16 @@ if not holdings.empty and total_value > 0:
             plot_bgcolor="rgba(0,0,0,0)"
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+else:
+    # 空白狀態
+    st.markdown("""
+    <div class="empty-state">
+        <div class="empty-icon">🌱</div>
+        <div class="empty-text">您目前尚未持有任何股票。<br>點擊下方按鈕開始您的第一筆交易紀錄！</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        if st.button("前往新增交易", use_container_width=True):
+            st.switch_page("pages/02_transactions.py")
