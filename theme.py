@@ -75,7 +75,7 @@ html, body, [class*="css"] {
 }
 
 /* 白色卡片 */
-.card, [data-testid="metric-container"], div.css-1r6slb0, .cathay-card {
+.card, [data-testid="metric-container"], .cathay-card {
     background-color: var(--cathay-white) !important;
     border: 1px solid var(--border-color) !important;
     border-radius: 12px !important;

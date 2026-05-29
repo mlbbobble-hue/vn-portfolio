@@ -112,9 +112,7 @@ else:
                 axis=1
             )
 
-            st.markdown(f'''
-            <h4 style='margin: 24px 0 16px 0; color: var(--text-primary);'>{t("phs_asset_allocation")}</h4>
-            ''', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
             
             fig = px.treemap(
                 df_plot,
@@ -135,10 +133,16 @@ else:
             )
 
             fig.update_layout(
-                height=550,
-                margin=dict(t=0, b=0, l=0, r=0),
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
+                title=dict(
+                    text=f"<b>{t('phs_asset_allocation')}</b>",
+                    font=dict(size=18, color="#f8fafc"),
+                    x=0.015,
+                    y=0.96
+                ),
+                height=580,
+                margin=dict(t=60, b=16, l=16, r=16),
+                paper_bgcolor="#1e293b",
+                plot_bgcolor="#1e293b",
                 coloraxis_showscale=False
             )
 
@@ -151,7 +155,7 @@ else:
                 tiling=dict(pad=0)
             )
 
-            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fig, use_container_width=True, theme=None, config={'displayModeBar': False})
             
     else:
         st.markdown(f'''
