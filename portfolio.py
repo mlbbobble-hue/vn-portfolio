@@ -2,7 +2,7 @@
 持倉計算模組 — 加權平均成本法（WAC）
 """
 import pandas as pd
-from database import get_all_transactions, get_price_cache, get_dividend_events
+from db_router import get_all_transactions, get_price_cache, get_dividend_events
 
 
 def compute_holdings() -> pd.DataFrame:

@@ -5,7 +5,7 @@
 import requests
 import logging
 from datetime import datetime, timedelta
-from database import (get_watchlist, load_notification_settings,
+from db_router import (get_watchlist, load_notification_settings,
                       update_last_alerted, get_price_cache)
 from market_data import get_moving_average
 from portfolio import get_estimated_yield, get_dividend_income_summary
