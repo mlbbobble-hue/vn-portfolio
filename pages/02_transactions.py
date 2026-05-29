@@ -210,7 +210,7 @@ with tab_view:
             return ""
         styled = (show.style.format({t("shares"):"{:,.0f}",t("price"):"{:,.0f}",
                                      t("fee"):"{:,.0f}",t("net_amount"):"{:,.0f}"})
-                  .applymap(hl, subset=[t("col_action")]))
+                  .map(hl, subset=[t("col_action")]))
         st.dataframe(styled, use_container_width=True, height=360)
 
         st.markdown("---")
