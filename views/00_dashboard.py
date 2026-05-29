@@ -78,98 +78,27 @@ else:
         ''', unsafe_allow_html=True)
 
     with c2:
-        badge_class = "badge-up" if roi_pct > 0 else "badge-down" if roi_pct < 0 else "badge-neutral"
-        sign = "+" if roi_pct > 0 else ""
-        st.markdown(f'''
-        <div class="cathay-card">
-            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("accum_return_rate")}</div>
-            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_roi}</div>
-            <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{roi_pct:.2f}%</span></div>
-        </div>
-        ''', unsafe_allow_html=True)
-        
-    # 3. 資產分佈圖表 (Treemap) 或 空狀態
-    if not holdings.empty:
-        st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
-        
-        plot_value_col = "market_value" if total_value > 0 else "total_cost"
-        df_plot = holdings[holdings[plot_value_col] > 0]
-        
-        if not df_plot.empty:
-            df_plot = df_plot.copy()
-            total_val = df_plot[plot_value_col].sum()
-            df_plot["weight"] = df_plot[plot_value_col] / total_val
-            
-            def get_text_color(roi):
-                if roi > 0: return "#d1fae5" # Light emerald for contrast
-                if roi < 0: return "#fee2e2" # Light red for contrast
-                return "#e2e8f0" # Light slate
-                
-            df_plot["pl_color"] = df_plot["roi_pct"].apply(get_text_color)
-            
-            df_plot["custom_txt"] = df_plot.apply(
-                lambda r: f"<b>{r['symbol']}</b><br>{r['weight']:.1%}<br><span style='color:{r['pl_color']}; font-weight:600;'>{r['roi_pct']:+.2f}%</span>" if r['weight'] >= 0.01 else "",
-                axis=1
-            )
+# 2. 投資績效 Badges & Cards
+st.markdown(f"<h4 style='margin-left: 8px;'>{t('invest_performance')}</h4>", unsafe_allow_html=True)
+c1, c2 = st.columns(2)
+with c1:
+    badge_class = "badge-up" if total_unrealized > 0 else "badge-down" if total_unrealized < 0 else "badge-neutral"
+    sign = "+" if total_unrealized > 0 else ""
+    st.markdown(f'''
+    <div class="cathay-card">
+        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("unrealized_pl")}</div>
+        <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_unrealized}</div>
+        <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{total_unrealized:,.2f}</span></div>
+    </div>
+    ''', unsafe_allow_html=True)
 
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            fig = px.treemap(
-                df_plot,
-                path=["symbol"],
-                values=plot_value_col,
-                color="roi_pct",
-                color_continuous_scale=[
-                    [0.0, "#b91c1c"],     # 嚴重虧損 (<<0)
-                    [0.499, "#7f1d1d"],   # 輕微虧損 (<0)
-                    [0.5, "#475569"],     # 平盤 (=0)
-                    [0.501, "#10b981"],   # 穩定獲利 (>0)
-                    [1.0, "#047857"]      # 巨額獲利 (>>50%)
-                ],
-                range_color=[-50, 50],
-                custom_data=["roi_pct", "custom_txt"]
-            )
-
-            # Disable hover for the root node to prevent the empty tooltip
-            import numpy as np
-            if len(fig.data) > 0:
-                parents = fig.data[0].parents
-                hoverinfos = ["skip" if (p == "" or p is None) else "all" for p in parents]
-                fig.data[0].hoverinfo = hoverinfos
-
-            fig.update_layout(
-                title=dict(
-                    text=f"<b>{t('phs_asset_allocation')}</b>",
-                    font=dict(size=18, color="#f8fafc"),
-                    x=0.015,
-                    y=0.96
-                ),
-                height=580,
-                margin=dict(t=50, b=0, l=0, r=0),
-                paper_bgcolor="#1e293b",
-                plot_bgcolor="#1e293b",
-                coloraxis_showscale=False
-            )
-
-            fig.update_traces(
-                texttemplate="%{customdata[1]}",
-                hovertemplate=t("portfolio_hover"),
-                textfont=dict(color="#f8fafc", size=17),
-                marker=dict(line=dict(width=2, color='#0f172a')),
-                root_color="rgba(0,0,0,0)",
-                tiling=dict(pad=0),
-                pathbar=dict(visible=False)
-            )
-
-            st.plotly_chart(fig, use_container_width=True, theme=None, config={'displayModeBar': False})
-            
-    else:
-        st.markdown(f'''
-        <div class="empty-state">
-            <div class="empty-icon">🌱</div>
-            <div class="empty-text">{t("portfolio_empty_desc")}</div>
-        </div>
-        ''', unsafe_allow_html=True)
-        
-        if st.button(t("go_to_add_tx"), use_container_width=True):
-            st.switch_page("views/02_transactions.py")
+with c2:
+    badge_class = "badge-up" if roi_pct > 0 else "badge-down" if roi_pct < 0 else "badge-neutral"
+    sign = "+" if roi_pct > 0 else ""
+    st.markdown(f'''
+    <div class="cathay-card">
+        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("accum_return_rate")}</div>
+        <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_roi}</div>
+        <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{roi_pct:.2f}%</span></div>
+    </div>
+    ''', unsafe_allow_html=True)
