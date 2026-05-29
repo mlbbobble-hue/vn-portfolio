@@ -20,7 +20,23 @@ def _get_client():
     if not url or not key:
         raise RuntimeError("未設定 SUPABASE_URL 或 SUPABASE_KEY")
 
-    from supabase import create_client
+    from supabase import create_client, ClientOptions
+    import streamlit as st
+    
+    # Check if we have an active user session token
+    # st.session_state might not be available outside Streamlit context
+    access_token = None
+    try:
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+        if get_script_run_ctx():
+            access_token = st.session_state.get("access_token")
+    except Exception:
+        pass
+        
+    if access_token:
+        options = ClientOptions(headers={"Authorization": f"Bearer {access_token}"})
+        return create_client(url, key, options=options)
+    
     return create_client(url, key)
 
 
