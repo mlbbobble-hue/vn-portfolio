@@ -98,6 +98,10 @@ if not holdings.empty and total_value > 0:
             plot_bgcolor="rgba(0,0,0,0)"
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("👉 前往查看完整持股明細", use_container_width=True, type="primary"):
+            st.switch_page("views/01_portfolio.py")
 else:
     # 空白狀態
     st.markdown("""
