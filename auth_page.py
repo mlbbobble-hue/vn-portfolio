@@ -239,7 +239,7 @@ def render_auth_page():
         if forgot_btn and login_email:
             from supabase_db import reset_password
             if reset_password(login_email.strip()):
-                st.info("📧 重設密碼連結已發送至您的 Email" if get_lang()=="zh" else "📧 Đã gửi link đặt lại mật khẩu đến email của bạn")
+                st.info(t("reset_pwd_sent"))
 
         
         
@@ -266,7 +266,7 @@ def render_auth_page():
             elif reg_pw != reg_pw2:
                 st.error(t("password_mismatch"))
             elif len(reg_pw) < 6:
-                st.error("密碼至少需要 6 個字元" if get_lang()=="zh" else "Mật khẩu tối thiểu 6 ký tự")
+                st.error(t("pwd_min_len"))
             else:
                 with st.spinner(t("loading")):
                     from supabase_db import sign_up
@@ -337,19 +337,17 @@ def check_auth() -> bool:
         st.session_state["is_admin"] = appr.get("is_admin", False)
 
     if not st.session_state["is_approved"]:
-        st.markdown("""
+        st.markdown(f"""
         <div style='max-width: 500px; margin: 100px auto; text-align: center; background: var(--cathay-white); padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid rgba(0,163,82,0.3);'>
             <div style='font-size: 4rem; margin-bottom: 20px;'>⏳</div>
-            <h2 style='color: #333333; margin-bottom: 10px;'>等待管理員開通</h2>
+            <h2 style='color: #333333; margin-bottom: 10px;'>{t("wait_admin_title")}</h2>
             <p style='color: var(--text-secondary); line-height: 1.6;'>
-                您的帳號已經成功登入，但由於系統採用白名單制，<br>
-                目前需要等待管理員審核並開通權限。<br><br>
-                系統已經發送通知信給管理員，開通後請重新整理網頁。
+                {t("wait_admin_desc")}
             </p>
             <br>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("🚪 登出", type="secondary"):
+        if st.button("🚪 " + t("logout"), type="secondary"):
             from supabase_db import sign_out
             sign_out()
             for key in ["authenticated", "user_id", "user_email", "user_name", "access_token", "is_approved", "is_admin"]:

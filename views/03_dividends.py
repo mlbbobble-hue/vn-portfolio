@@ -210,7 +210,7 @@ with tab_ov:
                             dtype = t("cash_div") if row["type"] == "CASH" else t("stock_div")
                             ex_date = row.get("ex_date", "N/A")
                             pay_date = row.get("pay_date", "")
-                            pay_str = pay_date if pd.notnull(pay_date) and str(pay_date).strip() else "未定"
+                            pay_str = pay_date if pd.notnull(pay_date) and str(pay_date).strip() else t("tba")
                             
                             is_done = False
                             if row["type"] == "STOCK":
@@ -223,14 +223,14 @@ with tab_ov:
                                         is_done = False
 
                             if is_done:
-                                status_badge = '<span class="badge-status-done">已發放</span>'
+                                status_badge = f'<span class="badge-status-done">{t("paid_status")}</span>'
                             else:
-                                status_badge = '<span class="badge-status-pending">在途 / 處理中</span>'
+                                status_badge = f'<span class="badge-status-pending">{t("pending_status")}</span>'
                                 
                             if row["type"] == "CASH":
                                 amount_str = f"+{row.get('cash_received', 0):,.0f} VNĐ"
                             else:
-                                amount_str = f"+{row.get('stock_received', 0):,.0f} 股"
+                                amount_str = f"+{row.get('stock_received', 0):,.0f} {t('div_shares')}"
                             
                             html_str += f"""
 <div class="timeline-item">
@@ -241,8 +241,8 @@ with tab_ov:
             <span class="tl-type">{dtype}</span>
         </div>
         <div class="tl-middle">
-            <span>📅 除權息日：{ex_date}</span>
-            <span>💰 實際發放日：{pay_str}</span>
+            <span>{t("div_ex_date_lbl")}{ex_date}</span>
+            <span>{t("div_pay_date_lbl")}{pay_str}</span>
         </div>
         <div class="tl-right">
             {status_badge}
@@ -251,28 +251,28 @@ with tab_ov:
     </div>
 </div>"""
                     else:
-                        html_str += '<div style="color:var(--text-muted); text-align:center; padding: 20px;">尚無任何配息紀錄</div>'
+                        html_str += f'<div style="color:var(--text-muted); text-align:center; padding: 20px;">{t("no_records")}</div>'
                     html_str += "</div>"
                     st.markdown(html_str, unsafe_allow_html=True)
 
 # ── Tab 2: 查詢 ──────────────────────────────────────────────
 with tab_lookup:
     st.subheader(t("tab_lookup"))
-    st.markdown("<span style='color:var(--text-muted);font-size:0.9em;'>輸入股票代碼即可查詢其過往所有的除權息紀錄，資料由系統自動從公開數據源獲取。</span>", unsafe_allow_html=True)
+    st.markdown(f"<span style='color:var(--text-muted);font-size:0.9em;'>{t('div_lookup_desc', default='輸入股票代碼即可查詢其過往所有的除權息紀錄，資料由系統自動從公開數據源獲取。')}</span>", unsafe_allow_html=True)
     
     col_search, col_space = st.columns([1, 2])
     with col_search:
-        lookup_sym = st.text_input("輸入股票代碼 (例如: FPT, HPG):", max_chars=10).upper().strip()
+        lookup_sym = st.text_input(t("enter_symbol", default="輸入股票代碼 (例如: FPT, HPG):"), max_chars=10).upper().strip()
     
     if lookup_sym:
-        with st.spinner(f"正在查詢 {lookup_sym} 的歷史除權息紀錄..."):
+        with st.spinner(t("fetching_hist", sym=lookup_sym, n="", default=f"正在查詢 {lookup_sym} 的歷史除權息紀錄...")):
             from market_data import get_dividend_history
             lookup_df = pd.DataFrame(get_dividend_history(lookup_sym))
             
         if lookup_df.empty:
-            st.warning(f"找不到 {lookup_sym} 的歷史除權息紀錄，請確認代碼是否正確。")
+            st.warning(t("div_not_found", sym=lookup_sym))
         else:
-            st.markdown(f"### {lookup_sym} 歷史配息與權益變動")
+            st.markdown(t("div_hist_title", sym=lookup_sym))
             
             # --- 1. 增設頂部統計圖表 (Add Dividend Chart Dashboard) ---
             import plotly.graph_objects as go
@@ -289,20 +289,20 @@ with tab_lookup:
                 fig = go.Figure()
                 fig.add_trace(go.Bar(
                     x=stats_df["Year"], y=stats_df["Cash"],
-                    name="現金股利 (VND)", marker_color="#10b981", yaxis="y1"
+                    name=t("div_cash_vnd"), marker_color="#10b981", yaxis="y1"
                 ))
                 fig.add_trace(go.Bar(
                     x=stats_df["Year"], y=stats_df["Stock"],
-                    name="股票配股比例", marker_color="#60a5fa", yaxis="y2"
+                    name=t("div_stock_ratio"), marker_color="#60a5fa", yaxis="y2"
                 ))
                 fig.update_layout(
-                    title="歷年配息趨勢",
+                    title=t("div_dashboard_title"),
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     font=dict(color="#94a3b8"),
                     xaxis=dict(type="category", showgrid=False),
-                    yaxis=dict(title="現金股利 (VND)", side="left", showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
-                    yaxis2=dict(title="股票配股比例", side="right", overlaying="y", showgrid=False),
+                    yaxis=dict(title=t("div_cash_vnd"), side="left", showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
+                    yaxis2=dict(title=t("div_stock_ratio"), side="right", overlaying="y", showgrid=False),
                     margin=dict(l=0, r=0, t=40, b=0),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                     height=300
@@ -311,16 +311,16 @@ with tab_lookup:
             
             # --- 2. 引入類型過濾頁籤 (Type Filters) ---
             try:
-                filter_tab = st.pills("過濾配息類型", ["全部", "現金股利 (Tiền mặt)", "股票股利 (Cổ phiếu)"], default="全部")
+                filter_tab = st.pills(t("div_filter_type"), [t("div_type_all"), t("div_type_cash"), t("div_type_stock")], default=t("div_type_all"))
             except:
-                filter_tab = st.radio("過濾配息類型", ["全部", "現金股利 (Tiền mặt)", "股票股利 (Cổ phiếu)"], horizontal=True, label_visibility="collapsed")
+                filter_tab = st.radio(t("div_filter_type"), [t("div_type_all"), t("div_type_cash"), t("div_type_stock")], horizontal=True, label_visibility="collapsed")
             
             if not filter_tab:
-                filter_tab = "全部"
+                filter_tab = t("div_type_all")
                 
-            if filter_tab == "現金股利 (Tiền mặt)":
+            if filter_tab == t("div_type_cash"):
                 filtered_lookup = lookup_df[lookup_df["type"] == "CASH"]
-            elif filter_tab == "股票股利 (Cổ phiếu)":
+            elif filter_tab == t("div_type_stock"):
                 filtered_lookup = lookup_df[lookup_df["type"] == "STOCK"]
             else:
                 filtered_lookup = lookup_df
@@ -344,26 +344,24 @@ with tab_lookup:
             html_str += '<div class="acc-table" style="max-height: 500px; overflow-y: auto; box-shadow: none; border: 1px solid var(--border-color);">'
             
             if filtered_lookup.empty:
-                html_str += '<div style="color:var(--text-muted); text-align:center; padding: 24px;">無符合條件的資料</div>'
+                html_str += f'<div style="color:var(--text-muted); text-align:center; padding: 24px;">{t("div_no_data")}</div>'
             else:
-                html_str += """
+                html_str += f"""
 <div class="acc-header" style="grid-template-columns: 1fr 1fr 1fr 1.2fr 1.2fr; border-bottom: 1px solid #334155; padding: 14px 16px;">
-    <div class="acc-col-right">除權息日<br><span style="font-size:11px;color:#64748b;">(Ngày GDKHQ)</span></div>
-    <div class="acc-col-right">登錄截止日<br><span style="font-size:11px;color:#64748b;">(Ngày chốt)</span></div>
-    <div class="acc-col-right">實際發放日<br><span style="font-size:11px;color:#64748b;">(Ngày thực hiện)</span></div>
-    <div class="acc-col-left" style="padding-left:16px;">配息類型<br><span style="font-size:11px;color:#64748b;">(Loại cổ tức)</span></div>
-    <div class="acc-col-right">比例/金額<br><span style="font-size:11px;color:#64748b;">(Tỷ lệ / Giá trị)</span></div>
+    <div class="acc-col-right">{t("ex_date")}<br><span style="font-size:11px;color:#64748b;">(Ngày GDKHQ)</span></div>
+    <div class="acc-col-right">{t("record_date")}<br><span style="font-size:11px;color:#64748b;">(Ngày chốt)</span></div>
+    <div class="acc-col-right">{t("pay_date")}<br><span style="font-size:11px;color:#64748b;">(Ngày thực hiện)</span></div>
+    <div class="acc-col-left" style="padding-left:16px;">{t("div_type")}<br><span style="font-size:11px;color:#64748b;">(Loại cổ tức)</span></div>
+    <div class="acc-col-right">{t("div_amount")}<br><span style="font-size:11px;color:#64748b;">(Tỷ lệ / Giá trị)</span></div>
 </div>
                 """
                 
                 years = sorted(filtered_lookup["ex_year"].dropna().unique(), reverse=True)
                 for y in years:
+                    year = int(y)
                     y_df = filtered_lookup[filtered_lookup["ex_year"] == y].sort_values("ex_date", ascending=False)
-                    t_cash = y_df[y_df["type"] == "CASH"]["cash_amount"].sum()
-                    t_stock = y_df[y_df["type"] == "STOCK"]["stock_ratio"].sum()
-                    
-                    c_str = f"{t_cash:,.0f} VNĐ" if t_cash > 0 else "-"
-                    s_str = f"{t_stock*100:g}%" if t_stock > 0 else "-"
+                    y_cash = y_df[y_df["type"] == "CASH"]["cash_amount"].sum()
+                    y_stock = y_df[y_df["type"] == "STOCK"]["stock_ratio"].sum() * 100
                     
                     html_str += f"""
 <details class="acc-details" open>

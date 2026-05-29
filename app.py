@@ -191,7 +191,7 @@ transactions_page = st.Page("views/02_transactions.py", title=t("nav_transaction
 dividends_page = st.Page("views/03_dividends.py", title=t("nav_dividends"), icon=":material/paid:")
 watchlist_page = st.Page("views/04_watchlist.py", title=t("nav_watchlist"), icon=":material/notifications_active:")
 
-admin_page = st.Page("views/06_admin.py", title="管理員後台", icon=":material/admin_panel_settings:")
+admin_page = st.Page("views/06_admin.py", title=t("nav_admin"), icon=":material/admin_panel_settings:")
 
 
 nav_pages = [dashboard_page, portfolio_page, transactions_page, dividends_page, watchlist_page]
