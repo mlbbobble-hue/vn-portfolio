@@ -156,7 +156,8 @@ with st.sidebar:
 dashboard_page = st.Page("pages/00_dashboard.py", title=t("nav_dashboard"), icon="📊")
 portfolio_page = st.Page("pages/01_portfolio.py", title=t("nav_portfolio"), icon="💼")
 transactions_page = st.Page("pages/02_transactions.py", title=t("nav_transactions"), icon="📝")
-dividends_page = st.Page("pages/03_dividends.py", title=t("nav_dividends"), icon="💰")
+dividends_page = st.Page("pages/03_dividends.py", title=t("nav_dividends"), icon="📜")
+div_tracker_page = st.Page("pages/06_dividend_tracker.py", title=t("nav_div_tracker"), icon="💰")
 watchlist_page = st.Page("pages/04_watchlist.py", title=t("nav_watchlist"), icon="👀")
 analytics_page = st.Page("pages/05_analytics.py", title=t("nav_analytics"), icon="📉")
 
@@ -165,6 +166,7 @@ pg = st.navigation([
     portfolio_page,
     transactions_page,
     dividends_page,
+    div_tracker_page,
     watchlist_page,
     analytics_page
 ])
