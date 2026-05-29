@@ -113,8 +113,7 @@ else:
             )
 
             st.markdown(f'''
-            <div style="background: #1e293b; border-radius: 16px; padding: 24px; margin-top: 24px; border: none !important; box-shadow: none !important; outline: none !important;">
-            <h4 style='margin: 0 0 16px 0;'>{t("phs_asset_allocation")}</h4>
+            <h4 style='margin: 24px 0 16px 0; color: var(--text-primary);'>{t("phs_asset_allocation")}</h4>
             ''', unsafe_allow_html=True)
             
             fig = px.treemap(
@@ -137,7 +136,7 @@ else:
 
             fig.update_layout(
                 height=550,
-                margin=dict(t=10, b=10, l=0, r=0),
+                margin=dict(t=0, b=0, l=0, r=0),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 coloraxis_showscale=False
@@ -147,11 +146,12 @@ else:
                 texttemplate="%{customdata[1]}",
                 hovertemplate=t("portfolio_hover"),
                 textfont=dict(color="#f8fafc", size=17),
-                marker=dict(line=dict(width=2, color='#0f172a')) 
+                marker=dict(line=dict(width=2, color='#0f172a')),
+                root_color="rgba(0,0,0,0)",
+                tiling=dict(pad=0)
             )
 
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-            st.markdown('</div>', unsafe_allow_html=True)
             
     else:
         st.markdown(f'''
