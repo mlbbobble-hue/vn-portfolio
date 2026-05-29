@@ -198,6 +198,7 @@ def get_dividend_history(symbol: str) -> list[dict]:
                     row_dict = dict(row)
                     ex_date = row_dict.get("exright_date", None)
                     pay_date = row_dict.get("payout_date", None)
+                    rec_date = row_dict.get("record_date", None)
                     
                     if pd.isna(ex_date) or str(ex_date).strip() == "" or str(ex_date) == "NaT":
                         continue
@@ -215,6 +216,7 @@ def get_dividend_history(symbol: str) -> list[dict]:
                         results.append({
                             "symbol": symbol,
                             "ex_date": str(ex_date)[:10],
+                            "record_date": str(rec_date)[:10] if pd.notnull(rec_date) and str(rec_date).strip() != "" and str(rec_date) != "NaT" else None,
                             "pay_date": str(pay_date)[:10] if pd.notnull(pay_date) and str(pay_date).strip() != "" and str(pay_date) != "NaT" else None,
                             "type": div_type,
                             "cash_amount": cash,

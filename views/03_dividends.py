@@ -23,8 +23,8 @@ st.markdown(f"""
     <p>{t('dividends_desc')}</p>
 </div>""", unsafe_allow_html=True)
 
-tab_ov, tab_auto, tab_man, tab_apply = st.tabs([
-    t("tab_overview"), t("tab_auto_fetch"), t("tab_manual"), t("tab_apply_stock")
+tab_ov, tab_lookup, tab_auto, tab_man, tab_apply = st.tabs([
+    t("tab_overview"), t("tab_lookup"), t("tab_auto_fetch"), t("tab_manual"), t("tab_apply_stock")
 ])
 
 # ── Tab 1: 總覽 ─────────────────────────────────────────────
@@ -254,6 +254,65 @@ with tab_ov:
                         html_str += '<div style="color:var(--text-muted); text-align:center; padding: 20px;">尚無任何配息紀錄</div>'
                     html_str += "</div>"
                     st.markdown(html_str, unsafe_allow_html=True)
+
+# ── Tab 2: 查詢 ──────────────────────────────────────────────
+with tab_lookup:
+    st.subheader(t("tab_lookup"))
+    st.markdown("<span style='color:var(--text-muted);font-size:0.9em;'>輸入股票代碼即可查詢其過往所有的除權息紀錄，資料由系統自動從公開數據源獲取。</span>", unsafe_allow_html=True)
+    
+    col_search, col_space = st.columns([1, 2])
+    with col_search:
+        lookup_sym = st.text_input("輸入股票代碼 (例如: FPT, HPG):", max_chars=10).upper().strip()
+    
+    if lookup_sym:
+        with st.spinner(f"正在查詢 {lookup_sym} 的歷史除權息紀錄..."):
+            from market_data import get_dividend_history
+            lookup_df = pd.DataFrame(get_dividend_history(lookup_sym))
+            
+        if lookup_df.empty:
+            st.warning(f"找不到 {lookup_sym} 的歷史除權息紀錄，請確認代碼是否正確。")
+        else:
+            st.markdown(f"### {lookup_sym} 歷史配息與權益變動")
+            
+            html_str = '<div class="acc-table" style="max-height: 500px; overflow-y: auto;">'
+            html_str += """
+<div class="acc-header" style="grid-template-columns: 1fr 1.2fr 1fr 1fr 1fr;">
+    <div class="acc-col-left">除權息日<br><span style="font-size:11px;color:#64748b;">(Ngày GDKHQ)</span></div>
+    <div class="acc-col-left">登錄截止日<br><span style="font-size:11px;color:#64748b;">(Ngày chốt danh sách)</span></div>
+    <div class="acc-col-left">實際發放日<br><span style="font-size:11px;color:#64748b;">(Ngày thực hiện)</span></div>
+    <div class="acc-col-left">配息類型<br><span style="font-size:11px;color:#64748b;">(Loại cổ tức)</span></div>
+    <div class="acc-col-right">比例/金額<br><span style="font-size:11px;color:#64748b;">(Tỷ lệ / Giá trị)</span></div>
+</div>
+            """
+            
+            lookup_df = lookup_df.sort_values("ex_date", ascending=False)
+            
+            for _, row in lookup_df.iterrows():
+                ex_date = row.get("ex_date", "─")
+                rec_date = row.get("record_date", "─")
+                if pd.isna(rec_date) or not rec_date: rec_date = "─"
+                pay_date = row.get("pay_date", "─")
+                if pd.isna(pay_date) or not pay_date: pay_date = "─"
+                
+                dtype = "現金股利" if row["type"] == "CASH" else "股票股利"
+                if row["type"] == "CASH":
+                    amt_str = f"{row['cash_amount']:,.0f} VNĐ/股"
+                else:
+                    amt_str = f"{row['stock_ratio']*100:.1f}%"
+                    
+                html_str += f"""
+<div class="acc-row" style="grid-template-columns: 1fr 1.2fr 1fr 1fr 1fr;">
+    <div class="acc-col-left" style="color: #cbd5e1;">{ex_date}</div>
+    <div class="acc-col-left" style="color: #94a3b8;">{rec_date}</div>
+    <div class="acc-col-left" style="color: #94a3b8;">{pay_date}</div>
+    <div class="acc-col-left">
+        <span style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; font-size: 12px; color: {'#10b981' if row['type'] == 'CASH' else '#f59e0b'}">{dtype}</span>
+    </div>
+    <div class="acc-col-right" style="font-weight: 600; color: #f8fafc;">{amt_str}</div>
+</div>
+                """
+            html_str += "</div>"
+            st.markdown(html_str, unsafe_allow_html=True)
 
 # ── Tab 2: 自動抓取 ─────────────────────────────────────────
 with tab_auto:

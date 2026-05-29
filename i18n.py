@@ -171,6 +171,7 @@ TRANSLATIONS = {
     "dividends_desc":       {"vi": "Cổ tức tiền mặt × Cổ tức cổ phiếu × Đếm ngược ngày GDKHQ",
                              "zh": "現金股利 × 股票股利 × 除權息日倒數"},
     "tab_overview":         {"vi": "Tổng quan cổ tức", "zh": "配息總覽"},
+    "tab_lookup":           {"vi": "Lịch sử cổ tức", "zh": "歷史除權息查詢"},
     "tab_auto_fetch":       {"vi": "🤖 Tự động lấy dữ liệu", "zh": "🤖 自動抓取"},
     "tab_manual":           {"vi": "✏️ Nhập thủ công", "zh": "✏️ 手動新增"},
     "tab_apply_stock":      {"vi": "Áp dụng cổ tức CP", "zh": "套用股票股利"},
