@@ -13,7 +13,6 @@ TRANSLATIONS = {
     "nav_portfolio":        {"vi": "Danh mục", "zh": "持倉明細"},
     "nav_transactions":     {"vi": "Giao dịch", "zh": "交易記錄"},
     "nav_dividends":        {"vi": "Lịch sử Cổ tức", "zh": "歷史配息紀錄"},
-    "nav_div_tracker":      {"vi": "Theo dõi Cổ tức (DT)", "zh": "配息追蹤 (DT)"},
     "nav_watchlist":        {"vi": "Theo dõi", "zh": "觀察清單"},
     "nav_analytics":        {"vi": "Phân tích", "zh": "圖表分析"},
 
@@ -196,18 +195,6 @@ TRANSLATIONS = {
     "est_income":           {"vi": "Thu nhập dự kiến (VNĐ)", "zh": "預估年收入 (VND)"},
     "total_annual_income":  {"vi": "Tổng Thu nhập Cổ tức (CASH) từ Danh mục: <strong style='font-size:1.2em;'>{val}</strong> VNĐ", 
                              "zh": "依目前持股計算，過去歷史現金總配息為：<strong style='font-size:1.2em;'>{val}</strong> VNĐ"},
-
-    # ── Dividend Tracker ──────────────────────────────────────
-    "dt_annual_income":     {"vi": "Thu nhập Cổ tức (Năm)", "zh": "預估年配息收入"},
-    "dt_yoc":               {"vi": "Tỷ suất Vốn (YOC)", "zh": "成本殖利率 (YOC)"},
-    "dt_yield":             {"vi": "Tỷ suất Hiện tại", "zh": "當前殖利率"},
-    "dt_portfolio_value":   {"vi": "Giá trị Danh mục", "zh": "持倉總值"},
-    "dt_monthly_calendar":  {"vi": "Cổ tức Hàng tháng (TTM)", "zh": "月度現金流 (近12個月)"},
-    "dt_holdings_breakdown":{"vi": "Chi tiết Danh mục", "zh": "持倉配息明細"},
-    "dt_ttm_dps":           {"vi": "Cổ tức 12T (DPS)", "zh": "近一年每股配息"},
-    "dt_annual_total":      {"vi": "Tổng Thu nhập", "zh": "預期總收入"},
-    "dt_month":             {"vi": "Tháng", "zh": "月份"},
-    "dt_amount":            {"vi": "Số tiền", "zh": "金額"},
 
     "auto_fetch_title":     {"vi": "🤖 Tự động lấy dữ liệu cổ tức từ vnstock",
                              "zh": "🤖 自動從 vnstock 抓取配息數據"},

@@ -1,3 +1,5 @@
+from theme import load_css
+load_css()
 import streamlit as st
 import pandas as pd
 import plotly.express as px
