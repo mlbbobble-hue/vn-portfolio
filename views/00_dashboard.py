@@ -150,7 +150,8 @@ else:
                 textfont=dict(color="#f8fafc", size=17),
                 marker=dict(line=dict(width=2, color='#0f172a')),
                 root_color="rgba(0,0,0,0)",
-                tiling=dict(pad=0)
+                tiling=dict(pad=0),
+                pathbar=dict(visible=False)
             )
 
             st.plotly_chart(fig, use_container_width=True, theme=None, config={'displayModeBar': False})
