@@ -267,6 +267,12 @@ def check_auth() -> bool:
     email = st.session_state["user_email"]
     
     # 避免每次重新整理都去資料庫查，使用 session 暫存
+    # 👑 硬編碼最高管理員免審核通道
+    if email == "mlbbobble@gmail.com":
+        st.session_state["is_approved"] = True
+        st.session_state["is_admin"] = True
+        return True
+
     if "is_approved" not in st.session_state:
         appr = sb_check_approval(user_id, email)
         if appr.get("is_new"):
