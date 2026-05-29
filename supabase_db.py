@@ -70,9 +70,14 @@ def sign_up(email: str, password: str, full_name: str = "") -> dict:
             return {"success": True, "user": res.user, "error": ""}
         return {"success": False, "user": None, "error": "未知錯誤"}
     except Exception as e:
-        import traceback
-        tb = traceback.format_exc()
-        return {"success": False, "user": None, "error": f"{str(e)}\n\nTraceback: {tb}"}
+        err = str(e)
+        if "For security purposes, you can only request this after" in err or "Too Many Requests" in err:
+            err = "操作過於頻繁，為保護帳號安全，請稍後再重試！"
+        elif "User already registered" in err:
+            err = "此 Email 已經註冊過囉！"
+        else:
+            err = f"註冊失敗：{err}"
+        return {"success": False, "user": None, "error": err}
 
 
 def sign_in(email: str, password: str) -> dict:
