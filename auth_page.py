@@ -11,7 +11,7 @@ AUTH_STYLE = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp {
-    background: #F6F7F9;
+    background: var(--bg-main, #0f172a);
     min-height: 100vh;
 }
 .auth-container {
@@ -27,82 +27,98 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     display: flex; justify-content: center; margin-bottom: 12px;
 }
 .auth-logo .icon svg {
-    width: 64px; height: 64px; fill: #00A352;
+    width: 64px; height: 64px; fill: var(--financial-up, #10b981);
 }
 .auth-logo .title {
     font-size: 1.5rem; font-weight: 700;
-    color: #00A352;
+    color: var(--financial-up, #10b981);
     margin: 8px 0 4px;
 }
-.auth-logo .sub { font-size: 0.85rem; color: #888888; }
+.auth-logo .sub { font-size: 0.85rem; color: var(--text-secondary, #94a3b8); }
 .auth-card {
-    background: #FFFFFF; 
-    border: 1px solid rgba(0,163,82,0.2);
-    border-radius: 20px;
+    background: var(--bg-card, #1e293b); 
+    border: 1px solid var(--border-color, #334155);
+    border-radius: 12px;
     padding: 32px 36px;
     backdrop-filter: blur(20px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 .auth-title {
-    font-size: 1.3rem; font-weight: 600; color: #333333;
+    font-size: 1.3rem; font-weight: 600; color: var(--text-primary, #f8fafc);
     margin-bottom: 24px; text-align: center;
 }
 .stTextInput > div > div > input {
-    background: #F6F7F9 !important;
-    border: 1px solid rgba(0,163,82,0.3) !important;
+    background: var(--bg-main, #0f172a) !important;
+    border: 1px solid var(--border-color, #334155) !important;
     border-radius: 10px !important;
-    color: #333333 !important;
+    color: var(--text-primary, #f8fafc) !important;
     padding: 10px 14px !important;
 }
 .stTextInput > div > div > input:focus {
-    border-color: #00A352 !important;
-    box-shadow: 0 0 0 2px rgba(0,163,82,0.25) !important;
+    border-color: var(--financial-up, #10b981) !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
 }
 .stButton > button {
-    background: #00A352 !important;
+    background: var(--financial-up, #10b981) !important;
     color: white !important; border: none !important;
     border-radius: 10px !important; font-weight: 600 !important;
     font-size: 1rem !important; padding: 12px !important;
     transition: all 0.2s !important;
-    box-shadow: 0 4px 15px rgba(0,163,82,0.3) !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
 }
 .stButton > button:hover {
     transform: translateY(-1px) !important;
-    box-shadow: 0 6px 20px rgba(0,163,82,0.5) !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5) !important;
 }
 .stButton > button[kind="secondary"] {
     background: transparent !important;
-    border: 1px solid rgba(0,163,82,0.4) !important;
-    color: #00A352 !important;
+    border: 1px solid rgba(16, 185, 129, 0.4) !important;
+    color: var(--financial-up, #10b981) !important;
     box-shadow: none !important;
 }
 .stButton > button[kind="secondary"]:hover {
-    background: rgba(0,163,82,0.05) !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+.stCheckbox > label {
+    color: var(--text-secondary, #94a3b8) !important;
 }
 .divider {
-    text-align: center; color: #888888; font-size: 0.85rem;
-    margin: 16px 0; position: relative;
+    text-align: center; color: var(--text-secondary, #94a3b8); font-size: 0.85rem;
+    position: relative; margin: 24px 0;
 }
 .divider::before, .divider::after {
-    content: ''; position: absolute; top: 50%; width: 42%; height: 1px;
-    background: rgba(0,163,82,0.2);
+    content: ""; position: absolute; top: 50%; width: 42%;
+    border-top: 1px solid var(--border-color, #334155);
 }
 .divider::before { left: 0; }
 .divider::after { right: 0; }
+.auth-switch {
+    text-align: center; margin-top: 16px; font-size: 0.9rem;
+    color: var(--text-secondary, #94a3b8);
+}
+.auth-switch a {
+    color: var(--financial-up, #10b981); font-weight: 600; text-decoration: none; cursor: pointer;
+}
 .footer-note {
-    text-align: center; color: #888888; font-size: 0.75rem; margin-top: 20px;
+    text-align: center; color: var(--text-secondary, #94a3b8); font-size: 0.75rem; margin-top: 20px;
 }
 
 [data-testid="collapsedControl"] { display: none !important; }
 [data-testid="stSidebar"] { display: none !important; }
 
 /* 將 Tabs 容器變成卡片風格 */
-div[data-testid="stTabs"] {
-    background: #FFFFFF;
-    border: 1px solid rgba(0,163,82,0.2);
-    border-radius: 20px;
-    padding: 20px 30px 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+[data-testid="stTabs"] {
+    background: var(--bg-card, #1e293b);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border: 1px solid var(--border-color, #334155);
+}
+[data-testid="stTabs"] button {
+    color: var(--text-secondary, #94a3b8) !important;
+}
+[data-testid="stTabs"] button[aria-selected="true"] {
+    color: var(--financial-up, #10b981) !important;
 }
 
 </style>
