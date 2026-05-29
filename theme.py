@@ -249,8 +249,6 @@ p, span, label {
     font-weight: 700;
 }
 
-</style>""", unsafe_allow_html=True)
-
 /* 頁面標題區塊 */
 .page-header {
     background: linear-gradient(90deg, rgba(0, 163, 82, 0.05) 0%, transparent 100%);
@@ -278,3 +276,6 @@ p, span, label {
     margin: 6px 0;
     box-shadow: var(--shadow-soft);
 }
+
+</style>""", unsafe_allow_html=True)
+
