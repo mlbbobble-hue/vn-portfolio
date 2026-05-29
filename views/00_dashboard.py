@@ -126,7 +126,7 @@ else:
 
             # 多國語言支持
             lang = st.session_state.get("lang", "zh")
-            title_text = "資產體檢氣泡圖" if lang == "zh" else "Biểu đồ bong bóng chẩn đoán tài sản"
+            title_text = "投資組合效率前緣邊界分析圖" if lang == "zh" else "Phân tích biên hiệu quả danh mục đầu tư"
             x_title = "持股比例 (%)" if lang == "zh" else "Tỷ lệ (%)"
             y_title = "未實現損益率 (%)" if lang == "zh" else "Hiệu suất (%)"
 
