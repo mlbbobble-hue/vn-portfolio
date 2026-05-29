@@ -122,6 +122,12 @@ with tab_pl:
 
 # ── Tab 3: 歷史走勢 ─────────────────────────────────────────
 with tab_hist:
+    lang = st.session_state.get("lang", "zh")
+    msg = "🚧 個股歷史走勢功能暫時關閉維護中，敬請期待！" if lang == "zh" else "🚧 Tính năng biểu đồ lịch sử đang tạm thời bảo trì!"
+    st.info(msg)
+    
+    # 以下功能暫時停用
+    '''
     st.subheader(t("hist_title"))
     holdings = compute_holdings()
     if holdings.empty:
@@ -166,7 +172,7 @@ with tab_hist:
                 fig_h.update_layout(
                     title=t("hist_chart_title", sym=sel_sym, n=days),
                     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(color="#e2e8f0"), height=480,
+                    font=dict(color="var(--text-secondary)"), height=480,
                     xaxis=dict(gridcolor="rgba(99,102,241,0.1)", rangeslider=dict(visible=True)),
                     yaxis=dict(gridcolor="rgba(99,102,241,0.1)", title="VNĐ"),
                     margin=dict(t=40,b=20),
@@ -176,3 +182,4 @@ with tab_hist:
                 st.plotly_chart(fig_h, use_container_width=True)
             else:
                 st.error(t("col_format_error"))
+    '''
