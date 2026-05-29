@@ -93,25 +93,24 @@ with tab_ov:
                 
             amount_str = f"+{row['cash_amount']:,.0f} VNĐ" if row["type"] == "CASH" else f"+{row['stock_ratio']*100:.1f}% 配股"
             
-            html_str += f'''
-            <div class="timeline-item">
-                <div class="timeline-node"></div>
-                <div class="timeline-content">
-                    <div class="tl-left">
-                        <span class="tl-symbol">{sym}</span>
-                        <span class="tl-type">{dtype}</span>
-                    </div>
-                    <div class="tl-middle">
-                        <span>📅 除權息日：{ex_date}</span>
-                        <span>💰 實際發放日：{pay_str}</span>
-                    </div>
-                    <div class="tl-right">
-                        {status_badge}
-                        <span class="tl-amount">{amount_str}</span>
-                    </div>
-                </div>
-            </div>
-            '''
+            html_str += f"""
+<div class="timeline-item">
+    <div class="timeline-node"></div>
+    <div class="timeline-content">
+        <div class="tl-left">
+            <span class="tl-symbol">{sym}</span>
+            <span class="tl-type">{dtype}</span>
+        </div>
+        <div class="tl-middle">
+            <span>📅 除權息日：{ex_date}</span>
+            <span>💰 實際發放日：{pay_str}</span>
+        </div>
+        <div class="tl-right">
+            {status_badge}
+            <span class="tl-amount">{amount_str}</span>
+        </div>
+    </div>
+</div>"""
         
         if timeline_divs.empty:
             html_str += '<div style="color:var(--text-muted); text-align:center; padding: 20px;">尚無任何配息紀錄</div>'
