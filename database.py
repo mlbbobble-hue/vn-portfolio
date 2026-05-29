@@ -100,6 +100,18 @@ def delete_transaction(txn_id: int):
         conn.commit()
 
 
+def update_transaction(txn_id: int, updates: dict):
+    """更新指定交易記錄"""
+    if not updates:
+        return
+    set_clause = ", ".join([f"{k} = ?" for k in updates.keys()])
+    values = list(updates.values())
+    values.append(txn_id)
+    with get_connection() as conn:
+        conn.execute(f"UPDATE transactions SET {set_clause} WHERE id = ?", tuple(values))
+        conn.commit()
+
+
 def get_all_transactions() -> pd.DataFrame:
     """取得所有交易記錄"""
     with get_connection() as conn:

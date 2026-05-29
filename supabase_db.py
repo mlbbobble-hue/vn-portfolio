@@ -244,6 +244,10 @@ def sb_delete_transaction(user_id: str, txn_id: int):
     _table("transactions").delete().eq("id", txn_id).eq("user_id", user_id).execute()
 
 
+def sb_update_transaction(user_id: str, txn_id: int, updates: dict):
+    _table("transactions").update(updates).eq("id", txn_id).eq("user_id", user_id).execute()
+
+
 def sb_get_all_transactions(user_id: str) -> pd.DataFrame:
     res = _table("transactions").select("*").eq("user_id", user_id)\
           .order("date", desc=True).order("id", desc=True).execute()

@@ -39,6 +39,15 @@ def delete_transaction(txn_id: int):
         _del(txn_id)
 
 
+def update_transaction(txn_id: int, updates: dict):
+    if _use_cloud():
+        from supabase_db import sb_update_transaction
+        sb_update_transaction(_uid(), txn_id, updates)
+    else:
+        from database import update_transaction as _upd
+        _upd(txn_id, updates)
+
+
 def get_all_transactions() -> pd.DataFrame:
     if _use_cloud():
         from supabase_db import sb_get_all_transactions

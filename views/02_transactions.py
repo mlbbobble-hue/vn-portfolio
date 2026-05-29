@@ -5,7 +5,8 @@ from datetime import date
 from i18n import t, render_lang_switcher
 from auth_page import check_auth, render_user_info_sidebar
 from db_router import (add_transaction, delete_transaction,
-                        get_all_transactions, import_transactions_from_csv)
+                        get_all_transactions, import_transactions_from_csv,
+                        update_transaction)
 from config import BROKERS
 
 st.set_page_config(page_title=f"VN Portfolio | {t('transactions_title')}", page_icon="📝", layout="wide")
@@ -266,12 +267,84 @@ with tab_view:
         st.dataframe(styled, use_container_width=True, height=360)
 
         st.markdown("---")
-        st.subheader(t("delete_tx_title"))
-        del_id = st.number_input(t("delete_tx_hint"), min_value=1, step=1, key="del_id")
-        if st.button(t("delete_tx_btn"), use_container_width=True):
-            if del_id in all_txns["id"].values:
-                delete_transaction(int(del_id))
-                st.success(t("delete_ok", id=del_id))
-                st.rerun()
+        
+        # 建立兩個分頁來處理修改和刪除，避免畫面太長
+        edit_tab, delete_tab = st.tabs(["✏️ 修改紀錄 (Edit)", "🗑️ 刪除紀錄 (Delete)"])
+        
+        with edit_tab:
+            st.markdown("### ✏️ 修改交易記錄")
+            edit_id = st.number_input("請輸入要修改的紀錄 ID (ID)", min_value=1, step=1, key="edit_id")
+            
+            # 尋找這筆紀錄
+            target_record = all_txns[all_txns["id"] == edit_id]
+            
+            if not target_record.empty:
+                r = target_record.iloc[0]
+                st.info(f"正在修改紀錄 ID: {edit_id} ({r['action']} {r['symbol']})")
+                
+                with st.form(key="edit_tx_form"):
+                    e1, e2, e3 = st.columns(3)
+                    with e1:
+                        # 轉換為 date 物件
+                        try:
+                            d_val = pd.to_datetime(r["date"]).date()
+                        except:
+                            d_val = date.today()
+                        new_date = st.date_input(t("tx_date"), value=d_val, key="e_date")
+                        
+                        try:
+                            broker_idx = BROKERS.index(r["broker"])
+                        except ValueError:
+                            broker_idx = 0
+                        new_broker = st.selectbox(t("tx_broker"), BROKERS, index=broker_idx, key="e_broker")
+                    
+                    with e2:
+                        new_symbol = st.text_input(t("tx_symbol"), value=r["symbol"], key="e_sym").upper()
+                        act_idx = 0 if r["action"] == "BUY" else 1
+                        new_action = st.radio(t("tx_action"), ["BUY", "SELL"], index=act_idx, horizontal=True, key="e_act")
+                    
+                    with e3:
+                        new_shares = st.number_input(t("tx_shares"), min_value=1.0, value=float(r["shares"]), step=100.0, key="e_shares")
+                        new_price = st.number_input(t("tx_price"), min_value=0.0, value=float(r["price"]), step=100.0, key="e_price")
+                        
+                    new_fee = st.number_input(t("tx_fee"), min_value=0.0, value=float(r.get("fee", 0)), step=1000.0, key="e_fee")
+                    new_note = st.text_input(t("tx_note"), value=r.get("note", ""), key="e_note")
+                    
+                    if st.form_submit_button("✅ 儲存修改 (Save)", use_container_width=True):
+                        if not new_symbol:
+                            st.error(t("enter_symbol"))
+                        else:
+                            updates = {
+                                "date": str(new_date),
+                                "broker": new_broker,
+                                "symbol": new_symbol,
+                                "action": new_action,
+                                "shares": new_shares,
+                                "price": new_price,
+                                "fee": new_fee,
+                                "note": new_note
+                            }
+                            update_transaction(int(edit_id), updates)
+                            st.success(f"✅ 紀錄 ID {edit_id} 修改成功！")
+                            st.rerun()
             else:
-                st.error(t("not_found", id=del_id))
+                if edit_id:
+                    st.warning("找不到此 ID 的紀錄，請確認 ID 是否正確。")
+                    
+        with delete_tab:
+            st.markdown("### 🗑️ 刪除交易記錄")
+            del_id = st.number_input(t("delete_tx_hint"), min_value=1, step=1, key="del_id")
+            
+            # 尋找這筆紀錄預覽
+            del_record = all_txns[all_txns["id"] == del_id]
+            if not del_record.empty:
+                r = del_record.iloc[0]
+                st.warning(f"⚠️ 即將刪除: {r['date']} | {r['action']} {r['symbol']} | {r['shares']:,.0f} 股")
+            
+            if st.button(t("delete_tx_btn"), use_container_width=True, type="primary"):
+                if del_id in all_txns["id"].values:
+                    delete_transaction(int(del_id))
+                    st.success(t("delete_ok", id=del_id))
+                    st.rerun()
+                else:
+                    st.error(t("not_found", id=del_id))
