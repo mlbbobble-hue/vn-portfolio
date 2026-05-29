@@ -114,15 +114,17 @@ else:
 
             st.markdown("<br>", unsafe_allow_html=True)
             
+            df_plot["parent"] = ""
             fig = px.treemap(
                 df_plot,
-                path=["symbol"],
+                names="symbol",
+                parents="parent",
                 values=plot_value_col,
                 color="roi_pct",
                 color_continuous_scale=[
                     [0.0, "#b91c1c"],     # 嚴重虧損 (<<0)
                     [0.499, "#7f1d1d"],   # 輕微虧損 (<0)
-                    [0.5, "#475569"],     # 平盤 (=0)
+                    [0.5, "rgba(0,0,0,0)"],# 平盤 (=0) 完全透明
                     [0.501, "#10b981"],   # 穩定獲利 (>0)
                     [1.0, "#047857"]      # 巨額獲利 (>>50%)
                 ],
