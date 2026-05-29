@@ -110,22 +110,36 @@ html, body, [class*="css"] {
 }
 
 /* 膠囊按鈕 (Pill-shaped Buttons) */
-.stButton>button {
+.stButton>button[kind="primary"] {
     background-color: var(--cathay-green) !important;
     color: white !important;
     border: none !important;
-    border-radius: 50px !important; /* 膠囊形狀 */
+    border-radius: 50px !important;
     font-weight: 600 !important;
     padding: 8px 24px !important;
     transition: background-color 0.2s ease;
-    white-space: nowrap !important;
 }
-.stButton>button * {
+.stButton>button[kind="primary"] * {
     color: white !important;
-    white-space: nowrap !important;
 }
-.stButton>button:hover {
+.stButton>button[kind="primary"]:hover {
     background-color: var(--cathay-dark-green) !important;
+}
+
+.stButton>button[kind="secondary"] {
+    background-color: white !important;
+    color: var(--cathay-green) !important;
+    border: 1px solid var(--cathay-green) !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    padding: 8px 24px !important;
+    transition: all 0.2s ease;
+}
+.stButton>button[kind="secondary"] * {
+    color: var(--cathay-green) !important;
+}
+.stButton>button[kind="secondary"]:hover {
+    background-color: rgba(0, 163, 82, 0.05) !important;
 }
 .stButton>button:active {
     transform: scale(0.98);
