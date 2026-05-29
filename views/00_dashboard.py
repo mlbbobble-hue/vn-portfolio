@@ -17,10 +17,10 @@ from config import PRICE_REFRESH_SECONDS
 st.markdown("""
 <style>
 /* 針對本頁面的微調 */
-.app-title-small { font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 4px; display:block; }
-.empty-state { text-align: center; padding: 40px 20px; background: white; border-radius: 16px; border: 1px dashed #ccc; margin-top: 20px; }
-.empty-icon { font-size: 48px; margin-bottom: 16px; color: #ccc; }
-.empty-text { color: #888; font-size: 16px; margin-bottom: 24px; }
+.app-title-small { font-size: 14px; color: var(--text-secondary); margin-bottom: 4px; display:block; }
+.empty-state { text-align: center; padding: 40px 20px; background: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border-color); margin-top: 20px; }
+.empty-icon { font-size: 48px; margin-bottom: 16px; color: var(--text-secondary); }
+.empty-text { color: var(--text-secondary); font-size: 16px; margin-bottom: 24px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -74,8 +74,8 @@ with c1:
     sign = "+" if total_unrealized > 0 else ""
     st.markdown(f"""
     <div class="cathay-card">
-        <div style="font-size: 14px; color: #888; margin-bottom: 8px;">未實現損益</div>
-        <div style="font-size: 22px; font-weight: bold; color: #333;">{display_unrealized}</div>
+        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">未實現損益</div>
+        <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_unrealized}</div>
         <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{total_unrealized:,.0f}</span></div>
     </div>
     """, unsafe_allow_html=True)
@@ -85,8 +85,8 @@ with c2:
     sign = "+" if roi_pct > 0 else ""
     st.markdown(f"""
     <div class="cathay-card">
-        <div style="font-size: 14px; color: #888; margin-bottom: 8px;">累積報酬率</div>
-        <div style="font-size: 22px; font-weight: bold; color: #333;">{display_roi}</div>
+        <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">累積報酬率</div>
+        <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_roi}</div>
         <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{roi_pct:.2f}%</span></div>
     </div>
     """, unsafe_allow_html=True)

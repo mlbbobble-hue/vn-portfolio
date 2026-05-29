@@ -78,7 +78,7 @@ html, body, [class*="css"] {
 .card, [data-testid="metric-container"], div.css-1r6slb0, .cathay-card {
     background-color: var(--cathay-white) !important;
     border: 1px solid var(--border-color) !important;
-    border-radius: 16px !important;
+    border-radius: 12px !important;
     padding: 20px;
     margin-bottom: 16px;
     box-shadow: var(--shadow-soft);

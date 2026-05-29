@@ -55,18 +55,26 @@ for col, label, val, suffix, color in [
     (c1, t("total_invested"), total_cost,   t("vnd"), "#a78bfa"),
     (c2, t("current_value"), total_mktval,  t("vnd"), "#a78bfa"),
     (c3, t("unrealized_pl"), total_unreal,  f"{'▲'if total_unreal>=0 else '▼'} {abs(total_roi):.2f}%",
-     "#34d399" if total_unreal>=0 else "#f87171"),
+     "var(--financial-up)" if total_unreal>=0 else "var(--financial-down)"),
     (c4, t("realized_pl"),  total_real,     t("history_pl"),
-     "#34d399" if total_real>=0 else "#f87171"),
+     "var(--financial-up)" if total_real>=0 else "var(--financial-down)"),
 ]:
     with col:
         is_pl = '損益' in label or 'Lãi' in label
         val_str = f"{val:+,.0f}" if is_pl else f"{val:,.0f}"
+        
+        # 依照規格：標題 14px (--text-secondary)，數值 26px bold
+        # 如果是損益則套用 --financial-up/down，否則套用 --text-primary
+        if color == "#a78bfa":
+            val_color = "var(--text-primary)"
+        else:
+            val_color = color
+            
         st.markdown(f"""
         <div class="metric-card">
-            <div style='font-size:.82rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;'>{label}</div>
-            <div style='font-size:1.6rem;font-weight:700;color:{color};'>{val_str}</div>
-            <div style='font-size:.82rem;color:#64748b;'>{suffix}</div>
+            <div style='font-size:14px;color:var(--text-secondary);'>{label}</div>
+            <div style='font-size:26px;font-weight:bold;color:{val_color};margin-top:4px;'>{val_str}</div>
+            <div style='font-size:12px;color:var(--text-secondary);margin-top:4px;'>{suffix}</div>
         </div>""", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
