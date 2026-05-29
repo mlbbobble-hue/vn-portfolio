@@ -96,8 +96,8 @@ with st.sidebar:
         pass
 
     st.markdown(f"""
-    <div style='position:fixed;bottom:20px;left:16px;right:16px;font-size:0.72rem;
-                color:#475569;text-align:center;'>
+    <div style='margin-top:20px;font-size:0.72rem;
+                color:#888;text-align:center;'>
         {t('disclaimer')}<br>{t('data_source')}
     </div>""", unsafe_allow_html=True)
 
