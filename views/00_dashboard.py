@@ -96,35 +96,43 @@ else:
         df_plot = holdings[holdings[plot_value_col] > 0]
         
         if not df_plot.empty:
-            def get_performance_category(roi):
-                if roi >= 50: return t("roi_double")
-                if roi > 0: return t("roi_profit")
-                if roi < 0: return t("roi_loss")
-                return t("roi_flat")
-
             df_plot = df_plot.copy()
-            df_plot["performance"] = df_plot["roi_pct"].apply(get_performance_category)
+            total_val = df_plot[plot_value_col].sum()
+            df_plot["weight"] = df_plot[plot_value_col] / total_val
             
-            color_map = {
-                t("roi_double"): "#10b981", 
-                t("roi_profit"): "#10b981",  
-                t("roi_loss"): "#ef4444",  
-                t("roi_flat"): "#64748b", 
-                "(?)": "#1e293b"              
-            }
+            def get_text_color(roi):
+                if roi > 0: return "#10b981"
+                if roi < 0: return "#ef4444"
+                return "#64748b"
+                
+            df_plot["pl_color"] = df_plot["roi_pct"].apply(get_text_color)
+            
+            df_plot["custom_txt"] = df_plot.apply(
+                lambda r: f"<b>{r['symbol']}</b><br>{r['weight']:.1%}<br><span style='color:{r['pl_color']}'>{r['roi_pct']:+.2f}%</span>" if r['weight'] >= 0.01 else "",
+                axis=1
+            )
 
             st.markdown(f'''
             <div class="cathay-card" style="padding: 24px; margin-top: 24px;">
-            <h4 style='margin: 0 0 16px 0;'>{t("portfolio_chart_title")}</h4>
+            <h4 style='margin: 0 0 16px 0;'>{t("phs_asset_allocation")}</h4>
             ''', unsafe_allow_html=True)
             
             fig = px.treemap(
                 df_plot,
-                path=[px.Constant(t("portfolio")), "symbol"],
+                path=["symbol"],
                 values=plot_value_col,
-                color="performance",
-                color_discrete_map=color_map,
-                custom_data=["roi_pct"]
+                color="roi_pct",
+                color_continuous_scale=[
+                    [0.0, "#b91c1c"],     # 極度虧損 (亮紅)
+                    [0.45, "#7f1d1d"],    # 輕微虧損 (暗紅)
+                    [0.499, "#7f1d1d"],
+                    [0.5, "#475569"],     # 平盤 (灰藍)
+                    [0.501, "#10b981"],
+                    [0.8, "#10b981"],     # 穩定獲利 (翠綠)
+                    [1.0, "#047857"]      # 巨額獲利 (深綠)
+                ],
+                range_color=[-50, 50],
+                custom_data=["roi_pct", "custom_txt"]
             )
 
             fig.update_layout(
@@ -132,21 +140,14 @@ else:
                 margin=dict(t=10, b=10, l=0, r=0),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                legend=dict(
-                    title=None,
-                    orientation="h",
-                    yanchor="top",
-                    y=-0.05,
-                    xanchor="center",
-                    x=0.5
-                )
+                coloraxis_showscale=False
             )
 
             fig.update_traces(
-                texttemplate="<b>%{label}</b><br>%{percentRoot:.2%}",
+                texttemplate="%{customdata[1]}",
                 hovertemplate=t("portfolio_hover"),
-                textfont=dict(color="white", size=15),
-                marker=dict(line=dict(width=2, color='white')) 
+                textfont=dict(color="#f8fafc", size=17),
+                marker=dict(line=dict(width=1, color='rgba(255,255,255,0.15)')) 
             )
 
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
