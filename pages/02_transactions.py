@@ -165,12 +165,17 @@ with tab_import:
                     st.session_state["mapped_df"] = mapped_df
             
             if "mapped_df" in st.session_state:
-                st.markdown("### ✨ 轉換結果預覽")
-                final_df = st.session_state["mapped_df"].dropna(subset=["symbol", "shares", "price"])
-                st.dataframe(final_df.head(10), use_container_width=True)
+                st.markdown("### ✨ 轉換結果預覽與編輯")
+                st.info("💡 您可以直接在下方的表格中點擊欄位進行修改！例如把 HPG_WFT 刪除後綴改回 HPG。改完後再按下確認匯入即可。")
+                final_df = st.session_state["mapped_df"].dropna(subset=["symbol", "shares", "price"]).copy()
+                
+                # Automatically strip _WFT to save user time
+                final_df["symbol"] = final_df["symbol"].astype(str).str.replace(r"_WFT$", "", regex=True, flags=re.IGNORECASE)
+                
+                edited_df = st.data_editor(final_df, use_container_width=True, num_rows="dynamic")
                 
                 if st.button("✅ 確認匯入", use_container_width=True, type="primary"):
-                    cnt = import_transactions_from_csv(final_df)
+                    cnt = import_transactions_from_csv(edited_df)
                     st.success(t("import_ok", n=cnt))
                     del st.session_state["mapped_df"]
                     st.rerun()
