@@ -9,6 +9,12 @@ import plotly.graph_objects as go
 from datetime import datetime
 import time
 
+try:
+    from streamlit_autorefresh import st_autorefresh
+except ImportError:
+    st_autorefresh = None
+
+from datetime import datetime, timedelta
 from i18n import t, render_lang_switcher
 from auth_page import check_auth, render_user_info_sidebar
 from db_router import (seed_test_data, get_portfolio_symbols,
@@ -47,6 +53,51 @@ def fmt_vnd(v):
 def fmt_pct(v):
     return f"{'▲' if v>0 else '▼' if v<0 else '─'} {abs(v):.2f}%"
 
+
+# ── 自動更新股價邏輯 ──────────────────────────────────────────
+if st_autorefresh:
+    # 每 10 分鐘自動重啟頁面一次 (600,000 ms)
+    # 真正的「更新股價」邏輯會在下面判斷
+    count = st_autorefresh(interval=10 * 60 * 1000, key="price_autorefresh")
+
+def auto_update_if_needed():
+    try:
+        now_utc = datetime.utcnow()
+        now_vn = now_utc + timedelta(hours=7)
+        # 判斷是否為越南開盤時間：週一至週五，早上 9 點到下午 3 點
+        if now_vn.weekday() >= 5: return
+        if not (9 <= now_vn.hour < 15): return
+        
+        # 檢查最後更新時間
+        from db_router import get_price_cache
+        cache = get_price_cache()
+        if cache.empty: return
+        
+        # 尋找最舊的更新時間 (避免只抓到剛更新完的)
+        # 如果最舊的資料距離現在超過 60 分鐘，就觸發全面更新
+        last_update = pd.to_datetime(cache["updated_at"]).max()
+        if last_update.tzinfo is not None:
+            last_update = last_update.tz_localize(None)
+            
+        if (now_utc - last_update).total_seconds() >= 3600:
+            symbols = get_portfolio_symbols()
+            from db_router import get_watchlist
+            try:
+                wl_df = get_watchlist()
+                wl_syms = wl_df["symbol"].tolist() if not wl_df.empty else []
+            except Exception:
+                wl_syms = []
+            all_syms = list(set(symbols + wl_syms))
+            if all_syms:
+                from market_data import get_multiple_prices
+                prices_df = get_multiple_prices(all_syms)
+                for _, p in prices_df.iterrows():
+                    upsert_price_cache(p["symbol"], p["price"], p["change_pct"], p.get("volume", 0))
+    except Exception as e:
+        pass
+
+# 在背景執行自動檢查與更新
+auto_update_if_needed()
 
 # ── 側邊欄 ─────────────────────────────────────────────────────
 with st.sidebar:
