@@ -95,6 +95,16 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 
 [data-testid="collapsedControl"] { display: none !important; }
 [data-testid="stSidebar"] { display: none !important; }
+
+/* 將 Tabs 容器變成卡片風格 */
+div[data-testid="stTabs"] {
+    background: #FFFFFF;
+    border: 1px solid rgba(0,163,82,0.2);
+    border-radius: 20px;
+    padding: 20px 30px 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
 </style>
 
 """
@@ -139,7 +149,8 @@ def render_auth_page():
 
     # ── 登入 Tab ──────────────────────────────────────────────
     with tab_login:
-        st.markdown(f'<div class="auth-card"><div class="auth-title">{t("login_title")}</div>', unsafe_allow_html=True)
+        st.subheader(t("login_title"))
+        
 
         login_email = st.text_input(t("email"), placeholder="you@example.com", key="login_email")
         login_pw    = st.text_input(t("password"), type="password", key="login_pw")
@@ -182,19 +193,20 @@ def render_auth_page():
 
         
         st.markdown('<div class="divider">OR</div>', unsafe_allow_html=True)
-        if st.button("🚀 使用 Google 帳號一鍵登入", use_container_width=True, type="primary"):
-            from supabase_db import sign_in_with_google
-            res = sign_in_with_google()
-            if res.get("success"):
-                st.markdown(f'<meta http-equiv="refresh" content="0;url={res["url"]}">', unsafe_allow_html=True)
-            else:
-                st.error(t("login_fail"))
+        from supabase_db import sign_in_with_google
+        res = sign_in_with_google()
+        if res.get("success"):
+            st.link_button("🚀 使用 Google 帳號一鍵登入", url=res["url"], use_container_width=True, type="primary")
+        else:
+            if st.button("🚀 使用 Google 帳號一鍵登入 (載入失敗)", use_container_width=True, disabled=True):
+                pass
 
-        st.markdown("</div>", unsafe_allow_html=True)
+        
 
     # ── 註冊 Tab ──────────────────────────────────────────────
     with tab_register:
-        st.markdown(f'<div class="auth-card"><div class="auth-title">{t("register_title")}</div>', unsafe_allow_html=True)
+        st.subheader(t("register_title"))
+        
 
         reg_name  = st.text_input(t("full_name"), placeholder="Nguyễn Văn A / 王小明", key="reg_name")
         reg_email = st.text_input(t("email"), placeholder="you@example.com", key="reg_email")
@@ -223,9 +235,9 @@ def render_auth_page():
                 else:
                     st.error(t("register_fail", msg=result["error"]))
 
-        st.markdown("</div>", unsafe_allow_html=True)
+        
 
-    st.markdown("</div>", unsafe_allow_html=True)  # auth-container
+      # auth-container
     st.markdown(f'<div class="footer-note">{t("disclaimer")}</div>', unsafe_allow_html=True)
 
     return False  # 未登入
