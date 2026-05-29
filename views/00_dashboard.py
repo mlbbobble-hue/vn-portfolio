@@ -101,14 +101,14 @@ else:
             df_plot["weight"] = df_plot[plot_value_col] / total_val
             
             def get_text_color(roi):
-                if roi > 0: return "#10b981"
-                if roi < 0: return "#ef4444"
-                return "#64748b"
+                if roi > 0: return "#d1fae5" # Light emerald for contrast
+                if roi < 0: return "#fee2e2" # Light red for contrast
+                return "#e2e8f0" # Light slate
                 
             df_plot["pl_color"] = df_plot["roi_pct"].apply(get_text_color)
             
             df_plot["custom_txt"] = df_plot.apply(
-                lambda r: f"<b>{r['symbol']}</b><br>{r['weight']:.1%}<br><span style='color:{r['pl_color']}'>{r['roi_pct']:+.2f}%</span>" if r['weight'] >= 0.01 else "",
+                lambda r: f"<b>{r['symbol']}</b><br><span style='font-size:14px; color:rgba(255,255,255,0.75);'>{r['weight']:.1%}</span><br><span style='color:{r['pl_color']}; font-weight:600;'>{r['roi_pct']:+.2f}%</span>" if r['weight'] >= 0.01 else "",
                 axis=1
             )
 
@@ -120,13 +120,13 @@ else:
                 values=plot_value_col,
                 color="roi_pct",
                 color_continuous_scale=[
-                    [0.0, "#b91c1c"],     # 極度虧損 (亮紅)
-                    [0.45, "#7f1d1d"],    # 輕微虧損 (暗紅)
-                    [0.499, "#7f1d1d"],
-                    [0.5, "#475569"],     # 平盤 (灰藍)
-                    [0.501, "#10b981"],
-                    [0.8, "#10b981"],     # 穩定獲利 (翠綠)
-                    [1.0, "#047857"]      # 巨額獲利 (深綠)
+                    [0.0, "#7f1d1d"],     # Extreme loss (Deep Red)
+                    [0.4, "#991b1b"],     # Moderate loss (Mid Red)
+                    [0.48, "#b91c1c"],    # Slight loss (Bright Red)
+                    [0.5, "#334155"],     # Flat (Slate)
+                    [0.52, "#10b981"],    # Slight profit (Bright Green)
+                    [0.6, "#059669"],     # Moderate profit (Mid Green)
+                    [1.0, "#047857"]      # Extreme profit (Deep Green)
                 ],
                 range_color=[-50, 50],
                 custom_data=["roi_pct", "custom_txt"]
@@ -140,9 +140,9 @@ else:
                     y=0.96
                 ),
                 height=580,
-                margin=dict(t=60, b=16, l=16, r=16),
-                paper_bgcolor="#1e293b",
-                plot_bgcolor="#1e293b",
+                margin=dict(t=60, b=0, l=0, r=0),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
                 coloraxis_showscale=False
             )
 

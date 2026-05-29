@@ -10,6 +10,7 @@ import logging
 import concurrent.futures
 import re
 import json
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +128,7 @@ def _fetch_vnstock(symbol: str) -> dict:
 #  公開 API
 # ══════════════════════════════════════════════════════════════
 
+@st.cache_data(ttl=300)
 def get_stock_price(symbol: str) -> dict:
     """取得單一股票報價：先查 Sheet 快取，沒有才用 vnstock"""
     result = _fetch_from_sheet(symbol)
@@ -135,7 +137,8 @@ def get_stock_price(symbol: str) -> dict:
     return _fetch_vnstock(symbol)
 
 
-def get_multiple_prices(symbols: list[str], delay: float = 0.1, progress_callback=None) -> pd.DataFrame:
+@st.cache_data(ttl=300)
+def get_multiple_prices(symbols: list[str], delay: float = 0.1, _progress_callback=None) -> pd.DataFrame:
     """
     批次抓取多檔股價。
     策略：
@@ -157,8 +160,8 @@ def get_multiple_prices(symbols: list[str], delay: float = 0.1, progress_callbac
         else:
             missing_symbols.append(sym)
     
-    if progress_callback:
-        progress_callback(len(results), total)
+    if _progress_callback:
+        _progress_callback(len(results), total)
     
     # Step 2: 沒拿到的用 vnstock fallback
     if missing_symbols:
@@ -173,8 +176,8 @@ def get_multiple_prices(symbols: list[str], delay: float = 0.1, progress_callbac
                 for future in concurrent.futures.as_completed(futures, timeout=15):
                     try:
                         results.append(future.result())
-                        if progress_callback:
-                            progress_callback(len(results), total)
+                        if _progress_callback:
+                            _progress_callback(len(results), total)
                     except Exception:
                         pass
             except concurrent.futures.TimeoutError:
@@ -183,6 +186,7 @@ def get_multiple_prices(symbols: list[str], delay: float = 0.1, progress_callbac
     return pd.DataFrame(results)
 
 
+@st.cache_data(ttl=3600)
 def get_dividend_history(symbol: str) -> list[dict]:
     symbol = symbol.upper().strip()
     results = []
@@ -229,6 +233,7 @@ def get_dividend_history(symbol: str) -> list[dict]:
     return results
 
 
+@st.cache_data(ttl=3600)
 def get_moving_average(symbol: str, period: int = 60) -> float | None:
     sources = ['vci', 'kbs', 'msn']
     for src in sources:
@@ -247,6 +252,7 @@ def get_moving_average(symbol: str, period: int = 60) -> float | None:
     return None
 
 
+@st.cache_data(ttl=3600)
 def get_historical_prices(symbol: str, days: int = 365) -> pd.DataFrame:
     end = datetime.now().strftime("%Y-%m-%d")
     start = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")

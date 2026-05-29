@@ -62,7 +62,7 @@ with tab_add:
         bond_market_price = st.number_input(
             "📊 目前市場價格 (VND)",
             min_value=0, step=1000, value=txn_price,
-            help="輸入此債券的目前市場報價，系統會用此價格計算市值與損益。此項目不會透過自動更新股價去抓取。",
+            help=t("bond_price_help"),
             key="bond_market_price"
         )
     
@@ -116,9 +116,9 @@ with tab_add:
 with tab_import:
     st.subheader(t("tab_import"))
     
-    import_mode = st.radio("匯入模式", ["目前持股快照 (Portfolio Snapshot)", "歷史交易明細 (Transaction History)"], horizontal=True)
+    import_mode = st.radio(t("import_mode"), [t("import_snapshot"), t("import_history")], horizontal=True)
     
-    if import_mode == "歷史交易明細 (Transaction History)":
+    if import_mode == t("import_history"):
         st.markdown(t("csv_format_hint") + "：系統會自動嘗試尋找對應的欄位，您也可以手動指定。")
         sample = pd.DataFrame({
             "date":["2024-01-15","2024-03-10"],"broker":["TCBS","PHS"],
@@ -141,7 +141,7 @@ with tab_import:
         try:
             df_up = pd.read_csv(uploaded)
             cols = list(df_up.columns)
-            st.write("預覽原始資料：")
+            st.write(t("preview_raw_data"))
             st.dataframe(df_up.head(3), use_container_width=True)
             
             st.markdown("### 🔗 欄位對應 (Column Mapping)")
@@ -152,19 +152,19 @@ with tab_import:
                         if kw.lower() in str(opt).lower(): return opt
                 return options[0] if options else None
 
-            if import_mode == "歷史交易明細 (Transaction History)":
+            if import_mode == t("import_history"):
                 col1, col2, col3, col4 = st.columns(4)
-                with col1: map_date = st.selectbox("日期 (Date)", cols, index=cols.index(guess_col(["date", "日期", "時間"], cols)))
-                with col2: map_sym = st.selectbox("股票代號 (Symbol)", cols, index=cols.index(guess_col(["symbol", "ticker", "代號", "股票"], cols)))
-                with col3: map_act = st.selectbox("動作 (Action)", cols, index=cols.index(guess_col(["action", "動作", "買賣", "type"], cols)))
-                with col4: map_shares = st.selectbox("股數 (Shares)", cols, index=cols.index(guess_col(["share", "qty", "股數", "數量"], cols)))
+                with col1: map_date = st.selectbox(t("col_date"), cols, index=cols.index(guess_col(["date", "日期", "時間"], cols)))
+                with col2: map_sym = st.selectbox(t("col_symbol"), cols, index=cols.index(guess_col(["symbol", "ticker", "代號", "股票"], cols)))
+                with col3: map_act = st.selectbox(t("col_action"), cols, index=cols.index(guess_col(["action", "動作", "買賣", "type"], cols)))
+                with col4: map_shares = st.selectbox(t("col_shares"), cols, index=cols.index(guess_col(["share", "qty", "股數", "數量"], cols)))
                 
                 col5, col6, col7, col8 = st.columns(4)
-                with col5: map_price = st.selectbox("價格 (Price)", cols, index=cols.index(guess_col(["price", "價格", "單價"], cols)))
-                with col6: map_broker = st.selectbox("券商 (Broker)", ["(手動輸入)"] + cols, index=0)
-                if map_broker == "(手動輸入)": manual_broker = st.selectbox("選擇預設券商", BROKERS)
-                with col7: map_fee = st.selectbox("手續費 (Fee) [選填]", ["(無)"] + cols, index=0)
-                with col8: map_note = st.selectbox("備註 (Note) [選填]", ["(無)"] + cols, index=0)
+                with col5: map_price = st.selectbox(t("col_price"), cols, index=cols.index(guess_col(["price", "價格", "單價"], cols)))
+                with col6: map_broker = st.selectbox(t("col_broker"), [t("manual_input")] + cols, index=0)
+                if map_broker == t("manual_input"): manual_broker = st.selectbox(t("default_broker"), BROKERS)
+                with col7: map_fee = st.selectbox(t("col_fee"), [t("no_fee_note")] + cols, index=0)
+                with col8: map_note = st.selectbox(t("col_note"), [t("no_fee_note")] + cols, index=0)
                 
                 if st.button("プレビュー (預覽轉換後資料)"):
                     mapped_df = pd.DataFrame()
@@ -173,24 +173,24 @@ with tab_import:
                     mapped_df["action"] = df_up[map_act]
                     mapped_df["shares"] = pd.to_numeric(df_up[map_shares].astype(str).str.replace(",",""), errors="coerce")
                     mapped_df["price"] = pd.to_numeric(df_up[map_price].astype(str).str.replace(",",""), errors="coerce")
-                    mapped_df["broker"] = manual_broker if map_broker == "(手動輸入)" else df_up[map_broker]
-                    mapped_df["fee"] = df_up[map_fee] if map_fee != "(無)" else 0
-                    mapped_df["note"] = df_up[map_note] if map_note != "(無)" else ""
+                    mapped_df["broker"] = manual_broker if map_broker == t("manual_input") else df_up[map_broker]
+                    mapped_df["fee"] = df_up[map_fee] if map_fee != t("no_fee_note") else 0
+                    mapped_df["note"] = df_up[map_note] if map_note != t("no_fee_note") else ""
                     st.session_state["mapped_df"] = mapped_df
                     
             else:
                 col1, col2, col3 = st.columns(3)
-                with col1: map_sym = st.selectbox("股票代號 (Symbol)", cols, index=cols.index(guess_col(["symbol", "ticker", "代號", "股票"], cols)))
-                with col2: map_shares = st.selectbox("股數 (Shares)", cols, index=cols.index(guess_col(["share", "qty", "股數", "數量"], cols)))
+                with col1: map_sym = st.selectbox(t("col_symbol"), cols, index=cols.index(guess_col(["symbol", "ticker", "代號", "股票"], cols)))
+                with col2: map_shares = st.selectbox(t("col_shares"), cols, index=cols.index(guess_col(["share", "qty", "股數", "數量"], cols)))
                 with col3: 
-                    cost_type = st.radio("成本類型", ["總成本 (Total Cost)", "平均價格 (Avg Price)"], horizontal=True)
+                    cost_type = st.radio(t("cost_type"), [t("total_cost"), t("avg_price")], horizontal=True)
                     map_cost = st.selectbox(cost_type, cols, index=cols.index(guess_col(["cost", "成本", "price", "價格", "市值", "金額"], cols)))
                 
                 col_b, col_d = st.columns(2)
-                with col_b: snapshot_broker = st.selectbox("預設券商 (Broker)", BROKERS)
-                with col_d: snapshot_date = st.date_input("匯入日期 (Date)", value=date.today())
+                with col_b: snapshot_broker = st.selectbox(t("default_broker_2"), BROKERS)
+                with col_d: snapshot_date = st.date_input(t("import_date"), value=date.today())
                 
-                if st.button("預覽轉換後資料", use_container_width=True):
+                if st.button(t("preview_parsed_data"), use_container_width=True):
                     mapped_df = pd.DataFrame()
                     mapped_df["symbol"] = df_up[map_sym]
                     mapped_df["date"] = snapshot_date
@@ -268,14 +268,14 @@ with tab_view:
         
         with edit_tab:
             st.markdown("### ✏️ 修改交易記錄")
-            edit_id = st.number_input("請輸入要修改的紀錄 ID (ID)", min_value=1, step=1, key="edit_id")
+            edit_id = st.number_input(t("edit_tx_id"), min_value=1, step=1, key="edit_id")
             
             # 尋找這筆紀錄
             target_record = all_txns[all_txns["id"] == edit_id]
             
             if not target_record.empty:
                 r = target_record.iloc[0]
-                st.info(f"正在修改紀錄 ID: {edit_id} ({r['action']} {r['symbol']})")
+                st.info(t("editing_tx", id=edit_id, act=r["action"], sym=r["symbol"]))
                 
                 with st.form(key="edit_tx_form"):
                     e1, e2, e3 = st.columns(3)
@@ -324,7 +324,7 @@ with tab_view:
                             st.rerun()
             else:
                 if edit_id:
-                    st.warning("找不到此 ID 的紀錄，請確認 ID 是否正確。")
+                    st.warning(t("tx_not_found"))
                     
         with delete_tab:
             st.markdown("### 🗑️ 刪除交易記錄")
