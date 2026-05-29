@@ -148,8 +148,8 @@ else:
                 ),
                 height=580,
                 margin=dict(t=50, b=0, l=0, r=0),
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="#0f172a",
+                plot_bgcolor="#0f172a",
                 coloraxis_showscale=False
             )
 
@@ -157,7 +157,7 @@ else:
                 texttemplate="%{customdata[1]}",
                 textfont=dict(color="#f8fafc", size=17),
                 marker=dict(line=dict(width=2, color='#0f172a')),
-                root_color="rgba(0,0,0,0)",
+                root_color="#0f172a",
                 tiling=dict(pad=0),
                 pathbar=dict(visible=False)
             )
