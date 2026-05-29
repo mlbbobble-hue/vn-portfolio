@@ -55,7 +55,9 @@ with st.sidebar:
     
     st.markdown(f"""
     <div style='text-align:center; padding:12px 0;'>
-        <div style='font-size:2.5rem; color: var(--cathay-green);'><span class="material-symbols-rounded">park</span></div>
+        <div style='font-size:2.5rem; color: var(--cathay-green);'><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--cathay-green)" xmlns="http://www.w3.org/2000/svg">
+<path d="M17 12C18.6569 12 20 10.6569 20 9C20 7.34315 18.6569 6 17 6C16.8202 6 16.6441 6.01579 16.4727 6.04618C15.8291 3.75549 13.6895 2 11.1111 2C8.53272 2 6.39308 3.75549 5.74945 6.04618C5.57811 6.01579 5.40194 6 5.22222 6C3.44263 6 2 7.34315 2 9C2 10.6569 3.44263 12 5.22222 12C5.35209 12 5.47955 11.9922 5.60421 11.977C6.07921 13.7277 7.72895 15 9.66667 15H10.5556V20C10.5556 21.1046 11.451 22 12.5556 22H13.4444C13.9967 22 14.4444 21.5523 14.4444 21V15H15.3333C17.2711 15 18.9208 13.7277 19.3958 11.977C19.5205 11.9922 19.6479 12 19.7778 12H17Z"/>
+</svg></div>
         <div style='font-size:1.05rem; font-weight:700; color:var(--cathay-green);'>VN Portfolio</div>
         <div style='font-size:0.75rem; color:#888;'>多券商整合 • 配息追蹤 • 價格提醒</div>
     </div>
