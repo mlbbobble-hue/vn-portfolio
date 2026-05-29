@@ -155,13 +155,20 @@ else:
 
             fig.update_traces(
                 texttemplate="%{customdata[1]}",
-                hovertemplate=t("portfolio_hover"),
                 textfont=dict(color="#f8fafc", size=17),
                 marker=dict(line=dict(width=2, color='#0f172a')),
                 root_color="rgba(0,0,0,0)",
                 tiling=dict(pad=0),
                 pathbar=dict(visible=False)
             )
+
+            # Disable hover for the root node completely
+            if len(fig.data) > 0:
+                parents = fig.data[0].parents
+                # Set hovertemplate array: empty for root, formatted string for leaves
+                ht = t("portfolio_hover")
+                fig.data[0].hovertemplate = ["" if (p == "" or p is None) else ht for p in parents]
+                fig.data[0].hoverinfo = ["skip" if (p == "" or p is None) else "all" for p in parents]
 
             st.plotly_chart(fig, use_container_width=True, theme=None, config={'displayModeBar': False})
             

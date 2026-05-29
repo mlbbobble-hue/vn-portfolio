@@ -275,6 +275,18 @@ a[data-testid="stPageLink-NavLink"] span {
     background-color: var(--bg-card);
 }
 
+/* 徹底移除 Plotly 圖表外層的突兀外框與留白 */
+[data-testid="stPlotlyChart"], 
+[data-testid="stPlotlyChart"] > div, 
+[data-testid="stPlotlyChart"] iframe {
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 h1, h2, h3, h4, h5, h6 {
     color: var(--text-primary) !important;
     font-weight: 700 !important;
