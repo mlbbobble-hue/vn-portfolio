@@ -23,10 +23,9 @@ if not check_auth():
     st.stop()
 
 st.markdown(f"""
-<div style='background:linear-gradient(90deg,rgba(99,102,241,0.15) 0%,transparent 100%);
-            border-left:4px solid #6366f1;padding:12px 20px;border-radius:0 12px 12px 0;margin-bottom:24px;'>
-    <h2 style='margin:0;color:#e2e8f0;'>{t('watchlist_title')}</h2>
-    <p style='margin:4px 0 0;color:#94a3b8;font-size:0.9rem;'>{t('watchlist_desc')}</p>
+<div class="page-header">
+    <h2>{t('watchlist_title')}</h2>
+    <p>{t('watchlist_desc')}</p>
 </div>""", unsafe_allow_html=True)
 
 tab_wl, tab_add, tab_notify = st.tabs([t("tab_watchlist"), t("tab_add_watch"), t("tab_notify")])
@@ -73,12 +72,11 @@ with tab_wl:
             if thresh: badges.append(t("yield_threshold", pct=thresh*100))
             badge_str = "　".join(badges) if badges else t("no_alert")
             st.markdown(f"""
-            <div style='background:rgba(30,30,60,0.7);border:1px solid rgba(99,102,241,0.25);
-                        border-radius:12px;padding:14px 18px;margin:6px 0;'>
+            <div style='class="card" style="padding:14px 18px;margin:6px 0;">
                 <div style='display:flex;justify-content:space-between;align-items:center;'>
                     <div>
-                        {"🟢" if enabled else "⚫"} <b style='color:#a78bfa;font-size:1.05rem;'>{sym}</b>
-                        <span style='color:#e2e8f0;margin-left:12px;'>{price_str}</span>
+                        {"🟢" if enabled else "⚫"} <b style='color:var(--text-primary);font-size:1.05rem;'>{sym}</b>
+                        <span style='color:var(--text-secondary);margin-left:12px;'>{price_str}</span>
                         <span style='color:{cc};margin-left:8px;'>{cs} {abs(change):.2f}%</span>
                     </div>
                     <div style='color:{dist_color};font-size:.9rem;'>{dist_str}</div>

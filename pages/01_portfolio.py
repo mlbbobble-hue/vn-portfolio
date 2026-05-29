@@ -22,10 +22,9 @@ if not check_auth():
     st.stop()
 
 st.markdown(f"""
-<div style='background:linear-gradient(90deg,rgba(99,102,241,0.15) 0%,transparent 100%);
-            border-left:4px solid #6366f1;padding:12px 20px;border-radius:0 12px 12px 0;margin-bottom:24px;'>
-    <h2 style='margin:0;color:#e2e8f0;'>{t('portfolio_title')}</h2>
-    <p style='margin:4px 0 0;color:#94a3b8;font-size:0.9rem;'>{t('portfolio_desc')}</p>
+<div class="page-header">
+    <h2>{t('portfolio_title')}</h2>
+    <p>{t('portfolio_desc')}</p>
 </div>""", unsafe_allow_html=True)
 
 txns = get_all_transactions()
@@ -65,7 +64,7 @@ for col, label, val, suffix, color in [
         val_str = f"{val:+,.0f}" if is_pl else f"{val:,.0f}"
         st.markdown(f"""
         <div class="metric-card">
-            <div style='font-size:.82rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;'>{label}</div>
+            <div style='font-size:.82rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;'>{label}</div>
             <div style='font-size:1.6rem;font-weight:700;color:{color};'>{val_str}</div>
             <div style='font-size:.82rem;color:#64748b;'>{suffix}</div>
         </div>""", unsafe_allow_html=True)
@@ -97,7 +96,7 @@ def color_cell(val):
         return "color:#34d399;font-weight:600"
     if isinstance(val,str) and ("▼" in val or (val.startswith("-") and any(c.isdigit() for c in val))):
         return "color:#f87171;font-weight:600"
-    return "color:#e2e8f0"
+    return "color:var(--text-secondary)"
 
 styled = disp.style.map(color_cell, subset=[t("daily_change"), t("roi"), t("unrealized_pl"), t("realized_pl")])
 st.dataframe(styled, use_container_width=True, height=300)

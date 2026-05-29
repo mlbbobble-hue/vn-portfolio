@@ -250,3 +250,31 @@ p, span, label {
 }
 
 </style>""", unsafe_allow_html=True)
+
+/* 頁面標題區塊 */
+.page-header {
+    background: linear-gradient(90deg, rgba(0, 163, 82, 0.05) 0%, transparent 100%);
+    border-left: 4px solid var(--cathay-green);
+    padding: 12px 20px;
+    border-radius: 0 12px 12px 0;
+    margin-bottom: 24px;
+}
+.page-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+}
+.page-header p {
+    margin: 4px 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* 數據卡片 (Metric Card) */
+.metric-card {
+    background: var(--cathay-white);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 18px 22px;
+    margin: 6px 0;
+    box-shadow: var(--shadow-soft);
+}

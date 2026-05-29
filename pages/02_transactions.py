@@ -21,10 +21,9 @@ if not check_auth():
     st.stop()
 
 st.markdown(f"""
-<div style='background:linear-gradient(90deg,rgba(99,102,241,0.15) 0%,transparent 100%);
-            border-left:4px solid #6366f1;padding:12px 20px;border-radius:0 12px 12px 0;margin-bottom:24px;'>
-    <h2 style='margin:0;color:#e2e8f0;'>{t('transactions_title')}</h2>
-    <p style='margin:4px 0 0;color:#94a3b8;font-size:0.9rem;'>{t('transactions_desc')}</p>
+<div class="page-header">
+    <h2>{t('transactions_title')}</h2>
+    <p>{t('transactions_desc')}</p>
 </div>""", unsafe_allow_html=True)
 
 tab_add, tab_import, tab_view = st.tabs([t("add_transaction"), t("tab_import"), t("tab_view")])
@@ -53,8 +52,8 @@ with tab_add:
     net_val   = total_val + txn_fee if action_code == "BUY" else total_val - txn_fee
     st.markdown(f"""
     <div style='background:rgba(99,102,241,0.1);border-radius:10px;padding:12px 16px;margin:12px 0;border:1px solid rgba(99,102,241,0.3);'>
-        <span style='color:#94a3b8;font-size:.85rem;'>{t('tx_preview')}　</span>
-        <b style='color:#a78bfa;font-size:1.1rem;'>{total_val:,.0f} {t('vnd')}</b>
+        <span style='color:var(--text-muted);font-size:.85rem;'>{t('tx_preview')}　</span>
+        <b style='color:var(--text-primary);font-size:1.1rem;'>{total_val:,.0f} {t('vnd')}</b>
         <span style='color:#64748b;'> + {txn_fee:,.0f} = </span>
         <b style='color:#34d399;'>{net_val:,.0f} {t('vnd')}</b>
     </div>""", unsafe_allow_html=True)

@@ -11,7 +11,7 @@ AUTH_STYLE = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp {
-    background: linear-gradient(135deg, #0a0a1a 0%, #0f0f2e 40%, #1a0a2e 100%);
+    background: var(--background-main);
     min-height: 100vh;
 }
 .auth-container {
@@ -32,43 +32,43 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 }
 .auth-logo .sub { font-size: 0.85rem; color: #64748b; }
 .auth-card {
-    background: linear-gradient(135deg, rgba(30,30,60,0.9), rgba(15,15,40,0.95));
-    border: 1px solid rgba(99,102,241,0.3);
+    background: var(--cathay-white); box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(0,163,82,0.3);
     border-radius: 20px;
     padding: 32px 36px;
     backdrop-filter: blur(20px);
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
 }
 .auth-title {
-    font-size: 1.3rem; font-weight: 600; color: #e2e8f0;
+    font-size: 1.3rem; font-weight: 600; color: var(--text-primary);
     margin-bottom: 24px; text-align: center;
 }
 .stTextInput > div > div > input {
     background: rgba(15,15,35,0.8) !important;
-    border: 1px solid rgba(99,102,241,0.3) !important;
+    border: 1px solid rgba(0,163,82,0.3) !important;
     border-radius: 10px !important;
-    color: #e2e8f0 !important;
+    color: var(--text-primary) !important;
     padding: 10px 14px !important;
 }
 .stTextInput > div > div > input:focus {
-    border-color: #6366f1 !important;
-    box-shadow: 0 0 0 2px rgba(99,102,241,0.25) !important;
+    border-color: var(--cathay-green) !important;
+    box-shadow: 0 0 0 2px rgba(0,163,82,0.25) !important;
 }
 .stButton > button {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    background: var(--cathay-green) !important;
     color: white !important; border: none !important;
     border-radius: 10px !important; font-weight: 600 !important;
     font-size: 1rem !important; padding: 12px !important;
     transition: all 0.2s !important;
-    box-shadow: 0 4px 15px rgba(99,102,241,0.3) !important;
+    box-shadow: 0 4px 15px rgba(0,163,82,0.3) !important;
 }
 .stButton > button:hover {
     transform: translateY(-1px) !important;
-    box-shadow: 0 6px 20px rgba(99,102,241,0.5) !important;
+    box-shadow: 0 6px 20px rgba(0,163,82,0.5) !important;
 }
 .stButton > button[kind="secondary"] {
     background: transparent !important;
-    border: 1px solid rgba(99,102,241,0.4) !important;
+    border: 1px solid rgba(0,163,82,0.4) !important;
     color: #a78bfa !important;
     box-shadow: none !important;
 }
@@ -78,7 +78,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 }
 .divider::before, .divider::after {
     content: ''; position: absolute; top: 50%; width: 42%; height: 1px;
-    background: rgba(99,102,241,0.2);
+    background: rgba(0,163,82,0.2);
 }
 .divider::before { left: 0; }
 .divider::after { right: 0; }
@@ -87,7 +87,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 }
 [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #1e1e3a 0%, #16213e 100%);
-    border-right: 1px solid rgba(99,102,241,0.2);
+    border-right: 1px solid rgba(0,163,82,0.2);
 }
 </style>
 """
@@ -244,7 +244,7 @@ def render_user_info_sidebar():
     name  = st.session_state.get("user_name", email)
 
     st.markdown(f"""
-    <div style='background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);
+    <div style='background:rgba(0,163,82,0.1);border:1px solid rgba(0,163,82,0.25);
                 border-radius:12px;padding:10px 14px;margin:8px 0;'>
         <div style='font-size:.75rem;color:#64748b;'>{t("logged_in_as", email=email)}</div>
         <div style='font-size:.9rem;color:#a78bfa;font-weight:600;'>👤 {name}</div>

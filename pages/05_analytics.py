@@ -22,10 +22,9 @@ if not check_auth():
     st.stop()
 
 st.markdown(f"""
-<div style='background:linear-gradient(90deg,rgba(99,102,241,0.15) 0%,transparent 100%);
-            border-left:4px solid #6366f1;padding:12px 20px;border-radius:0 12px 12px 0;margin-bottom:24px;'>
-    <h2 style='margin:0;color:#e2e8f0;'>{t('analytics_title')}</h2>
-    <p style='margin:4px 0 0;color:#94a3b8;font-size:0.9rem;'>{t('analytics_desc')}</p>
+<div class="page-header">
+    <h2>{t('analytics_title')}</h2>
+    <p>{t('analytics_desc')}</p>
 </div>""", unsafe_allow_html=True)
 
 tab_div, tab_pl, tab_hist = st.tabs([t("tab_monthly_div"), t("tab_pl_contrib"), t("tab_price_hist")])

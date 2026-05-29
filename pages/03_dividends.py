@@ -23,10 +23,9 @@ if not check_auth():
     st.stop()
 
 st.markdown(f"""
-<div style='background:linear-gradient(90deg,rgba(99,102,241,0.15) 0%,transparent 100%);
-            border-left:4px solid #6366f1;padding:12px 20px;border-radius:0 12px 12px 0;margin-bottom:24px;'>
-    <h2 style='margin:0;color:#e2e8f0;'>{t('dividends_title')}</h2>
-    <p style='margin:4px 0 0;color:#94a3b8;font-size:0.9rem;'>{t('dividends_desc')}</p>
+<div class="page-header">
+    <h2>{t('dividends_title')}</h2>
+    <p>{t('dividends_desc')}</p>
 </div>""", unsafe_allow_html=True)
 
 tab_ov, tab_auto, tab_man, tab_apply = st.tabs([
@@ -58,7 +57,7 @@ with tab_ov:
                 st.markdown(f"""
                 <div class="ex-soon">
                     {icon} <b>{row['symbol']}</b> — {dtype_str} | {t('ex_date')}: {row['ex_date']}
-                    <span style='color:#94a3b8;'> ({t('days_left', n=int(row['days_left']))})</span>
+                    <span style='color:var(--text-muted);'> ({t('days_left', n=int(row['days_left']))})</span>
                     <br><span style='color:#fbbf24;margin-left:24px;'>{amount_str}</span>
                 </div>""", unsafe_allow_html=True)
 
