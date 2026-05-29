@@ -103,7 +103,7 @@ else:
             def get_text_color(roi):
                 if roi > 0: return "#10b981"
                 if roi < 0: return "#ef4444"
-                return "transparent"
+                return "#64748b"
                 
             df_plot["pl_color"] = df_plot["roi_pct"].apply(get_text_color)
             
