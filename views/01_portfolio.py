@@ -93,43 +93,12 @@ for _, row in portfolio_df.iterrows():
 disp = pd.DataFrame(table_rows)
 def color_cell(val):
     if isinstance(val,str) and ("▲" in val or val.startswith("+")):
-        return "color:#34d399;font-weight:600"
+        return "color:#16a34a;font-weight:600"
     if isinstance(val,str) and ("▼" in val or (val.startswith("-") and any(c.isdigit() for c in val))):
-        return "color:#f87171;font-weight:600"
-    return "color:var(--text-secondary)"
+        return "color:#ef4444;font-weight:600"
+    return "color:#475569"
 
 styled = disp.style.map(color_cell, subset=[t("daily_change"), t("roi"), t("unrealized_pl"), t("realized_pl")])
-st.dataframe(styled, use_container_width=True, height=300)
+st.dataframe(styled, use_container_width=True, hide_index=True)
 
-st.markdown("<br>", unsafe_allow_html=True)
-col_l, col_r = st.columns(2)
-with col_l:
-    st.subheader(t("roi_ranking"))
-    roi_df = portfolio_df[portfolio_df["current_price"]>0].sort_values("roi_pct", ascending=True)
-    if not roi_df.empty:
-        fig = go.Figure(go.Bar(
-            x=roi_df["roi_pct"], y=roi_df["symbol"], orientation="h",
-            marker_color=["#34d399" if v>=0 else "#f87171" for v in roi_df["roi_pct"]],
-            text=[f"{v:+.2f}%" for v in roi_df["roi_pct"]], textposition="outside",
-        ))
-        fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                          font=dict(color="#e2e8f0"), height=280,
-                          xaxis=dict(gridcolor="rgba(99,102,241,0.1)", title="ROI %"),
-                          margin=dict(t=10,b=10,l=10,r=60), showlegend=False)
-        st.plotly_chart(fig, use_container_width=True)
-
-with col_r:
-    st.subheader(t("broker_distribution"))
-    broker_totals = {}
-    for _, row in portfolio_df.iterrows():
-        bd = row.get("broker_breakdown", {}); mkt = row["market_value"]; total_s = row["total_shares"]
-        if isinstance(bd, dict) and total_s > 0:
-            for b, s in bd.items():
-                broker_totals[b] = broker_totals.get(b,0) + mkt * s/total_s
-    if broker_totals:
-        bf = pd.DataFrame(list(broker_totals.items()), columns=[t("broker"), t("market_value")])
-        fig2 = px.pie(bf, values=t("market_value"), names=t("broker"), hole=0.5,
-                      color_discrete_sequence=["#6366f1","#8b5cf6","#a78bfa","#c4b5fd"])
-        fig2.update_layout(paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#e2e8f0"),
-                           height=280, margin=dict(t=10,b=10), showlegend=True)
-        st.plotly_chart(fig2, use_container_width=True)
+# The ROI and Broker charts have been removed per user request.
