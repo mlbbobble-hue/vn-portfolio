@@ -59,7 +59,7 @@ else:
     st.markdown(f'''
     <div class="cathay-app-header" style="margin: 0 0 20px 0;">
         <span class="app-title-small">{t("my_assets_overview")}</span>
-        <div class="total-value">{{display_value}}</div>
+        <div class="total-value">{display_value}</div>
     </div>
     ''', unsafe_allow_html=True)
 
@@ -72,8 +72,8 @@ else:
         st.markdown(f'''
         <div class="cathay-card">
             <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("unrealized_pl")}</div>
-            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{{display_unrealized}}</div>
-            <div style="margin-top: 8px;"><span class="badge {{badge_class}}">{{sign}}{{total_unrealized:,.0f}}</span></div>
+            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_unrealized}</div>
+            <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{total_unrealized:,.0f}</span></div>
         </div>
         ''', unsafe_allow_html=True)
 
@@ -83,8 +83,8 @@ else:
         st.markdown(f'''
         <div class="cathay-card">
             <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("accum_return_rate")}</div>
-            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{{display_roi}}</div>
-            <div style="margin-top: 8px;"><span class="badge {{badge_class}}">{{sign}}{{roi_pct:.2f}}%</span></div>
+            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_roi}</div>
+            <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{roi_pct:.2f}%</span></div>
         </div>
         ''', unsafe_allow_html=True)
         
