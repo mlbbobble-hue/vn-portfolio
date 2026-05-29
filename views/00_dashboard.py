@@ -113,7 +113,7 @@ else:
             )
 
             st.markdown(f'''
-            <div class="cathay-card" style="padding: 24px; margin-top: 24px;">
+            <div style="background: #1e293b; border-radius: 16px; padding: 24px; margin-top: 24px; border: none !important; box-shadow: none !important; outline: none !important;">
             <h4 style='margin: 0 0 16px 0;'>{t("phs_asset_allocation")}</h4>
             ''', unsafe_allow_html=True)
             
@@ -147,7 +147,7 @@ else:
                 texttemplate="%{customdata[1]}",
                 hovertemplate=t("portfolio_hover"),
                 textfont=dict(color="#f8fafc", size=17),
-                marker=dict(line=dict(width=1, color='rgba(255,255,255,0.15)')) 
+                marker=dict(line=dict(width=2, color='#0f172a')) 
             )
 
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
