@@ -148,8 +148,8 @@ else:
                 ),
                 height=580,
                 margin=dict(t=50, b=0, l=0, r=0),
-                paper_bgcolor="#1e293b",
-                plot_bgcolor="#1e293b",
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
                 coloraxis_showscale=False
             )
 
