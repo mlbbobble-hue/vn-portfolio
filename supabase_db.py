@@ -97,6 +97,19 @@ def sign_in(email: str, password: str) -> dict:
 
 
 
+
+def refresh_login(refresh_token: str) -> dict:
+    """用 refresh_token 重新登入"""
+    try:
+        client = _get_client()
+        res = client.auth.refresh_session(refresh_token)
+        if res.session:
+            return {"success": True, "session": res.session, "user": res.user, "error": ""}
+        return {"success": False, "error": "Token expired"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 def sign_in_with_google():
     """取得 Google 登入網址"""
     try:

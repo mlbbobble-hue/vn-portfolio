@@ -110,7 +110,35 @@ div[data-testid="stTabs"] {
 """
 
 
+
 def render_auth_page():
+    # 初始化 CookieController
+    try:
+        from streamlit_cookies_controller import CookieController
+        cookie_ctrl = CookieController()
+    except Exception:
+        cookie_ctrl = None
+
+    # 自動登入邏輯
+    if not st.session_state.get("authenticated") and cookie_ctrl is not None:
+        saved_token = cookie_ctrl.get("sb_refresh_token")
+        if saved_token and "auto_login_attempted" not in st.session_state:
+            st.session_state["auto_login_attempted"] = True
+            from supabase_db import refresh_login
+            res = refresh_login(saved_token)
+            if res["success"]:
+                user = res["user"]
+                full_name = (user.user_metadata or {}).get("full_name", user.email)
+                st.session_state["authenticated"] = True
+                st.session_state["user_id"]       = user.id
+                st.session_state["user_email"]    = user.email
+                st.session_state["user_name"]     = full_name
+                st.session_state["access_token"]  = res["session"].access_token
+                # 更新 token
+                cookie_ctrl.set("sb_refresh_token", res["session"].refresh_token, max_age=86400*30)
+                st.rerun()
+
+
     """
     渲染完整登入/註冊頁面。
     若登入成功，將 session_state 設定好後 rerun。
@@ -155,6 +183,7 @@ def render_auth_page():
         login_email = st.text_input(t("email"), placeholder="you@example.com", key="login_email")
         login_pw    = st.text_input(t("password"), type="password", key="login_pw")
 
+        remember_me = st.checkbox("保持登入狀態 (Keep me logged in)", value=True)
         col1, col2 = st.columns([3, 2])
         with col1:
             login_btn = st.button(t("login_btn"), use_container_width=True, key="do_login", type="primary")
@@ -179,6 +208,8 @@ def render_auth_page():
                     st.session_state["user_email"]    = user.email
                     st.session_state["user_name"]     = full_name
                     st.session_state["access_token"]  = result["session"].access_token
+                    if remember_me and cookie_ctrl is not None:
+                        cookie_ctrl.set("sb_refresh_token", result["session"].refresh_token, max_age=86400*30)
                     st.success(t("login_success", name=full_name))
                     st.rerun()
                 elif result["error"] == "EMAIL_NOT_CONFIRMED":

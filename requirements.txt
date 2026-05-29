@@ -6,3 +6,4 @@ requests>=2.31.0
 vnstock>=4.0.0
 python-dotenv>=1.0.0
 streamlit-autorefresh>=1.0.1
+streamlit-cookies-controller==0.0.4
