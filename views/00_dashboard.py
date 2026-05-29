@@ -108,7 +108,7 @@ else:
             df_plot["pl_color"] = df_plot["roi_pct"].apply(get_text_color)
             
             df_plot["custom_txt"] = df_plot.apply(
-                lambda r: f"<b>{r['symbol']}</b><br><span style='font-size:14px; color:rgba(255,255,255,0.75);'>{r['weight']:.1%}</span><br><span style='color:{r['pl_color']}; font-weight:600;'>{r['roi_pct']:+.2f}%</span>" if r['weight'] >= 0.01 else "",
+                lambda r: f"<b>{r['symbol']}</b><br>{r['weight']:.1%}<br><span style='color:{r['pl_color']}; font-weight:600;'>{r['roi_pct']:+.2f}%</span>" if r['weight'] >= 0.01 else "",
                 axis=1
             )
 
@@ -120,11 +120,11 @@ else:
                 values=plot_value_col,
                 color="roi_pct",
                 color_continuous_scale=[
-                    [0.0, "#8b2230"],     # -50% (Deep Red)
-                    [0.499, "#d62828"],   # Just below 0% (Bright Red)
-                    [0.5, "#64748b"],     # 0% (Slate Gray)
-                    [0.501, "#4caf50"],   # Just above 0% (Bright Green)
-                    [1.0, "#1b5e20"]      # +50% (Deep Green)
+                    [0.0, "#b91c1c"],     # 嚴重虧損 (<<0)
+                    [0.499, "#7f1d1d"],   # 輕微虧損 (<0)
+                    [0.5, "#475569"],     # 平盤 (=0)
+                    [0.501, "#10b981"],   # 穩定獲利 (>0)
+                    [1.0, "#047857"]      # 巨額獲利 (>>50%)
                 ],
                 range_color=[-50, 50],
                 custom_data=["roi_pct", "custom_txt"]
