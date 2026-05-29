@@ -346,16 +346,20 @@ def t(key: str, **kwargs) -> str:
 def render_lang_switcher():
     """在側邊欄渲染語言切換按鈕"""
     current = get_lang()
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🇻🇳 Tiếng Việt",
-                     use_container_width=True,
-                     type="primary" if current == "vi" else "secondary"):
-            set_lang("vi")
-            st.rerun()
-    with col2:
-        if st.button("🇹🇼 繁體中文",
-                     use_container_width=True,
-                     type="primary" if current == "zh" else "secondary"):
-            set_lang("zh")
-            st.rerun()
+    
+    # 使用 selectbox 讓介面更簡潔
+    options = ["🇹🇼 繁體中文", "🇻🇳 Tiếng Việt"]
+    current_index = 0 if current == "zh" else 1
+    
+    selected = st.selectbox(
+        "🌐 Language", 
+        options, 
+        index=current_index,
+        label_visibility="collapsed"
+    )
+    
+    new_lang = "zh" if "繁體中文" in selected else "vi"
+    if new_lang != current:
+        set_lang(new_lang)
+        st.rerun()
+
