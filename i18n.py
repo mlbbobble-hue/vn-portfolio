@@ -373,6 +373,17 @@ TRANSLATIONS = {
     "div_acc_stock_dist":   {"vi": "Lũy kế Cổ phiếu thưởng", "zh": "累計股票配股"},
     "total_records":        {"vi": "Tổng cộng {n} kỷ lục", "zh": "共 {n} 筆紀錄"},
 
+    # ── 總覽首頁 補充翻譯 ─────────────────────────────────────────────
+    "syncing_prices":       {"vi": "🔄 Đang đồng bộ giá...", "zh": "🔄 價格同步中..."},
+    "loading_values":       {"vi": "🔄 Đang tải...", "zh": "🔄 載入中..."},
+    "my_assets_overview":   {"vi": "Tổng quan tài sản của tôi", "zh": "我的資產總覽"},
+    "invest_performance":   {"vi": "Hiệu suất đầu tư", "zh": "投資績效"},
+    "unrealized_pl":        {"vi": "Lãi/lỗ chưa thực hiện", "zh": "未實現損益"},
+    "accum_return_rate":    {"vi": "Tỷ suất lợi nhuận tích lũy", "zh": "累積報酬率"},
+    "portfolio_chart_title":{"vi": "Danh mục đầu tư", "zh": "投資組合"},
+    "portfolio_hover":      {"vi": "<b>%{label}</b><br>Tỷ trọng: %{percentRoot:.2%}<br>Lợi nhuận dự kiến: %{customdata[0]:+.2f}%<extra></extra>", "zh": "<b>%{label}</b><br>持股比例: %{percentRoot:.2%}<br>預估損益: %{customdata[0]:+.2f}%<extra></extra>"},
+    "portfolio_empty_desc": {"vi": "Bạn hiện chưa sở hữu cổ phiếu nào.<br>Hãy nhấp vào nút bên dưới để bắt đầu giao dịch đầu tiên!", "zh": "您目前尚未持有任何股票。<br>點擊下方按鈕開始您的第一筆交易紀錄！"},
+
     # ── 新增修復 ─────────────────────────────────────────────
     "roi_double":           {"vi": "Lãi gấp đôi (>50%)", "zh": "獲利翻倍 (>50%)"},
     "roi_profit":           {"vi": "Lãi ổn định (>0%)", "zh": "穩定獲利 (>0%)"},

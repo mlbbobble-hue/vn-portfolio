@@ -45,8 +45,8 @@ if not holdings.empty:
 is_loading_prices = not holdings.empty and total_value == 0 and total_cost > 0
 
 if is_loading_prices:
-    display_value = "🔄 價格同步中..."
-    display_unrealized = "🔄 載入中..."
+    display_value = t("syncing_prices")
+    display_unrealized = t("loading_values")
     display_roi = "🔄"
     st_autorefresh(interval=2000, limit=15, key="wait_for_prices")
 else:
@@ -58,22 +58,22 @@ else:
 # 1. 頂部總資產橫幅
     st.markdown(f'''
     <div class="cathay-app-header" style="margin: 0 0 20px 0;">
-        <span class="app-title-small">我的資產總覽</span>
-        <div class="total-value">{display_value}</div>
+        <span class="app-title-small">{t("my_assets_overview")}</span>
+        <div class="total-value">{{display_value}}</div>
     </div>
     ''', unsafe_allow_html=True)
 
     # 2. 投資績效 Badges & Cards
-    st.markdown("<h4 style='margin-left: 8px;'>投資績效</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='margin-left: 8px;'>{t('invest_performance')}</h4>", unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
         badge_class = "badge-up" if total_unrealized > 0 else "badge-down" if total_unrealized < 0 else "badge-neutral"
         sign = "+" if total_unrealized > 0 else ""
         st.markdown(f'''
         <div class="cathay-card">
-            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">未實現損益</div>
-            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_unrealized}</div>
-            <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{total_unrealized:,.0f}</span></div>
+            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("unrealized_pl")}</div>
+            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{{display_unrealized}}</div>
+            <div style="margin-top: 8px;"><span class="badge {{badge_class}}">{{sign}}{{total_unrealized:,.0f}}</span></div>
         </div>
         ''', unsafe_allow_html=True)
 
@@ -82,9 +82,9 @@ else:
         sign = "+" if roi_pct > 0 else ""
         st.markdown(f'''
         <div class="cathay-card">
-            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">累積報酬率</div>
-            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_roi}</div>
-            <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{roi_pct:.2f}%</span></div>
+            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("accum_return_rate")}</div>
+            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{{display_roi}}</div>
+            <div style="margin-top: 8px;"><span class="badge {{badge_class}}">{{sign}}{{roi_pct:.2f}}%</span></div>
         </div>
         ''', unsafe_allow_html=True)
         
@@ -97,30 +97,30 @@ else:
         
         if not df_plot.empty:
             def get_performance_category(roi):
-                if roi >= 50: return "獲利翻倍 (>50%)"
-                if roi > 0: return "穩定獲利 (>0%)"
-                if roi < 0: return "微幅虧損 (<0%)"
-                return "平盤或特殊 (0%)"
+                if roi >= 50: return t("roi_double")
+                if roi > 0: return t("roi_profit")
+                if roi < 0: return t("roi_loss")
+                return t("roi_flat")
 
             df_plot = df_plot.copy()
             df_plot["performance"] = df_plot["roi_pct"].apply(get_performance_category)
             
             color_map = {
-                "獲利翻倍 (>50%)": "#10b981", 
-                "穩定獲利 (>0%)": "#10b981",  
-                "微幅虧損 (<0%)": "#ef4444",  
-                "平盤或特殊 (0%)": "#64748b", 
+                t("roi_double"): "#10b981", 
+                t("roi_profit"): "#10b981",  
+                t("roi_loss"): "#ef4444",  
+                t("roi_flat"): "#64748b", 
                 "(?)": "#1e293b"              
             }
 
-            st.markdown('''
+            st.markdown(f'''
             <div class="cathay-card" style="padding: 24px; margin-top: 24px;">
-            <h4 style='margin: 0 0 16px 0;'>投資組合</h4>
+            <h4 style='margin: 0 0 16px 0;'>{t("portfolio_chart_title")}</h4>
             ''', unsafe_allow_html=True)
             
             fig = px.treemap(
                 df_plot,
-                path=[px.Constant("投資組合"), "symbol"],
+                path=[px.Constant(t("portfolio")), "symbol"],
                 values=plot_value_col,
                 color="performance",
                 color_discrete_map=color_map,
@@ -144,7 +144,7 @@ else:
 
             fig.update_traces(
                 texttemplate="<b>%{label}</b><br>%{percentRoot:.2%}",
-                hovertemplate="<b>%{label}</b><br>持股比例: %{percentRoot:.2%}<br>預估損益: %{customdata[0]:+.2f}%<extra></extra>",
+                hovertemplate=t("portfolio_hover"),
                 textfont=dict(color="white", size=15),
                 marker=dict(line=dict(width=2, color='white')) 
             )
@@ -153,12 +153,12 @@ else:
             st.markdown('</div>', unsafe_allow_html=True)
             
     else:
-        st.markdown('''
+        st.markdown(f'''
         <div class="empty-state">
             <div class="empty-icon">🌱</div>
-            <div class="empty-text">您目前尚未持有任何股票。<br>點擊下方按鈕開始您的第一筆交易紀錄！</div>
+            <div class="empty-text">{t("portfolio_empty_desc")}</div>
         </div>
         ''', unsafe_allow_html=True)
         
-        if st.button("前往新增交易", use_container_width=True):
+        if st.button(t("go_to_add_tx"), use_container_width=True):
             st.switch_page("views/02_transactions.py")
