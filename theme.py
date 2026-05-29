@@ -119,12 +119,24 @@ html, body, [class*="css"] {
     padding: 8px 24px !important;
     transition: background-color 0.2s ease;
 }
+.stButton>button * {
+    color: white !important;
+}
 .stButton>button:hover {
     background-color: var(--cathay-dark-green) !important;
 }
 .stButton>button:active {
     transform: scale(0.98);
 }
+
+/* 修復側邊欄與頁面連結顏色太淡的問題 */
+[data-testid="stSidebarNav"] span, 
+a[data-testid="stPageLink-NavLink"] p, 
+a[data-testid="stPageLink-NavLink"] span {
+    color: var(--text-primary) !important;
+    font-weight: 500 !important;
+}
+
 
 /* 報酬率徽章 (Badges) */
 .badge {

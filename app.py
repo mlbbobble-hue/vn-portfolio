@@ -53,8 +53,8 @@ with st.sidebar:
     st.markdown(f"""
     <div style='text-align:center; padding:12px 0;'>
         <div style='font-size:2.5rem'>📈</div>
-        <div style='font-size:1.05rem; font-weight:700; color:#a78bfa;'>VN Portfolio</div>
-        <div style='font-size:0.75rem; color:#64748b;'>{t('app_tagline')}</div>
+        <div style='font-size:1.05rem; font-weight:700; color:var(--cathay-green);'>VN Portfolio</div>
+        <div style='font-size:0.75rem; color:#888;'>多券商整合 • 配息追蹤 • 價格提醒</div>
     </div>
     """, unsafe_allow_html=True)
 
