@@ -93,34 +93,7 @@ with col_left:
         </div>
         ''', unsafe_allow_html=True)
         
-    # 3. 詳細持股表格 (從 01_portfolio 移入，簡化版)
-    if not holdings.empty:
-        table_rows = []
-        for _, row in holdings.iterrows():
-            cur = row["current_price"]; roi = row["roi_pct"]
-            table_rows.append({
-                "代號": row["symbol"],
-                "股數": f"{row['total_shares']:,.0f}",
-                "現價": f"{cur:,.0f}" if cur > 0 else "─",
-                "盈虧金額": f"{row['unrealized_pl']:+,.0f}",
-                "損益率": f"{'+'if roi>=0 else ''}{roi:.2f}%"
-            })
-        disp = pd.DataFrame(table_rows)
-        def color_cell(val):
-            if isinstance(val,str) and ("▲" in val or val.startswith("+")):
-                return "color: var(--financial-up); font-weight: 600;"
-            if isinstance(val,str) and ("▼" in val or (val.startswith("-") and any(c.isdigit() for c in val))):
-                return "color: var(--financial-down); font-weight: 600;"
-            return ""
 
-        styled = disp.style.map(color_cell, subset=["盈虧金額", "損益率"]).hide(axis="index")
-        
-        st.markdown(f'''
-        <div class="cathay-card" style="padding: 24px; margin-bottom: 0;">
-            <h4 style="margin: 0 0 16px 0; color: var(--text-primary);">詳細持股</h4>
-            {styled.to_html(classes="custom-table")}
-        </div>
-        ''', unsafe_allow_html=True)
 
 
 with col_right:
