@@ -99,76 +99,107 @@ else:
             df_plot = df_plot.copy()
             total_val = df_plot[plot_value_col].sum()
             df_plot["weight"] = df_plot[plot_value_col] / total_val
-            
-            def get_text_color(roi):
-                if roi > 0: return "#10b981"
-                if roi < 0: return "#ef4444"
-                return "#64748b"
-                
-            df_plot["pl_color"] = df_plot["roi_pct"].apply(get_text_color)
-            
-            df_plot["custom_txt"] = df_plot.apply(
-                lambda r: f"<b>{r['symbol']}</b><br>{r['weight']:.1%}<br><span style='color:{r['pl_color']}; font-weight:600;'>{r['roi_pct']:+.2f}%</span>" if r['weight'] >= 0.01 else "",
-                axis=1
-            )
+            df_plot["weight_pct"] = df_plot["weight"] * 100
+
+            import plotly.graph_objects as go
+            import numpy as np
+
+            # 準備氣泡顏色
+            colors = []
+            for roi in df_plot["roi_pct"]:
+                if roi > 0:
+                    colors.append("rgba(16, 185, 129, 0.8)")  # 獲利綠
+                elif roi < 0:
+                    colors.append("rgba(239, 68, 68, 0.8)")   # 虧損紅
+                else:
+                    colors.append("rgba(100, 116, 139, 0.8)")  # 中性灰
+
+            # 準備氣泡大小：以最大市值股票為基準 [25, 80]
+            max_val = df_plot[plot_value_col].max()
+            if max_val > 0:
+                sizes = 25 + 55 * (df_plot[plot_value_col] / max_val)
+            else:
+                sizes = [40] * len(df_plot)
+
+            # 準備置中粗體股票代碼文字
+            labels = [f"<b>{sym}</b>" for sym in df_plot["symbol"]]
+
+            # 多國語言支持
+            lang = st.session_state.get("lang", "zh")
+            title_text = "資產體檢氣泡圖" if lang == "zh" else "Biểu đồ bong bóng chẩn đoán tài sản"
+            x_title = "持股比例 (%)" if lang == "zh" else "Tỷ lệ (%)"
+            y_title = "未實現損益率 (%)" if lang == "zh" else "Hiệu suất (%)"
+
+            if lang == "vi":
+                ht = (
+                    "<b>Mã CK: %{customdata[0]}</b><br>"
+                    "Tỷ lệ: %{x:.2f}%<br>"
+                    "Hiệu suất: %{y:+.2f}%<br>"
+                    "Tổng giá trị: ₫%{customdata[1]:,.0f}"
+                    "<extra></extra>"
+                )
+            else:
+                ht = (
+                    "<b>股票代碼: %{customdata[0]}</b><br>"
+                    "持股比例: %{x:.2f}%<br>"
+                    "未實現損益率: %{y:+.2f}%<br>"
+                    "目前總市值: ₫%{customdata[1]:,.0f}"
+                    "<extra></extra>"
+                )
 
             st.markdown("<br>", unsafe_allow_html=True)
-            
-            df_plot["parent"] = ""
-            fig = px.treemap(
-                df_plot,
-                names="symbol",
-                parents="parent",
-                values=plot_value_col,
-                color="roi_pct",
-                color_continuous_scale=[
-                    [0.0, "#b91c1c"],     # 嚴重虧損 (<<0)
-                    [0.499, "#7f1d1d"],   # 輕微虧損 (<0)
-                    [0.5, "rgba(0,0,0,0)"],# 平盤 (=0) 完全透明
-                    [0.501, "#10b981"],   # 穩定獲利 (>0)
-                    [1.0, "#047857"]      # 巨額獲利 (>>50%)
-                ],
-                range_color=[-50, 50],
-                custom_data=["roi_pct", "custom_txt"]
-            )
 
-            # Disable hover for the root node to prevent the empty tooltip
-            import numpy as np
-            if len(fig.data) > 0:
-                parents = fig.data[0].parents
-                hoverinfos = ["skip" if (p == "" or p is None) else "all" for p in parents]
-                fig.data[0].hoverinfo = hoverinfos
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=df_plot["weight_pct"],
+                y=df_plot["roi_pct"],
+                mode="markers+text",
+                marker=dict(
+                    size=sizes,
+                    color=colors,
+                    line=dict(width=1.5, color="#f8fafc")
+                ),
+                text=labels,
+                textposition="middle center",
+                textfont=dict(
+                    color="#f8fafc",
+                    size=12,
+                    family="Noto Sans TC"
+                ),
+                customdata=np.stack((df_plot["symbol"], df_plot[plot_value_col]), axis=-1),
+                hovertemplate=ht
+            ))
 
             fig.update_layout(
                 title=dict(
-                    text=f"<b>{t('phs_asset_allocation')}</b>",
+                    text=f"<b>{title_text}</b>",
                     font=dict(size=18, color="#f8fafc"),
                     x=0.015,
                     y=0.96
                 ),
                 height=580,
-                margin=dict(t=50, b=0, l=0, r=0),
+                margin=dict(t=80, b=50, l=50, r=30),
                 paper_bgcolor="#0f172a",
                 plot_bgcolor="#0f172a",
-                coloraxis_showscale=False
+                xaxis=dict(
+                    title=dict(text=x_title, font=dict(color="#94a3b8", size=13)),
+                    tickfont=dict(color="#94a3b8"),
+                    gridcolor="#334155",
+                    zeroline=True,
+                    zerolinecolor="#334155",
+                    zerolinewidth=1.5,
+                    range=[0, max(50, df_plot["weight_pct"].max() + 5)]
+                ),
+                yaxis=dict(
+                    title=dict(text=y_title, font=dict(color="#94a3b8", size=13)),
+                    tickfont=dict(color="#94a3b8"),
+                    gridcolor="#334155",
+                    zeroline=True,
+                    zerolinecolor="#334155",
+                    zerolinewidth=2
+                ),
+                showlegend=False
             )
-
-            fig.update_traces(
-                texttemplate="%{customdata[1]}",
-                textfont=dict(color="#f8fafc", size=17),
-                marker=dict(line=dict(width=2, color='#0f172a')),
-                root_color="#0f172a",
-                tiling=dict(pad=0),
-                pathbar=dict(visible=False)
-            )
-
-            # Disable hover for the root node completely
-            if len(fig.data) > 0:
-                parents = fig.data[0].parents
-                # Set hovertemplate array: empty for root, formatted string for leaves
-                ht = t("portfolio_hover")
-                fig.data[0].hovertemplate = ["" if (p == "" or p is None) else ht for p in parents]
-                fig.data[0].hoverinfo = ["skip" if (p == "" or p is None) else "all" for p in parents]
 
             st.plotly_chart(fig, use_container_width=True, theme=None, config={'displayModeBar': False})
             
