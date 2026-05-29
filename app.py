@@ -50,6 +50,9 @@ def fmt_pct(v):
 
 # ── 側邊欄 ─────────────────────────────────────────────────────
 with st.sidebar:
+    render_lang_switcher()
+    st.markdown("<br>", unsafe_allow_html=True)
+    
     st.markdown(f"""
     <div style='text-align:center; padding:12px 0;'>
         <div style='font-size:2.5rem'>📈</div>
@@ -76,9 +79,6 @@ with st.sidebar:
                 st.success(t("updated_count", n=len(all_syms)))
                 st.rerun()
                 
-    st.divider()
-
-    render_lang_switcher()
     st.divider()
     render_user_info_sidebar()
     st.divider()

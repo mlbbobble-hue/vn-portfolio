@@ -347,16 +347,19 @@ def render_lang_switcher():
     """在側邊欄渲染語言切換按鈕"""
     current = get_lang()
     
-    # 使用 selectbox 讓介面更簡潔
     options = ["🇹🇼 繁體中文", "🇻🇳 Tiếng Việt"]
     current_index = 0 if current == "zh" else 1
     
-    selected = st.selectbox(
-        "🌐 Language", 
-        options, 
-        index=current_index,
-        label_visibility="collapsed"
-    )
+    col1, col2 = st.columns([2, 3])
+    with col1:
+        st.markdown("<div style='margin-top: 8px; font-size: 14px; font-weight: bold; color: #666;'>🌐 更換語言：</div>", unsafe_allow_html=True)
+    with col2:
+        selected = st.selectbox(
+            "Language", 
+            options, 
+            index=current_index,
+            label_visibility="collapsed"
+        )
     
     new_lang = "zh" if "繁體中文" in selected else "vi"
     if new_lang != current:
