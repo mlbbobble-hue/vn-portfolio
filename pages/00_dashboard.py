@@ -48,22 +48,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 2. 九宮格常用功能 (Quick Actions Grid)
-st.markdown("<h4 style='margin-left: 8px;'>常用功能</h4>", unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.page_link("pages/01_portfolio.py", label="持倉明細", icon="💼")
-    st.page_link("pages/02_transactions.py", label="交易紀錄", icon="📋")
-with col2:
-    st.page_link("pages/03_dividends.py", label="歷史配息", icon="💵")
-    st.page_link("pages/04_watchlist.py", label="觀察清單", icon="🔔")
-with col3:
-    st.page_link("pages/05_analytics.py", label="圖表分析", icon="📈")
-    # 這裡可以放外部連結或保留空位，模擬 App 的版面
-    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
 
 # 3. 今日報酬與損益 (Badges & Cards)
 st.markdown("<h4 style='margin-left: 8px;'>投資績效</h4>", unsafe_allow_html=True)
