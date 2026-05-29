@@ -110,4 +110,4 @@ else:
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         if st.button("前往新增交易", use_container_width=True):
-            st.switch_page("pages/02_transactions.py")
+            st.switch_page("views/02_transactions.py")

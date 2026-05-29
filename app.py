@@ -64,22 +64,37 @@ def auto_update_if_needed():
     try:
         now_utc = datetime.utcnow()
         now_vn = now_utc + timedelta(hours=7)
-        # 判斷是否為越南開盤時間：週一至週五，早上 9 點到下午 3 點
-        if now_vn.weekday() >= 5: return
-        if not (9 <= now_vn.hour < 15): return
         
-        # 檢查最後更新時間
         from db_router import get_price_cache
         cache = get_price_cache()
-        if cache.empty: return
         
-        # 尋找最舊的更新時間 (避免只抓到剛更新完的)
-        # 如果最舊的資料距離現在超過 60 分鐘，就觸發全面更新
-        last_update = pd.to_datetime(cache["updated_at"]).max()
-        if last_update.tzinfo is not None:
-            last_update = last_update.tz_localize(None)
-            
-        if (now_utc - last_update).total_seconds() >= 3600:
+        force_update = False
+        
+        from db_router import get_portfolio_symbols, get_watchlist
+        symbols = get_portfolio_symbols()
+        try:
+            wl_df = get_watchlist()
+            wl_syms = wl_df["symbol"].tolist() if not wl_df.empty else []
+        except Exception:
+            wl_syms = []
+        all_syms = list(set(symbols + wl_syms))
+
+        # 如果快取是空的，或者有新的股票代碼不在快取中，無條件觸發更新
+        if cache.empty:
+            force_update = True
+        elif set(all_syms) - set(cache["symbol"].tolist()):
+            force_update = True
+        else:
+            # 判斷是否為越南開盤時間：週一至週五，早上 9 點到下午 3 點
+            is_market_open = (now_vn.weekday() < 5) and (9 <= now_vn.hour < 15)
+            if is_market_open:
+                last_update = pd.to_datetime(cache["updated_at"]).max()
+                if last_update.tzinfo is not None:
+                    last_update = last_update.tz_localize(None)
+                if (now_utc - last_update).total_seconds() >= 3600:
+                    force_update = True
+
+        if force_update:
             symbols = get_portfolio_symbols()
             from db_router import get_watchlist
             try:
@@ -156,14 +171,14 @@ with st.sidebar:
 
 
 # ── 主頁面 (Navigation) ──────────────────────────────────────────
-dashboard_page = st.Page("pages/00_dashboard.py", title=t("nav_dashboard"), icon=":material/park:")
-portfolio_page = st.Page("pages/01_portfolio.py", title=t("nav_portfolio"), icon=":material/business_center:")
-transactions_page = st.Page("pages/02_transactions.py", title=t("nav_transactions"), icon=":material/receipt_long:")
-dividends_page = st.Page("pages/03_dividends.py", title=t("nav_dividends"), icon=":material/paid:")
-watchlist_page = st.Page("pages/04_watchlist.py", title=t("nav_watchlist"), icon=":material/notifications_active:")
-analytics_page = st.Page("pages/05_analytics.py", title=t("nav_analytics"), icon=":material/monitoring:")
+dashboard_page = st.Page("views/00_dashboard.py", title=t("nav_dashboard"), icon=":material/park:")
+portfolio_page = st.Page("views/01_portfolio.py", title=t("nav_portfolio"), icon=":material/business_center:")
+transactions_page = st.Page("views/02_transactions.py", title=t("nav_transactions"), icon=":material/receipt_long:")
+dividends_page = st.Page("views/03_dividends.py", title=t("nav_dividends"), icon=":material/paid:")
+watchlist_page = st.Page("views/04_watchlist.py", title=t("nav_watchlist"), icon=":material/notifications_active:")
+analytics_page = st.Page("views/05_analytics.py", title=t("nav_analytics"), icon=":material/monitoring:")
 
-admin_page = st.Page("pages/06_admin.py", title="管理員後台", icon=":material/admin_panel_settings:")
+admin_page = st.Page("views/06_admin.py", title="管理員後台", icon=":material/admin_panel_settings:")
 
 
 nav_pages = [dashboard_page, portfolio_page, transactions_page, dividends_page, watchlist_page, analytics_page]
