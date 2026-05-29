@@ -79,13 +79,17 @@ with c2:
     """, unsafe_allow_html=True)
 
 # 3. 資產分佈圖表 (隱藏 Modebar) 或 空狀態
-if not holdings.empty and total_value > 0:
+if not holdings.empty:
     st.markdown("<h4 style='margin-left: 8px; margin-top: 16px;'>資產分佈</h4>", unsafe_allow_html=True)
-    df_plot = holdings[holdings["market_value"] > 0]
+    
+    # 如果還沒抓到報價，就用總成本來畫圓餅圖
+    plot_value_col = "market_value" if total_value > 0 else "total_cost"
+    df_plot = holdings[holdings[plot_value_col] > 0]
+    
     if not df_plot.empty:
         fig = px.pie(
             df_plot, 
-            values="market_value", 
+            values=plot_value_col, 
             names="symbol", 
             hole=0.6,
             color_discrete_sequence=px.colors.qualitative.Set2
@@ -99,9 +103,9 @@ if not holdings.empty and total_value > 0:
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
         
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("👉 前往查看完整持股明細", use_container_width=True, type="primary"):
-            st.switch_page("views/01_portfolio.py")
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("👉 前往查看完整持股明細", use_container_width=True, type="primary"):
+        st.switch_page("views/01_portfolio.py")
 else:
     # 空白狀態
     st.markdown("""
