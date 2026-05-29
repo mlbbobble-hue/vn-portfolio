@@ -103,12 +103,12 @@ with st.sidebar:
 
 
 # ── 主頁面 (Navigation) ──────────────────────────────────────────
-dashboard_page = st.Page("pages/00_dashboard.py", title=t("nav_dashboard"), icon="📊")
+dashboard_page = st.Page("pages/00_dashboard.py", title=t("nav_dashboard"), icon="🌳")
 portfolio_page = st.Page("pages/01_portfolio.py", title=t("nav_portfolio"), icon="💼")
-transactions_page = st.Page("pages/02_transactions.py", title=t("nav_transactions"), icon="📝")
-dividends_page = st.Page("pages/03_dividends.py", title=t("nav_dividends"), icon="📜")
-watchlist_page = st.Page("pages/04_watchlist.py", title=t("nav_watchlist"), icon="👀")
-analytics_page = st.Page("pages/05_analytics.py", title=t("nav_analytics"), icon="📉")
+transactions_page = st.Page("pages/02_transactions.py", title=t("nav_transactions"), icon="📋")
+dividends_page = st.Page("pages/03_dividends.py", title=t("nav_dividends"), icon="💵")
+watchlist_page = st.Page("pages/04_watchlist.py", title=t("nav_watchlist"), icon="🔔")
+analytics_page = st.Page("pages/05_analytics.py", title=t("nav_analytics"), icon="📈")
 
 pg = st.navigation([
     dashboard_page,

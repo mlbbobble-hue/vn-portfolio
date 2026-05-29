@@ -2,107 +2,139 @@ import streamlit as st
 
 def load_css():
     """
-    載入全域 CSS 主題 (The Dividend Tracker 風格)
+    載入全域 CSS 主題 (國泰證券 Cathay Securities 風格)
     """
     st.markdown("""<style>
-@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap');
+/* 國泰證券 (Cathay Securities) 專屬字體與色彩變數 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+:root {
+    /* 預設亮色模式 (Light Mode) 參數 - 國泰經典白底綠點綴 */
+    --cathay-green: #00A850;
+    --cathay-dark-green: #008f44;
+    --cathay-yellow: #FFB600;
+    
+    --bg-main: #F3F4F6;
+    --bg-sidebar: #FFFFFF;
+    --bg-card: #FFFFFF;
+    
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --border-color: #E5E7EB;
+    
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* 暗色模式 (Dark Mode) 參數 - 國泰專業黑底綠框 */
+        --bg-main: #121212;
+        --bg-sidebar: #1E1E1E;
+        --bg-card: #1E1E1E;
+        
+        --text-primary: #F3F4F6;
+        --text-secondary: #A0A0A0;
+        --border-color: #333333;
+        
+        --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    }
+}
 
 html, body, [class*="css"] {
-    font-family: 'Urbanist', sans-serif !important;
+    font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif !important;
 }
 
-/* 全站背景與字體顏色 (針對預設 Light Theme 但強制顯示暗色質感) */
 .stApp {
-    background: linear-gradient(135deg, #001F29 0%, #004B5E 50%, #002B36 100%);
-    color: #F7F9FC;
-}
-
-/* 針對 Streamlit 內建的深色模式優化 */
-@media (prefers-color-scheme: dark) {
-    .stApp {
-        background: linear-gradient(180deg, #021c23 0%, #063442 100%);
-        color: #F7F9FC;
-    }
+    background: var(--bg-main) !important;
+    color: var(--text-primary) !important;
 }
 
 /* 側邊欄背景 */
 [data-testid="stSidebar"] {
-    background: rgba(0, 31, 41, 0.8) !important;
-    backdrop-filter: blur(10px);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-sidebar) !important;
+    border-right: 1px solid var(--border-color);
 }
 
-/* 卡片與 Metric 玻璃擬態風格 (Glassmorphism) */
+/* 卡片與 Metric 容器 (扁平化與極簡設計) */
 .card, [data-testid="metric-container"], div.css-1r6slb0 {
-    background: rgba(255, 255, 255, 0.05) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 16px !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
     padding: 20px 24px;
     margin: 8px 0;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
-    transition: transform 0.2s ease-in-out;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease-in-out;
 }
 
 .card:hover, [data-testid="metric-container"]:hover {
-    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--cathay-green) !important;
 }
 
-/* 標題與重點文字的漸層高亮 */
+/* 標題與重點文字高亮 */
 .highlight-text {
-    background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--cathay-green) !important;
     font-weight: 700;
 }
 
-/* 按鈕風格 */
+/* 按鈕風格 (國泰企業綠) */
 .stButton>button {
-    background: linear-gradient(135deg, #068BAA, #007E9C) !important;
-    color: white !important;
+    background: var(--cathay-green) !important;
+    color: #FFFFFF !important;
     border: none !important;
     border-radius: 8px !important;
-    font-weight: 600 !important;
-    transition: background 0.3s ease;
+    font-weight: 500 !important;
+    transition: background 0.2s ease;
 }
 
 .stButton>button:hover {
-    background: linear-gradient(135deg, #007E9C, #005A70) !important;
-    box-shadow: 0 4px 12px rgba(6, 139, 170, 0.4);
+    background: var(--cathay-dark-green) !important;
+    box-shadow: var(--shadow-md);
 }
 
-/* DataFrame 表格圓角 */
+/* DataFrame 表格圓角與框線 */
 [data-testid="stDataFrame"] {
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
 }
 
 /* 特別警告或提醒區塊 (如即將除息) */
 .ex-soon {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1));
-    border: 1px solid rgba(251, 191, 36, 0.3);
-    border-radius: 12px;
+    background: rgba(255, 182, 0, 0.1);
+    border: 1px solid rgba(255, 182, 0, 0.5);
+    border-radius: 8px;
     padding: 12px 16px;
     margin: 4px 0;
 }
 
-/* 頁面標題容器 */
+/* 頁面標題容器 (國泰左側綠色裝飾線) */
 .page-header-container {
-    background: linear-gradient(90deg, rgba(6, 139, 170, 0.2) 0%, transparent 100%);
-    border-left: 4px solid #068BAA;
-    padding: 12px 20px;
+    background: var(--bg-sidebar);
+    border-left: 6px solid var(--cathay-green);
+    padding: 16px 24px;
     border-radius: 0 12px 12px 0;
     margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
 }
 
-h1, h2, h3 {
-    color: #FFFFFF !important;
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary) !important;
+    font-weight: 700 !important;
 }
 
+/* 確保特定描述文字使用次要顏色 */
 p, span, label {
-    color: #E2E8F0;
+    color: var(--text-secondary);
+}
+
+/* Metric 內建數值強制顯示主色 */
+[data-testid="stMetricValue"] {
+    color: var(--text-primary) !important;
 }
 
 </style>""", unsafe_allow_html=True)
