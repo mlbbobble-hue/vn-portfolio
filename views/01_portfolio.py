@@ -56,7 +56,7 @@ for col, label, val, suffix, color in [
 ]:
     with col:
         is_pl = '損益' in label or 'Lãi' in label
-        val_str = f"{val:+,.0f}" if is_pl else f"{val:,.0f}"
+        val_str = f"{val:+,.2f}" if is_pl else f"{val:,.0f}"
         
         # 依照規格：標題 14px (--text-secondary)，數值 26px bold
         # 如果是損益則套用 --financial-up/down，否則套用 --text-primary
@@ -153,11 +153,11 @@ html_str = '''
 
 def get_pl_classes(pl, roi):
     if pl > 0:
-        return "tlt-pl-up", f"+{pl:,.0f}", f"+{roi:.2f}%"
+        return "tlt-pl-up", f"+{pl:,.2f}", f"+{roi:.2f}%"
     elif pl < 0:
-        return "tlt-pl-down", f"{pl:,.0f}", f"{roi:.2f}%"
+        return "tlt-pl-down", f"{pl:,.2f}", f"{roi:.2f}%"
     else:
-        return "tlt-pl-neutral", "0", "0.00%"
+        return "tlt-pl-neutral", "0.00", "0.00%"
 
 if portfolio_df.empty:
     html_str += '<div style="text-align:center; padding:24px; color:#94a3b8;">目前無任何持股資料</div>'

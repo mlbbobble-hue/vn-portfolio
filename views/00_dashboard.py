@@ -51,7 +51,7 @@ if is_loading_prices:
     st_autorefresh(interval=2000, limit=15, key="wait_for_prices")
 else:
     display_value = f"₫{total_value:,.0f}"
-    display_unrealized = f"₫{abs(total_unrealized):,.0f}"
+    display_unrealized = f"₫{abs(total_unrealized):,.2f}"
     display_roi = f"{abs(roi_pct):.2f}%"
 
 
@@ -73,7 +73,7 @@ else:
         <div class="cathay-card">
             <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("unrealized_pl")}</div>
             <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_unrealized}</div>
-            <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{total_unrealized:,.0f}</span></div>
+            <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{total_unrealized:,.2f}</span></div>
         </div>
         ''', unsafe_allow_html=True)
 
