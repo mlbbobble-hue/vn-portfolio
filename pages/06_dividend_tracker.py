@@ -5,7 +5,7 @@ import plotly.express as px
 from datetime import date, timedelta
 from i18n import t, render_lang_switcher
 from auth_page import check_auth, render_user_info_sidebar
-from portfolio import compute_holdings
+from portfolio import compute_portfolio_with_prices
 from db_router import get_dividend_events
 
 st.set_page_config(page_title=f"VN Portfolio | {t('nav_div_tracker')}", page_icon="💰", layout="wide")
@@ -90,7 +90,7 @@ st.markdown(f"<div class='dt-header'>{t('nav_div_tracker')}</div>", unsafe_allow
 st.markdown(f"<p style='color: #8be1f6; font-size: 1.1rem;'>{t('dividends_desc')}</p>", unsafe_allow_html=True)
 
 # 1. Fetch Data
-holdings = compute_holdings()
+holdings = compute_portfolio_with_prices()
 events = get_dividend_events()
 
 if holdings.empty:
@@ -98,7 +98,7 @@ if holdings.empty:
     st.stop()
 
 # 2. Calculate Key Metrics
-total_value = holdings['total_value'].sum()
+total_value = holdings['market_value'].sum()
 total_cost = holdings['total_cost'].sum()
 
 # TTM (Trailing 12 Months) logic
