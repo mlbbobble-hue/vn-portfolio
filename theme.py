@@ -335,9 +335,6 @@ p, span, label {
     box-shadow: var(--shadow-soft);
 }
 
-</style>""", unsafe_allow_html=True)
-
-
 /* Dashboard 左右等高佈局 (Equal Height Flexbox Hack) */
 #dashboard-layout-anchor + div[data-testid="stHorizontalBlock"] {
     align-items: stretch !important;
@@ -372,3 +369,5 @@ p, span, label {
 .custom-table th:first-child, .custom-table td:first-child {
     text-align: left; /* 第一欄 (代號) 靠左對齊 */
 }
+
+</style>""", unsafe_allow_html=True)
