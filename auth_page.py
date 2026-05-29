@@ -11,7 +11,7 @@ AUTH_STYLE = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp {
-    background: var(--background-main);
+    background: #F6F7F9;
     min-height: 100vh;
 }
 .auth-container {
@@ -27,39 +27,39 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     display: flex; justify-content: center; margin-bottom: 12px;
 }
 .auth-logo .icon svg {
-    width: 64px; height: 64px; fill: var(--cathay-green);
+    width: 64px; height: 64px; fill: #00A352;
 }
 .auth-logo .title {
     font-size: 1.5rem; font-weight: 700;
-    color: var(--cathay-green);
+    color: #00A352;
     margin: 8px 0 4px;
 }
-.auth-logo .sub { font-size: 0.85rem; color: var(--text-muted); }
+.auth-logo .sub { font-size: 0.85rem; color: #888888; }
 .auth-card {
-    background: var(--card-bg); 
+    background: #FFFFFF; 
     border: 1px solid rgba(0,163,82,0.2);
     border-radius: 20px;
     padding: 32px 36px;
     backdrop-filter: blur(20px);
-    box-shadow: var(--shadow-soft);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 .auth-title {
-    font-size: 1.3rem; font-weight: 600; color: var(--text-primary);
+    font-size: 1.3rem; font-weight: 600; color: #333333;
     margin-bottom: 24px; text-align: center;
 }
 .stTextInput > div > div > input {
-    background: var(--background-main) !important;
+    background: #F6F7F9 !important;
     border: 1px solid rgba(0,163,82,0.3) !important;
     border-radius: 10px !important;
-    color: var(--text-primary) !important;
+    color: #333333 !important;
     padding: 10px 14px !important;
 }
 .stTextInput > div > div > input:focus {
-    border-color: var(--cathay-green) !important;
+    border-color: #00A352 !important;
     box-shadow: 0 0 0 2px rgba(0,163,82,0.25) !important;
 }
 .stButton > button {
-    background: var(--cathay-green) !important;
+    background: #00A352 !important;
     color: white !important; border: none !important;
     border-radius: 10px !important; font-weight: 600 !important;
     font-size: 1rem !important; padding: 12px !important;
@@ -73,14 +73,14 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stButton > button[kind="secondary"] {
     background: transparent !important;
     border: 1px solid rgba(0,163,82,0.4) !important;
-    color: var(--cathay-green) !important;
+    color: #00A352 !important;
     box-shadow: none !important;
 }
 .stButton > button[kind="secondary"]:hover {
     background: rgba(0,163,82,0.05) !important;
 }
 .divider {
-    text-align: center; color: var(--text-muted); font-size: 0.85rem;
+    text-align: center; color: #888888; font-size: 0.85rem;
     margin: 16px 0; position: relative;
 }
 .divider::before, .divider::after {
@@ -90,9 +90,13 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .divider::before { left: 0; }
 .divider::after { right: 0; }
 .footer-note {
-    text-align: center; color: var(--text-muted); font-size: 0.75rem; margin-top: 20px;
+    text-align: center; color: #888888; font-size: 0.75rem; margin-top: 20px;
 }
+
+[data-testid="collapsedControl"] { display: none !important; }
+[data-testid="stSidebar"] { display: none !important; }
 </style>
+
 """
 
 
@@ -104,21 +108,27 @@ def render_auth_page():
     """
     st.markdown(AUTH_STYLE, unsafe_allow_html=True)
 
-    # 側邊欄：語言切換
-    with st.sidebar:
-        st.markdown("""
-        <div style='text-align:center;padding:12px 0;'>
-            <div style='font-size:2rem;'>📈</div>
-            <div style='font-size:.9rem;color:#64748b;'>VN Portfolio</div>
-        </div>
-        """, unsafe_allow_html=True)
-        render_lang_switcher()
+
+
+    # 頂部語言切換
+    current = get_lang()
+    options = ["🇹🇼 繁體中文", "🇻🇳 Tiếng Việt"]
+    current_index = 0 if current == "zh" else 1
+    
+    col1, col2 = st.columns([7, 3])
+    with col2:
+        selected = st.selectbox("Language", options, index=current_index, label_visibility="collapsed")
+        new_lang = "zh" if "繁體中文" in selected else "vi"
+        if new_lang != current:
+            from i18n import set_lang
+            set_lang(new_lang)
+            st.rerun()
 
     # Logo 區
     st.markdown(f"""
     <div class="auth-container">
     <div class="auth-logo">
-        <div class="icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="var(--cathay-green)" xmlns="http://www.w3.org/2000/svg"><path d="M17 12C18.6569 12 20 10.6569 20 9C20 7.34315 18.6569 6 17 6C16.8202 6 16.6441 6.01579 16.4727 6.04618C15.8291 3.75549 13.6895 2 11.1111 2C8.53272 2 6.39308 3.75549 5.74945 6.04618C5.57811 6.01579 5.40194 6 5.22222 6C3.44263 6 2 7.34315 2 9C2 10.6569 3.44263 12 5.22222 12C5.35209 12 5.47955 11.9922 5.60421 11.977C6.07921 13.7277 7.72895 15 9.66667 15H10.5556V20C10.5556 21.1046 11.451 22 12.5556 22H13.4444C13.9967 22 14.4444 21.5523 14.4444 21V15H15.3333C17.2711 15 18.9208 13.7277 19.3958 11.977C19.5205 11.9922 19.6479 12 19.7778 12H17Z"/></svg></div>
+        <div class="icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="#00A352" xmlns="http://www.w3.org/2000/svg"><path d="M17 12C18.6569 12 20 10.6569 20 9C20 7.34315 18.6569 6 17 6C16.8202 6 16.6441 6.01579 16.4727 6.04618C15.8291 3.75549 13.6895 2 11.1111 2C8.53272 2 6.39308 3.75549 5.74945 6.04618C5.57811 6.01579 5.40194 6 5.22222 6C3.44263 6 2 7.34315 2 9C2 10.6569 3.44263 12 5.22222 12C5.35209 12 5.47955 11.9922 5.60421 11.977C6.07921 13.7277 7.72895 15 9.66667 15H10.5556V20C10.5556 21.1046 11.451 22 12.5556 22H13.4444C13.9967 22 14.4444 21.5523 14.4444 21V15H15.3333C17.2711 15 18.9208 13.7277 19.3958 11.977C19.5205 11.9922 19.6479 12 19.7778 12H17Z"/></svg></div>
         <div class="title">{t('app_name')}</div>
         <div class="sub">{t('app_tagline')}</div>
     </div>
@@ -136,7 +146,7 @@ def render_auth_page():
 
         col1, col2 = st.columns([3, 2])
         with col1:
-            login_btn = st.button(t("login_btn"), use_container_width=True, key="do_login")
+            login_btn = st.button(t("login_btn"), use_container_width=True, key="do_login", type="primary")
         with col2:
             forgot_btn = st.button("🔑 Forgot?" if get_lang()=="vi" else "🔑 忘記密碼?",
                                     use_container_width=True, key="forgot_btn",
@@ -172,7 +182,7 @@ def render_auth_page():
 
         
         st.markdown('<div class="divider">OR</div>', unsafe_allow_html=True)
-        if st.button("🚀 使用 Google 帳號一鍵登入", use_container_width=True):
+        if st.button("🚀 使用 Google 帳號一鍵登入", use_container_width=True, type="primary"):
             from supabase_db import sign_in_with_google
             res = sign_in_with_google()
             if res.get("success"):
@@ -193,7 +203,7 @@ def render_auth_page():
                                    key="reg_pw")
         reg_pw2   = st.text_input(t("confirm_password"), type="password", key="reg_pw2")
 
-        reg_btn = st.button(t("register_btn"), use_container_width=True, key="do_register")
+        reg_btn = st.button(t("register_btn"), use_container_width=True, key="do_register", type="primary")
 
         if reg_btn:
             if not all([reg_name, reg_email, reg_pw, reg_pw2]):
@@ -279,9 +289,9 @@ def check_auth() -> bool:
 
     if not st.session_state["is_approved"]:
         st.markdown("""
-        <div style='max-width: 500px; margin: 100px auto; text-align: center; background: var(--cathay-white); padding: 40px; border-radius: 20px; box-shadow: var(--shadow-soft); border: 1px solid rgba(0,163,82,0.3);'>
+        <div style='max-width: 500px; margin: 100px auto; text-align: center; background: var(--cathay-white); padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid rgba(0,163,82,0.3);'>
             <div style='font-size: 4rem; margin-bottom: 20px;'>⏳</div>
-            <h2 style='color: var(--text-primary); margin-bottom: 10px;'>等待管理員開通</h2>
+            <h2 style='color: #333333; margin-bottom: 10px;'>等待管理員開通</h2>
             <p style='color: var(--text-secondary); line-height: 1.6;'>
                 您的帳號已經成功登入，但由於系統採用白名單制，<br>
                 目前需要等待管理員審核並開通權限。<br><br>
