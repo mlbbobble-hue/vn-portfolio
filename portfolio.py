@@ -199,3 +199,63 @@ def get_estimated_yield(symbol: str, current_price: float, annual_dps: float) ->
     if current_price <= 0:
         return 0.0
     return (annual_dps / current_price) * 100
+
+def compute_received_dividends() -> tuple[float, dict, list]:
+    """
+    計算實際收到的歷史配息與配股。
+    根據每次除權息日 (ex_date) 前的持股數來計算。
+    回傳: (total_cash, stock_received_dict, detailed_history_list)
+    """
+    txns = get_all_transactions()
+    divs = get_dividend_events()
+    
+    if txns.empty or divs.empty:
+        return 0.0, {}, []
+
+    txns["date_dt"] = pd.to_datetime(txns["date"], errors="coerce")
+    txns = txns.dropna(subset=["date_dt"]).sort_values("date_dt")
+    
+    divs["ex_date_dt"] = pd.to_datetime(divs["ex_date"], errors="coerce")
+    divs = divs.dropna(subset=["ex_date_dt"]).sort_values("ex_date_dt")
+    
+    total_cash = 0.0
+    stock_received = {}
+    details = []
+
+    for _, div in divs.iterrows():
+        sym = div["symbol"]
+        ex_date = div["ex_date_dt"]
+        
+        # 必須在除息日之前買入
+        past_txns = txns[(txns["symbol"] == sym) & (txns["date_dt"] < ex_date)]
+        
+        if past_txns.empty:
+            continue
+            
+        shares_held = 0.0
+        for _, t in past_txns.iterrows():
+            if t["action"] == "BUY":
+                shares_held += t["shares"]
+            elif t["action"] == "SELL":
+                shares_held -= t["shares"]
+                
+        if shares_held > 0:
+            rec_cash = 0.0
+            rec_stock = 0.0
+            if div["type"] == "CASH":
+                rec_cash = shares_held * div["cash_amount"]
+                total_cash += rec_cash
+            elif div["type"] == "STOCK":
+                rec_stock = shares_held * div["stock_ratio"]
+                stock_received[sym] = stock_received.get(sym, 0) + rec_stock
+                
+            details.append({
+                "symbol": sym,
+                "ex_date": div["ex_date"],
+                "type": div["type"],
+                "shares_held": shares_held,
+                "cash_received": rec_cash,
+                "stock_received": rec_stock,
+            })
+            
+    return total_cash, stock_received, details

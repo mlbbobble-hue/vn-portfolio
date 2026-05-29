@@ -8,7 +8,7 @@ from db_router import (add_dividend_event, get_dividend_events, delete_dividend_
                         mark_dividend_applied, upsert_dividend_events_bulk,
                         get_portfolio_symbols, add_transaction)
 from market_data import get_dividend_history
-from portfolio import apply_stock_dividend, compute_holdings
+from portfolio import apply_stock_dividend, compute_holdings, compute_received_dividends
 
 st.set_page_config(page_title=f"VN Portfolio | {t('dividends_title')}", page_icon="💰", layout="wide")
 from theme import load_css
@@ -71,22 +71,35 @@ with tab_ov:
         st.dataframe(disp, use_container_width=True, height=300)
 
         st.markdown("---")
-        st.subheader(t("annual_income_title"))
-        if not holdings.empty:
-            shares_map = holdings.set_index("symbol")["total_shares"].to_dict()
-            cash_divs  = all_divs[all_divs["type"]=="CASH"]
-            rows_inc = []
-            for sym, s in shares_map.items():
-                dps = cash_divs[cash_divs["symbol"]==sym]["cash_amount"].sum()
-                rows_inc.append({t("symbol"):sym, t("my_shares"):f"{s:,.0f}",
-                                 t("annual_dps"):f"{dps:,.0f}", t("est_income"):f"{dps*s:,.0f}"})
-            st.dataframe(pd.DataFrame(rows_inc), use_container_width=True)
-            total_income = sum(cash_divs[cash_divs["symbol"]==s]["cash_amount"].sum()*sh
-                               for s,sh in shares_map.items())
+        st.subheader("📊 歷史實際獲得配息/配股統計")
+        st.markdown("<span style='color:var(--text-muted);font-size:0.9em;'>此統計會比對您的歷史交易紀錄，只有在除息日（Ex-Date）之前持有的股數才會納入配息計算。</span><br><br>", unsafe_allow_html=True)
+        
+        total_cash_rec, stock_rec_dict, details = compute_received_dividends()
+        
+        if details:
+            # 建立彙整表格
+            summary_rows = []
+            for sym in set([d['symbol'] for d in details]):
+                sym_details = [d for d in details if d['symbol'] == sym]
+                sym_cash = sum(d['cash_received'] for d in sym_details)
+                sym_stock = stock_rec_dict.get(sym, 0.0)
+                if sym_cash > 0 or sym_stock > 0:
+                    summary_rows.append({
+                        "股票代號": sym,
+                        "獲得現金 (VNĐ)": f"{sym_cash:,.0f}",
+                        "獲得配股 (股)": f"{sym_stock:,.0f}" if sym_stock > 0 else "-"
+                    })
+            st.dataframe(pd.DataFrame(summary_rows), use_container_width=True)
+            
+            # 總和顯示
+            total_stock_str = " | ".join([f"{k}: {v:,.0f}股" for k, v in stock_rec_dict.items() if v > 0])
             st.markdown(f"""
             <div style='background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:12px;padding:14px 18px;margin-top:8px;'>
-                {t('total_annual_income', val=f"{total_income:,.0f}")}
+                <div style='font-size:1.1em;'>💰 <b>歷史累計獲得現金配息：</b> <span style='color:var(--cathay-green);font-size:1.3em;font-weight:700;'>{total_cash_rec:,.0f} VNĐ</span></div>
+                <div style='font-size:1.0em;margin-top:8px;'>📦 <b>歷史累計獲得股票配股：</b> <span style='color:#f59e0b;font-weight:600;'>{total_stock_str if total_stock_str else "無"}</span></div>
             </div>""", unsafe_allow_html=True)
+        else:
+            st.info("目前還沒有實際領到配息的紀錄（可能是剛買入還沒遇到除息日）。")
 
 # ── Tab 2: 自動抓取 ─────────────────────────────────────────
 with tab_auto:
