@@ -1,0 +1,15 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# 資料庫（本機開發用）
+data/*.db
+
+# 機密設定（絕對不能上傳！）
+.streamlit/secrets.toml
+.env
+
+# macOS
+.DS_Store
