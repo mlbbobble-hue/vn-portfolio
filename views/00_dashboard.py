@@ -56,6 +56,7 @@ else:
 
 
 # --- 以下為雙欄排版 (Two-Column Layout) ---
+st.markdown('<div id="dashboard-layout-anchor"></div>', unsafe_allow_html=True)
 col_left, col_right = st.columns([1, 1], gap="large")
 
 with col_left:
@@ -94,8 +95,6 @@ with col_left:
         
     # 3. 詳細持股表格 (從 01_portfolio 移入，簡化版)
     if not holdings.empty:
-        st.markdown("<h4 style='margin-left: 8px; margin-top: 16px;'>詳細持股</h4>", unsafe_allow_html=True)
-        
         table_rows = []
         for _, row in holdings.iterrows():
             cur = row["current_price"]; roi = row["roi_pct"]
@@ -115,13 +114,18 @@ with col_left:
             return ""
 
         styled = disp.style.map(color_cell, subset=["盈虧金額", "損益率"]).hide(axis="index")
-        st.markdown(styled.to_html(classes="custom-table"), unsafe_allow_html=True)
+        
+        st.markdown(f'''
+        <div class="cathay-card" style="padding: 24px; margin-bottom: 0;">
+            <h4 style="margin: 0 0 16px 0; color: var(--text-primary);">詳細持股</h4>
+            {styled.to_html(classes="custom-table")}
+        </div>
+        ''', unsafe_allow_html=True)
 
 
 with col_right:
-    # 4. 資產分佈圖表 (Treemap) 或 空狀態
     if not holdings.empty:
-        st.markdown("<h4 style='margin-left: 8px;'>資產分佈</h4>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
         
         plot_value_col = "market_value" if total_value > 0 else "total_cost"
         df_plot = holdings[holdings[plot_value_col] > 0]
