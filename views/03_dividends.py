@@ -274,7 +274,42 @@ with tab_lookup:
         else:
             st.markdown(f"### {lookup_sym} 歷史配息與權益變動")
             
-            # 1. 新增 Filter Tabs
+            # --- 1. 增設頂部統計圖表 (Add Dividend Chart Dashboard) ---
+            import plotly.graph_objects as go
+            lookup_df["ex_year"] = pd.to_datetime(lookup_df["ex_date"], errors="coerce").dt.year
+            yearly_stats = []
+            for y in sorted(lookup_df["ex_year"].dropna().unique(), reverse=False):
+                y_df = lookup_df[lookup_df["ex_year"] == y]
+                c_sum = y_df[y_df["type"] == "CASH"]["cash_amount"].sum()
+                s_sum = y_df[y_df["type"] == "STOCK"]["stock_ratio"].sum()
+                yearly_stats.append({"Year": str(int(y)), "Cash": c_sum, "Stock": s_sum})
+                
+            if yearly_stats:
+                stats_df = pd.DataFrame(yearly_stats)
+                fig = go.Figure()
+                fig.add_trace(go.Bar(
+                    x=stats_df["Year"], y=stats_df["Cash"],
+                    name="現金股利 (VND)", marker_color="#10b981", yaxis="y1"
+                ))
+                fig.add_trace(go.Bar(
+                    x=stats_df["Year"], y=stats_df["Stock"],
+                    name="股票配股比例", marker_color="#60a5fa", yaxis="y2"
+                ))
+                fig.update_layout(
+                    title="歷年配息趨勢",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#94a3b8"),
+                    xaxis=dict(type="category", showgrid=False),
+                    yaxis=dict(title="現金股利 (VND)", side="left", showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
+                    yaxis2=dict(title="股票配股比例", side="right", overlaying="y", showgrid=False),
+                    margin=dict(l=0, r=0, t=40, b=0),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                    height=300
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            
+            # --- 2. 引入類型過濾頁籤 (Type Filters) ---
             try:
                 filter_tab = st.pills("過濾配息類型", ["全部", "現金股利 (Tiền mặt)", "股票股利 (Cổ phiếu)"], default="全部")
             except:
@@ -292,56 +327,83 @@ with tab_lookup:
                 
             filtered_lookup = filtered_lookup.sort_values("ex_date", ascending=False)
             
-            # 2. 移除直向邊框並調整樣式 (via inline styles or CSS)
+            # --- 3. 表格改用年度聚合與折疊 (Group by Year) ---
             html_str = '<div class="acc-table" style="max-height: 500px; overflow-y: auto; box-shadow: none; border: 1px solid var(--border-color);">'
-            html_str += """
-<div class="acc-header" style="grid-template-columns: 1fr 1fr 1fr 1fr 1.2fr; border-bottom: 1px solid #334155; padding: 14px 16px;">
+            
+            if filtered_lookup.empty:
+                html_str += '<div style="color:var(--text-muted); text-align:center; padding: 24px;">無符合條件的資料</div>'
+            else:
+                html_str += """
+<div class="acc-header" style="grid-template-columns: 1fr 1fr 1fr 1.2fr 1.2fr; border-bottom: 1px solid #334155; padding: 14px 16px;">
     <div class="acc-col-right">除權息日<br><span style="font-size:11px;color:#64748b;">(Ngày GDKHQ)</span></div>
-    <div class="acc-col-right">登錄截止日<br><span style="font-size:11px;color:#64748b;">(Ngày chốt danh sách)</span></div>
+    <div class="acc-col-right">登錄截止日<br><span style="font-size:11px;color:#64748b;">(Ngày chốt)</span></div>
     <div class="acc-col-right">實際發放日<br><span style="font-size:11px;color:#64748b;">(Ngày thực hiện)</span></div>
     <div class="acc-col-left" style="padding-left:16px;">配息類型<br><span style="font-size:11px;color:#64748b;">(Loại cổ tức)</span></div>
     <div class="acc-col-right">比例/金額<br><span style="font-size:11px;color:#64748b;">(Tỷ lệ / Giá trị)</span></div>
 </div>
-            """
-            
-            for _, row in filtered_lookup.iterrows():
-                ex_date = row.get("ex_date", "─")
-                rec_date = row.get("record_date", "─")
-                if pd.isna(rec_date) or not rec_date: rec_date = "─"
-                pay_date = row.get("pay_date", "─")
-                if pd.isna(pay_date) or not pay_date: pay_date = "─"
-                
-                if row["type"] == "CASH":
-                    dtype = "現金股利"
-                    amt_main = f"{row['cash_amount']:,.0f}"
-                    amt_sub = "Cổ tức bằng tiền"
-                    amt_color = "#10b981"
-                    main_size = "18px"
-                else:
-                    dtype = "股票股利"
-                    amt_main = f"100 : {row['stock_ratio']*100:g}"
-                    amt_sub = "Cổ tức bằng cổ phiếu"
-                    amt_color = "#f8fafc"
-                    main_size = "18px"
-                    
-                html_str += f"""
-<div class="acc-row" style="grid-template-columns: 1fr 1fr 1fr 1fr 1.2fr; border-bottom: 1px solid #334155; padding: 14px 16px;">
-    <div class="acc-col-right" style="color: #cbd5e1;">{ex_date}</div>
-    <div class="acc-col-right" style="color: #94a3b8;">{rec_date}</div>
-    <div class="acc-col-right" style="color: #94a3b8;">{pay_date}</div>
-    <div class="acc-col-left" style="padding-left:16px;">
-        <span style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; font-size: 12px; color: {'#10b981' if row['type'] == 'CASH' else '#f59e0b'}">{dtype}</span>
-    </div>
-    <div class="acc-col-right">
-        <div style="font-weight: 700; color: {amt_color}; font-size: {main_size};">{amt_main}</div>
-        <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">[{amt_sub}]</div>
-    </div>
-</div>
                 """
-            
-            if filtered_lookup.empty:
-                html_str += '<div style="color:var(--text-muted); text-align:center; padding: 24px;">無符合條件的資料</div>'
                 
+                years = sorted(filtered_lookup["ex_year"].dropna().unique(), reverse=True)
+                for y in years:
+                    y_df = filtered_lookup[filtered_lookup["ex_year"] == y].sort_values("ex_date", ascending=False)
+                    t_cash = y_df[y_df["type"] == "CASH"]["cash_amount"].sum()
+                    t_stock = y_df[y_df["type"] == "STOCK"]["stock_ratio"].sum()
+                    
+                    c_str = f"{t_cash:,.0f} VNĐ" if t_cash > 0 else "-"
+                    s_str = f"{t_stock*100:g}%" if t_stock > 0 else "-"
+                    
+                    html_str += f"""
+<details class="acc-details" open>
+    <summary>
+        <div class="acc-row" style="grid-template-columns: 1fr 1fr 1.5fr; border-bottom: 1px solid #334155; background: rgba(255,255,255,0.02);">
+            <div class="acc-col-left">
+                <span class="tlt-main"><span class="acc-arrow">▶</span>{int(y)} 年度</span>
+            </div>
+            <div class="acc-col-right">
+                <span style="font-size:12px;color:#94a3b8;">累計現金：</span>
+                <span style="color:#10b981;font-weight:600;font-size:15px;">{c_str}</span>
+            </div>
+            <div class="acc-col-right">
+                <span style="font-size:12px;color:#94a3b8;">累計配股：</span>
+                <span style="color:#60a5fa;font-weight:600;font-size:15px;">{s_str}</span>
+            </div>
+        </div>
+    </summary>
+                    """
+                    
+                    for _, row in y_df.iterrows():
+                        ex_date = row.get("ex_date", "─")
+                        rec_date = row.get("record_date", "─")
+                        if pd.isna(rec_date) or not rec_date: rec_date = "─"
+                        pay_date = row.get("pay_date", "─")
+                        if pd.isna(pay_date) or not pay_date: pay_date = "─"
+                        
+                        if row["type"] == "CASH":
+                            dtype = "現金股利"
+                            amt_main = f"{row['cash_amount']:,.0f} VNĐ"
+                            amt_color = "#f8fafc"
+                            badge_bg = "#065f46"
+                            badge_text = "#34d399"
+                        else:
+                            dtype = "股票股利"
+                            amt_main = f"100 : {row['stock_ratio']*100:g}"
+                            amt_color = "#f8fafc"
+                            badge_bg = "#1e3a8a"
+                            badge_text = "#60a5fa"
+                            
+                        html_str += f"""
+    <div class="acc-sub-row" style="grid-template-columns: 1fr 1fr 1fr 1.2fr 1.2fr; border-bottom: 1px solid #334155; padding: 14px 16px;">
+        <div class="acc-col-right" style="color: #cbd5e1;">{ex_date}</div>
+        <div class="acc-col-right" style="color: #94a3b8;">{rec_date}</div>
+        <div class="acc-col-right" style="color: #94a3b8;">{pay_date}</div>
+        <div class="acc-col-left" style="padding-left:16px;">
+            <span style="background: {badge_bg}; padding: 4px 8px; border-radius: 4px; font-size: 12px; color: {badge_text};">{dtype}</span>
+        </div>
+        <div class="acc-col-right" style="font-weight: 700; color: {amt_color}; font-size: 16px;">{amt_main}</div>
+    </div>
+                        """
+                    html_str += "</details>"
+                    
             html_str += "</div>"
             st.markdown(html_str, unsafe_allow_html=True)
 
