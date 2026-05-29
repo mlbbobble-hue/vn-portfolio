@@ -56,9 +56,7 @@ def sign_up(email: str, password: str, full_name: str = "") -> dict:
     except Exception as e:
         import traceback
         tb = traceback.format_exc()
-        return {"success": False, "user": None, "error": f"{str(e)}
-
-Traceback: {tb}"}
+        return {"success": False, "user": None, "error": f"{str(e)}\n\nTraceback: {tb}"}
 
 
 def sign_in(email: str, password: str) -> dict:
