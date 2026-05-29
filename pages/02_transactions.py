@@ -68,35 +68,118 @@ with tab_add:
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
+
 # ── Tab 2: 匯入 ─────────────────────────────────────────────
 with tab_import:
     st.subheader(t("tab_import"))
-    st.markdown(t("csv_format_hint"))
-    st.markdown("""
-    | date | broker | symbol | action | shares | price | fee | note |
-    |------|--------|--------|--------|--------|-------|-----|------|
-    | 2024-01-15 | TCBS | FPT | BUY | 1000 | 115000 | 172 | ... |
-    """)
-    sample = pd.DataFrame({
-        "date":["2024-01-15","2024-03-10"],"broker":["TCBS","PHS"],
-        "symbol":["FPT","TCB"],"action":["BUY","BUY"],
-        "shares":[1000,2000],"price":[115000,25000],"fee":[172,75],"note":["",""],
-    })
+    
+    import_mode = st.radio("匯入模式", ["目前持股快照 (Portfolio Snapshot)", "歷史交易明細 (Transaction History)"], horizontal=True)
+    
+    if import_mode == "歷史交易明細 (Transaction History)":
+        st.markdown(t("csv_format_hint") + "：系統會自動嘗試尋找對應的欄位，您也可以手動指定。")
+        sample = pd.DataFrame({
+            "date":["2024-01-15","2024-03-10"],"broker":["TCBS","PHS"],
+            "symbol":["FPT","TCB"],"action":["BUY","BUY"],
+            "shares":[1000,2000],"price":[115000,25000],"fee":[172,75],"note":["",""],
+        })
+    else:
+        st.markdown("💡 **持股快照模式**：只要提供「股票代號」、「股數」與「總成本(或平均價格)」，系統會自動將它們轉換為今天的買進紀錄！")
+        sample = pd.DataFrame({
+            "symbol":["FPT","TCB"],
+            "shares":[1000,2000],
+            "total_cost":[115000000,50000000]
+        })
+        
     st.download_button(t("download_template"), data=sample.to_csv(index=False).encode("utf-8-sig"),
                        file_name="template.csv", mime="text/csv")
+                       
     uploaded = st.file_uploader(t("upload_csv"), type=["csv"])
     if uploaded:
         try:
             df_up = pd.read_csv(uploaded)
-            st.dataframe(df_up.head(10), use_container_width=True)
-            if st.button(t("confirm_import"), use_container_width=True):
-                cnt = import_transactions_from_csv(df_up)
-                st.success(t("import_ok", n=cnt))
-                st.rerun()
+            cols = list(df_up.columns)
+            st.write("預覽原始資料：")
+            st.dataframe(df_up.head(3), use_container_width=True)
+            
+            st.markdown("### 🔗 欄位對應 (Column Mapping)")
+            
+            def guess_col(keywords, options):
+                for opt in options:
+                    for kw in keywords:
+                        if kw.lower() in str(opt).lower(): return opt
+                return options[0] if options else None
+
+            if import_mode == "歷史交易明細 (Transaction History)":
+                col1, col2, col3, col4 = st.columns(4)
+                with col1: map_date = st.selectbox("日期 (Date)", cols, index=cols.index(guess_col(["date", "日期", "時間"], cols)))
+                with col2: map_sym = st.selectbox("股票代號 (Symbol)", cols, index=cols.index(guess_col(["symbol", "ticker", "代號", "股票"], cols)))
+                with col3: map_act = st.selectbox("動作 (Action)", cols, index=cols.index(guess_col(["action", "動作", "買賣", "type"], cols)))
+                with col4: map_shares = st.selectbox("股數 (Shares)", cols, index=cols.index(guess_col(["share", "qty", "股數", "數量"], cols)))
+                
+                col5, col6, col7, col8 = st.columns(4)
+                with col5: map_price = st.selectbox("價格 (Price)", cols, index=cols.index(guess_col(["price", "價格", "單價"], cols)))
+                with col6: map_broker = st.selectbox("券商 (Broker)", ["(手動輸入)"] + cols, index=0)
+                if map_broker == "(手動輸入)": manual_broker = st.selectbox("選擇預設券商", BROKERS)
+                with col7: map_fee = st.selectbox("手續費 (Fee) [選填]", ["(無)"] + cols, index=0)
+                with col8: map_note = st.selectbox("備註 (Note) [選填]", ["(無)"] + cols, index=0)
+                
+                if st.button("プレビュー (預覽轉換後資料)"):
+                    mapped_df = pd.DataFrame()
+                    mapped_df["date"] = df_up[map_date]
+                    mapped_df["symbol"] = df_up[map_sym]
+                    mapped_df["action"] = df_up[map_act]
+                    mapped_df["shares"] = pd.to_numeric(df_up[map_shares].astype(str).str.replace(",",""), errors="coerce")
+                    mapped_df["price"] = pd.to_numeric(df_up[map_price].astype(str).str.replace(",",""), errors="coerce")
+                    mapped_df["broker"] = manual_broker if map_broker == "(手動輸入)" else df_up[map_broker]
+                    mapped_df["fee"] = df_up[map_fee] if map_fee != "(無)" else 0
+                    mapped_df["note"] = df_up[map_note] if map_note != "(無)" else ""
+                    st.session_state["mapped_df"] = mapped_df
+                    
+            else:
+                col1, col2, col3 = st.columns(3)
+                with col1: map_sym = st.selectbox("股票代號 (Symbol)", cols, index=cols.index(guess_col(["symbol", "ticker", "代號", "股票"], cols)))
+                with col2: map_shares = st.selectbox("股數 (Shares)", cols, index=cols.index(guess_col(["share", "qty", "股數", "數量"], cols)))
+                with col3: 
+                    cost_type = st.radio("成本類型", ["總成本 (Total Cost)", "平均價格 (Avg Price)"], horizontal=True)
+                    map_cost = st.selectbox(cost_type, cols, index=cols.index(guess_col(["cost", "成本", "price", "價格", "市值", "金額"], cols)))
+                
+                col_b, col_d = st.columns(2)
+                with col_b: snapshot_broker = st.selectbox("預設券商 (Broker)", BROKERS)
+                with col_d: snapshot_date = st.date_input("匯入日期 (Date)", value=date.today())
+                
+                if st.button("預覽轉換後資料", use_container_width=True):
+                    mapped_df = pd.DataFrame()
+                    mapped_df["date"] = snapshot_date
+                    mapped_df["symbol"] = df_up[map_sym]
+                    mapped_df["action"] = "BUY"
+                    mapped_df["shares"] = pd.to_numeric(df_up[map_shares].astype(str).str.replace(",",""), errors="coerce")
+                    mapped_df["broker"] = snapshot_broker
+                    mapped_df["fee"] = 0
+                    mapped_df["note"] = "Snapshot Import"
+                    
+                    if "總成本" in cost_type:
+                        mapped_df["price"] = pd.to_numeric(df_up[map_cost].astype(str).str.replace(",",""), errors='coerce') / pd.to_numeric(df_up[map_shares].astype(str).str.replace(",",""), errors='coerce')
+                    else:
+                        mapped_df["price"] = pd.to_numeric(df_up[map_cost].astype(str).str.replace(",",""), errors='coerce')
+                        
+                    st.session_state["mapped_df"] = mapped_df
+            
+            if "mapped_df" in st.session_state:
+                st.markdown("### ✨ 轉換結果預覽")
+                final_df = st.session_state["mapped_df"].dropna(subset=["symbol", "shares", "price"])
+                st.dataframe(final_df.head(10), use_container_width=True)
+                
+                if st.button("✅ 確認匯入", use_container_width=True, type="primary"):
+                    cnt = import_transactions_from_csv(final_df)
+                    st.success(t("import_ok", n=cnt))
+                    del st.session_state["mapped_df"]
+                    st.rerun()
+                    
         except Exception as e:
             st.error(t("import_fail", err=e))
 
 # ── Tab 3: 查看 ─────────────────────────────────────────────
+
 with tab_view:
     st.subheader(t("history_title"))
     all_txns = get_all_transactions()
