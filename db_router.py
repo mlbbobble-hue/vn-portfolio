@@ -168,6 +168,7 @@ def upsert_price_cache(symbol, price, change_pct, volume=0):
         _ups(symbol, price, change_pct, volume)
 
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_price_cache() -> pd.DataFrame:
     if _use_cloud():
         from supabase_db import sb_get_price_cache

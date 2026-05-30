@@ -29,6 +29,21 @@ if not check_auth():
     st.stop()
 
 # 獲取資料
+
+def format_vnd(amount: float) -> str:
+    if abs(amount) >= 100_000_000:
+        return f"{amount / 100_000_000:.2f} 億"
+    else:
+        return f"{amount:,.0f}"
+
+col_title, col_toggle = st.columns([1, 1])
+with col_title:
+    pass # Title is already above
+with col_toggle:
+    show_in_twd = st.toggle("顯示為台幣 (TWD) 🇹🇼", value=False)
+    
+EXCHANGE_RATE = 780
+
 holdings = compute_portfolio_with_prices()
 
 total_value = 0.0
@@ -50,9 +65,22 @@ if is_loading_prices:
     display_roi = "🔄"
     st_autorefresh(interval=2000, limit=15, key="wait_for_prices")
 else:
-    display_value = f"₫{total_value:,.0f}"
-    display_unrealized = f"{'-' if total_unrealized < 0 else ''}₫{abs(total_unrealized):,.2f}"
+    if show_in_twd:
+        display_val_num = total_value / EXCHANGE_RATE
+        display_unreal_num = total_unrealized / EXCHANGE_RATE
+        currency_label = "TWD"
+    else:
+        display_val_num = total_value
+        display_unreal_num = total_unrealized
+        currency_label = "VND"
+        
+    formatted_val = format_vnd(display_val_num)
+    formatted_unreal = format_vnd(abs(display_unreal_num))
+    
+    display_value = f"{formatted_val} {currency_label}"
+    display_unrealized = f"{'-' if display_unreal_num < 0 else ''}{formatted_unreal} {currency_label}"
     display_roi = f"{roi_pct:.2f}%"
+
 
 
 # 1. 頂部總資產橫幅
@@ -89,7 +117,7 @@ else:
             trend = ""
             sign = ""
         
-        amount_text = f"{sign}{abs(total_unrealized):,.0f} VND"
+        amount_text = f"{sign}{display_unrealized}"
         pct_text = f"{trend}{sign}{abs(roi_pct):.2f}%"
 
     st.markdown(f'''
@@ -117,79 +145,27 @@ else:
             df_plot["roi_str"] = df_plot["roi_pct"].apply(lambda x: f"{x:+.2f}%")
             df_plot["val_str"] = df_plot[plot_value_col].apply(lambda x: f"{x:,.0f}")
 
-            import plotly.graph_objects as go
-            import numpy as np
+            import plotly.express as px
+            import pandas as pd
 
-            # 準備氣泡顏色
-            colors = []
-            for roi in df_plot["roi_pct"]:
-                if roi > 0:
-                    colors.append("rgba(16, 185, 129, 0.8)")  # 獲利綠
-                elif roi < 0:
-                    colors.append("rgba(239, 68, 68, 0.8)")   # 虧損紅
-                else:
-                    colors.append("rgba(100, 116, 139, 0.8)")  # 中性灰
+            # Add color logic for treemap
+            df_plot["color_val"] = df_plot["roi_pct"].clip(-20, 20)  # For color scale clipping
 
-            # 準備氣泡大小：以最大市值股票為基準 [25, 80]
-            max_val = df_plot[plot_value_col].max()
-            if max_val > 0:
-                sizes = 25 + 55 * (df_plot[plot_value_col] / max_val)
-            else:
-                sizes = [40] * len(df_plot)
-
-            # 準備置中粗體股票代碼文字
-            labels = [f"<b>{sym}</b>" for sym in df_plot["symbol"]]
-
-            # 多國語言支持
-            lang = st.session_state.get("lang", "zh")
-            title_text = "投資組合效率前緣邊界分析圖" if lang == "zh" else "Phân tích biên hiệu quả danh mục đầu tư"
-            x_title = "持股比例 (%)" if lang == "zh" else "Tỷ lệ (%)"
-            y_title = "未實現損益率 (%)" if lang == "zh" else "Hiệu suất (%)"
-
-            if lang == "vi":
-                ht = (
-                    "<b>Mã CK: %{customdata[0]}</b><br>"
-                    "Tỷ lệ: %{customdata[1]}<br>"
-                    "Hiệu suất: %{customdata[2]}<br>"
-                    "Tổng giá trị: ₫%{customdata[3]}"
-                    "<extra></extra>"
-                )
-            else:
-                ht = (
-                    "<b>股票代碼: %{customdata[0]}</b><br>"
-                    "持股比例: %{customdata[1]}<br>"
-                    "未實現損益率: %{customdata[2]}<br>"
-                    "目前總市值: ₫%{customdata[3]}"
-                    "<extra></extra>"
-                )
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=df_plot["weight_pct"],
-                y=df_plot["roi_pct"],
-                mode="markers+text",
-                marker=dict(
-                    size=sizes,
-                    color=colors,
-                    line=dict(width=1.5, color="#f8fafc")
-                ),
-                text=labels,
-                textposition="middle center",
-                textfont=dict(
-                    color="#f8fafc",
-                    size=12,
-                    family="Noto Sans TC"
-                ),
-                customdata=np.stack((
-                    df_plot["symbol"], 
-                    df_plot["weight_str"], 
-                    df_plot["roi_str"], 
-                    df_plot["val_str"]
-                ), axis=-1),
+            fig = px.treemap(
+                df_plot,
+                path=[px.Constant("Portfolio"), "symbol"],
+                values=plot_value_col,
+                color="color_val",
+                color_continuous_scale=[(0, "#ef4444"), (0.5, "#64748b"), (1, "#10b981")],
+                color_continuous_midpoint=0,
+                custom_data=["symbol", "weight_str", "roi_str", "val_str"]
+            )
+            
+            fig.update_traces(
+                textinfo="label+value+text",
+                text=df_plot["roi_str"],
                 hovertemplate=ht
-            ))
+            )
 
             fig.update_layout(
                 title=dict(
@@ -199,29 +175,12 @@ else:
                     y=0.96
                 ),
                 height=580,
-                margin=dict(t=80, b=50, l=50, r=30),
+                margin=dict(t=80, b=20, l=20, r=20),
                 paper_bgcolor="#0f172a",
                 plot_bgcolor="#0f172a",
-                xaxis=dict(
-                    title=dict(text=x_title, font=dict(color="#94a3b8", size=13)),
-                    tickfont=dict(color="#94a3b8"),
-                    gridcolor="#334155",
-                    zeroline=True,
-                    zerolinecolor="#334155",
-                    zerolinewidth=1.5,
-                    range=[0, max(50, df_plot["weight_pct"].max() + 5)]
-                ),
-                yaxis=dict(
-                    title=dict(text=y_title, font=dict(color="#94a3b8", size=13)),
-                    tickfont=dict(color="#94a3b8"),
-                    gridcolor="#334155",
-                    zeroline=True,
-                    zerolinecolor="#334155",
-                    zerolinewidth=2
-                ),
-                showlegend=False
+                coloraxis_showscale=False
             )
-
+            
             st.plotly_chart(fig, use_container_width=True, theme=None, config={'displayModeBar': False})
             
     else:
