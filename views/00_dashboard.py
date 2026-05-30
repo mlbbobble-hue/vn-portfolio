@@ -148,6 +148,26 @@ else:
             import plotly.express as px
             import pandas as pd
 
+            lang = st.session_state.get("lang", "zh")
+            title_text = "投資組合熱力圖" if lang == "zh" else "Bản đồ nhiệt danh mục đầu tư"
+            
+            if lang == "vi":
+                ht = (
+                    "<b>Mã CK: %{customdata[0]}</b><br>"
+                    "Tỷ lệ: %{customdata[1]}<br>"
+                    "Hiệu suất: %{customdata[2]}<br>"
+                    "Tổng giá trị: ₫%{customdata[3]}"
+                    "<extra></extra>"
+                )
+            else:
+                ht = (
+                    "<b>股票代碼: %{customdata[0]}</b><br>"
+                    "持股比例: %{customdata[1]}<br>"
+                    "未實現損益率: %{customdata[2]}<br>"
+                    "目前總市值: ₫%{customdata[3]}"
+                    "<extra></extra>"
+                )
+
             # Add color logic for treemap
             df_plot["color_val"] = df_plot["roi_pct"].clip(-20, 20)  # For color scale clipping
 
