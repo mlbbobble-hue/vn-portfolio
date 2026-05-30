@@ -110,7 +110,12 @@ else:
             df_plot = df_plot.copy()
             total_val = df_plot[plot_value_col].sum()
             df_plot["weight"] = df_plot[plot_value_col] / total_val
-            df_plot["weight_pct"] = df_plot["weight"] * 100
+            df_plot["weight_pct"] = (df_plot["weight"] * 100).round(2)
+            df_plot["roi_pct"] = df_plot["roi_pct"].astype(float).round(2)
+
+            df_plot["weight_str"] = df_plot["weight_pct"].apply(lambda x: f"{x:.2f}%")
+            df_plot["roi_str"] = df_plot["roi_pct"].apply(lambda x: f"{x:+.2f}%")
+            df_plot["val_str"] = df_plot[plot_value_col].apply(lambda x: f"{x:,.0f}")
 
             import plotly.graph_objects as go
             import numpy as np
@@ -144,17 +149,17 @@ else:
             if lang == "vi":
                 ht = (
                     "<b>Mã CK: %{customdata[0]}</b><br>"
-                    "Tỷ lệ: %{x:.2f}%<br>"
-                    "Hiệu suất: %{y:+.2f}%<br>"
-                    "Tổng giá trị: ₫%{customdata[1]:,.0f}"
+                    "Tỷ lệ: %{customdata[1]}<br>"
+                    "Hiệu suất: %{customdata[2]}<br>"
+                    "Tổng giá trị: ₫%{customdata[3]}"
                     "<extra></extra>"
                 )
             else:
                 ht = (
                     "<b>股票代碼: %{customdata[0]}</b><br>"
-                    "持股比例: %{x:.2f}%<br>"
-                    "未實現損益率: %{y:+.2f}%<br>"
-                    "目前總市值: ₫%{customdata[1]:,.0f}"
+                    "持股比例: %{customdata[1]}<br>"
+                    "未實現損益率: %{customdata[2]}<br>"
+                    "目前總市值: ₫%{customdata[3]}"
                     "<extra></extra>"
                 )
 
@@ -177,7 +182,12 @@ else:
                     size=12,
                     family="Noto Sans TC"
                 ),
-                customdata=np.stack((df_plot["symbol"], df_plot[plot_value_col]), axis=-1),
+                customdata=np.stack((
+                    df_plot["symbol"], 
+                    df_plot["weight_str"], 
+                    df_plot["roi_str"], 
+                    df_plot["val_str"]
+                ), axis=-1),
                 hovertemplate=ht
             ))
 
