@@ -117,8 +117,8 @@ else:
             trend = ""
             sign = ""
         
-        amount_text = f"{sign}{display_unrealized}"
-        pct_text = f"{trend}{sign}{abs(roi_pct):.2f}%"
+        amount_text = f"{sign}{formatted_unreal} {currency_label}"
+        pct_text = f"{trend}{abs(roi_pct):.2f}%"
 
     st.markdown(f'''
     <div class="cathay-card" style="background: {c_bg}; border-left: 6px solid {c_color}; padding: 20px; text-align: left; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-bottom: 20px;">
