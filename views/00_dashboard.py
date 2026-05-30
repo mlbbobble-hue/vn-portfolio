@@ -51,8 +51,8 @@ if is_loading_prices:
     st_autorefresh(interval=2000, limit=15, key="wait_for_prices")
 else:
     display_value = f"₫{total_value:,.0f}"
-    display_unrealized = f"₫{abs(total_unrealized):,.2f}"
-    display_roi = f"{abs(roi_pct):.2f}%"
+    display_unrealized = f"{'-' if total_unrealized < 0 else ''}₫{abs(total_unrealized):,.2f}"
+    display_roi = f"{roi_pct:.2f}%"
 
 
 # 1. 頂部總資產橫幅
@@ -65,29 +65,40 @@ else:
 
     # 2. 投資績效 Badges & Cards
     st.markdown(f"<h4 style='margin-left: 8px;'>{t('invest_performance')}</h4>", unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    with c1:
-        badge_class = "badge-up" if total_unrealized > 0 else "badge-down" if total_unrealized < 0 else "badge-neutral"
-        sign = "+" if total_unrealized > 0 else ""
-        st.markdown(f'''
-        <div class="cathay-card">
-            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("unrealized_pl")}</div>
-            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_unrealized}</div>
-            <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{total_unrealized:,.2f}</span></div>
-        </div>
-        ''', unsafe_allow_html=True)
+    if is_loading_prices:
+        c_color = "var(--text-primary)"
+        c_bg = "var(--bg-card)"
+        trend = ""
+        sign = ""
+        amount_text = display_unrealized
+        pct_text = display_roi
+    else:
+        if total_unrealized > 0:
+            c_color = "#10b981"
+            c_bg = "var(--bg-card)"
+            trend = "▲ "
+            sign = "+"
+        elif total_unrealized < 0:
+            c_color = "#ef4444"
+            c_bg = "var(--bg-card)"
+            trend = "▼ "
+            sign = "-"
+        else:
+            c_color = "var(--text-primary)"
+            c_bg = "var(--bg-card)"
+            trend = ""
+            sign = ""
+        
+        amount_text = f"{sign}{abs(total_unrealized):,.0f} VND"
+        pct_text = f"{trend}{sign}{abs(roi_pct):.2f}%"
 
-    with c2:
-        badge_class = "badge-up" if roi_pct > 0 else "badge-down" if roi_pct < 0 else "badge-neutral"
-        sign = "+" if roi_pct > 0 else ""
-        st.markdown(f'''
-        <div class="cathay-card">
-            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">{t("accum_return_rate")}</div>
-            <div style="font-size: 26px; font-weight: bold; color: var(--text-primary);">{display_roi}</div>
-            <div style="margin-top: 8px;"><span class="badge {badge_class}">{sign}{roi_pct:.2f}%</span></div>
-        </div>
-        ''', unsafe_allow_html=True)
-
+    st.markdown(f'''
+    <div class="cathay-card" style="background: {c_bg}; border-left: 6px solid {c_color}; padding: 20px; text-align: left; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-bottom: 20px;">
+        <div style="font-size: 14px; color: #94a3b8; margin-bottom: 12px;">{t("unrealized_pl")}</div>
+        <div style="font-size: 24px; font-weight: bold; color: {c_color}; margin-bottom: 8px;">{amount_text}</div>
+        <div style="font-size: 14px; font-weight: bold; color: {c_color};">{pct_text}</div>
+    </div>
+    ''', unsafe_allow_html=True)
     # 3. 資產分佈圖表 (Treemap) 或 空狀態
     if not holdings.empty:
         st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
