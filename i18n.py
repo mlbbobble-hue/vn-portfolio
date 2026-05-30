@@ -72,7 +72,7 @@ TRANSLATIONS = {
     "password":             {"vi": "Mật khẩu", "zh": "密碼"},
     "confirm_password":     {"vi": "Xác nhận mật khẩu", "zh": "確認密碼"},
     "full_name":            {"vi": "Họ và tên", "zh": "姓名"},
-    "login_title":          {"vi": "Gia nhập Antigravity", "zh": "加入 Antigravity"},
+    "login_title":          {"vi": "Đăng nhập vào hệ thống", "zh": "登入系統"},
     "register_title":       {"vi": "Tạo tài khoản mới", "zh": "建立新帳號"},
     "login_btn":            {"vi": "🔐 Đăng nhập", "zh": "🔐 登入"},
     "register_btn":         {"vi": "Tạo tài khoản", "zh": "建立帳號"},
