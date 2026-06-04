@@ -5,6 +5,41 @@ import pandas as pd
 from db_router import get_all_transactions, get_price_cache, get_dividend_events
 
 
+def get_total_realized_pl() -> float:
+    txns = get_all_transactions()
+    if txns.empty: return 0.0
+    
+    txns = txns.sort_values(["date", "id"])
+    holdings = {}
+    total_realized = 0.0
+    
+    for _, row in txns.iterrows():
+        sym = row["symbol"]
+        action = row["action"]
+        shares = float(row["shares"])
+        price = float(row["price"])
+        fee = float(row["fee"])
+        
+        if sym not in holdings:
+            holdings[sym] = {"shares": 0.0, "avg_cost": 0.0, "total_cost": 0.0}
+            
+        h = holdings[sym]
+        if action == "BUY":
+            cost_of_new = shares * price + fee
+            new_total_shares = h["shares"] + shares
+            h["avg_cost"] = (h["total_cost"] + cost_of_new) / new_total_shares if new_total_shares > 0 else 0
+            h["total_cost"] += cost_of_new
+            h["shares"] = new_total_shares
+        elif action == "SELL":
+            sell_value = shares * price - fee
+            cost_basis = shares * h["avg_cost"]
+            total_realized += sell_value - cost_basis
+            h["shares"] = max(0.0, h["shares"] - shares)
+            h["total_cost"] = h["shares"] * h["avg_cost"]
+            
+    return total_realized
+
+
 def compute_holdings() -> pd.DataFrame:
     """
     計算所有持股的庫存股數與平均持股成本（WAC）
