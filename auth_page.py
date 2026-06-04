@@ -160,7 +160,7 @@ def render_auth_page():
 
     # 自動登入邏輯
     if not st.session_state.get("authenticated") and cookie_ctrl is not None:
-        saved_token = cookie_ctrl.get("sb_refresh_token")
+        saved_token = cookies.get("sb_refresh_token") if cookies else None
         if saved_token and "auto_login_attempted" not in st.session_state:
             st.session_state["auto_login_attempted"] = True
             from supabase_db import refresh_login
@@ -252,8 +252,12 @@ def render_auth_page():
                             cookie_ctrl.set("sb_refresh_token", result["session"].refresh_token, max_age=86400*30)
                         except:
                             pass
-                    st.success(t("login_success", name=full_name))
-                    st.rerun()
+                        st.success(t("login_success", name=full_name) + " (Redirecting...)")
+                        import streamlit.components.v1 as components
+                        components.html("<script>setTimeout(function(){ window.parent.location.reload(); }, 800);</script>")
+                    else:
+                        st.success(t("login_success", name=full_name))
+                        st.rerun()
                 elif result["error"] == "EMAIL_NOT_CONFIRMED":
                     st.warning(t("check_email_confirm"))
                 else:
@@ -403,4 +407,6 @@ def render_user_info_sidebar():
         sign_out()
         for key in ["authenticated", "user_id", "user_email", "user_name", "access_token"]:
             st.session_state.pop(key, None)
-        st.rerun()
+        
+        import streamlit.components.v1 as components
+        components.html("<script>document.cookie = 'sb_refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; setTimeout(function(){ window.parent.location.reload(); }, 500);</script>")
