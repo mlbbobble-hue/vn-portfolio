@@ -11,3 +11,4 @@ pypdf>=4.0.0
 yfinance
 ddgs
 feedparser
+deep-translator
