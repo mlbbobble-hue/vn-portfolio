@@ -160,27 +160,26 @@ def run_email_sync(user_id):
         
     mail.select("inbox")
     
-    sender_domain = ""
+    domains_to_search = []
     if broker == "TCBS":
-        sender_domain = "@tcbs.com.vn"
+        domains_to_search = ["@tcbs.com.vn"]
     elif broker == "SSI":
-        sender_domain = "@ssi.com.vn"
+        domains_to_search = ["@ssi.com.vn"]
     elif broker == "VNDIRECT":
-        sender_domain = "@vndirect.com.vn"
+        domains_to_search = ["@vndirect.com.vn"]
     elif broker == "PHS":
-        sender_domain = "@phs.vn"
+        domains_to_search = ["@phs.vn"]
     elif broker == "ALL (搜尋全部券商)":
-        sender_domain = "" # 空字串代表不限制寄件者
-        
-    if sender_domain:
-        status, messages = mail.search(None, f'(UNSEEN FROM "{sender_domain}")')
-    else:
-        status, messages = mail.search(None, '(UNSEEN)')
-        
-    if status != "OK":
-        return {"found": 0, "inserted": 0}
-        
-    mail_ids = messages[0].split()
+        domains_to_search = ["@tcbs.com.vn", "@ssi.com.vn", "@vndirect.com.vn", "@phs.vn"]
+    
+    all_mail_ids = set()
+    for domain in domains_to_search:
+        status, messages = mail.search(None, f'(UNSEEN FROM "{domain}")')
+        if status == "OK":
+            ids = messages[0].split()
+            all_mail_ids.update(ids)
+            
+    mail_ids = list(all_mail_ids)
     found = len(mail_ids)
     inserted = 0
     
