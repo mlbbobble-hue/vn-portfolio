@@ -247,6 +247,14 @@ with tab_view:
         st.markdown(f"<small style='color:#64748b;'>{t('total_records')} {len(f)} {t('records')}</small>", unsafe_allow_html=True)
         f = f.copy()
         f["淨金額"] = f.apply(lambda r: r["shares"]*r["price"] + (r["fee"] if r["action"]=="BUY" else -r["fee"]), axis=1)
+        
+        # Ensure correct data types for st.data_editor
+        f["id"] = pd.to_numeric(f["id"], errors="coerce")
+        f["shares"] = pd.to_numeric(f["shares"], errors="coerce")
+        f["price"] = pd.to_numeric(f["price"], errors="coerce")
+        f["fee"] = pd.to_numeric(f["fee"], errors="coerce")
+        f["date"] = pd.to_datetime(f["date"], errors="coerce").dt.date
+        
         f = f.reset_index(drop=True)
         
         st.markdown("### ✏️ 快速編輯與刪除 (Inline Edit & Delete)")
