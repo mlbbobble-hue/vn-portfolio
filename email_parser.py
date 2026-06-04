@@ -217,6 +217,20 @@ def run_email_sync(user_id, start_date=None):
         for response_part in msg_data:
             if isinstance(response_part, tuple):
                 msg = email.message_from_bytes(response_part[1])
+                
+                # 解碼並檢查標題，如果包含投資日報等行銷關鍵字，直接略過以加速讀取
+                from email.header import decode_header
+                subject = msg.get("Subject", "")
+                decoded_subject = ""
+                for part, encoding in decode_header(subject):
+                    if isinstance(part, bytes):
+                        decoded_subject += part.decode(encoding or "utf-8", errors="ignore")
+                    else:
+                        decoded_subject += str(part)
+                
+                if any(kw in decoded_subject.upper() for kw in ["投資日報", "BẢN TIN", "NEWSLETTER"]):
+                    continue
+
                 date_tuple = email.utils.parsedate_tz(msg['Date'])
                 if date_tuple:
                     local_date = datetime.fromtimestamp(email.utils.mktime_tz(date_tuple))
@@ -225,6 +239,8 @@ def run_email_sync(user_id, start_date=None):
                     date_str = datetime.now().strftime("%Y-%m-%d")
                 
                 text = extract_text_from_email(msg)
+                if not text.strip():
+                    continue
                 debug_text = text # 記錄最後一封信的文字內容
                 txns = parse_broker_email(text, date_str, broker)
                 
