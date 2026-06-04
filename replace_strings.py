@@ -1,77 +1,53 @@
-import os
+import re
 
-replacements_dashboard = {
-    '"獲利翻倍 (>50%)"': 't("roi_double")',
-    '"穩定獲利 (>0%)"': 't("roi_profit")',
-    '"微幅虧損 (<0%)"': 't("roi_loss")',
-    '"平盤或特殊 (0%)"': 't("roi_flat")',
-    '"投資組合"': 't("portfolio")',
-    '"前往新增交易"': 't("go_to_add_tx")',
-}
+# 00_dashboard.py
+with open("views/00_dashboard.py", "r", encoding="utf-8") as f:
+    c = f.read()
 
-replacements_transactions = {
-    '"輸入此債券的目前市場報價，系統會用此價格計算市值與損益。此項目不會透過自動更新股價去抓取。"': 't("bond_price_help")',
-    '"匯入模式"': 't("import_mode")',
-    '"目前持股快照 (Portfolio Snapshot)"': 't("import_snapshot")',
-    '"歷史交易明細 (Transaction History)"': 't("import_history")',
-    '"預覽原始資料："': 't("preview_raw_data")',
-    '"日期 (Date)"': 't("col_date")',
-    '"股票代號 (Symbol)"': 't("col_symbol")',
-    '"動作 (Action)"': 't("col_action")',
-    '"股數 (Shares)"': 't("col_shares")',
-    '"價格 (Price)"': 't("col_price")',
-    '"券商 (Broker)"': 't("col_broker")',
-    '"手續費 (Fee) [選填]"': 't("col_fee")',
-    '"備註 (Note) [選填]"': 't("col_note")',
-    '"(手動輸入)"': 't("manual_input")',
-    '"選擇預設券商"': 't("default_broker")',
-    '"預設券商 (Broker)"': 't("default_broker_2")',
-    '"匯入日期 (Date)"': 't("import_date")',
-    '"(無)"': 't("no_fee_note")',
-    '"成本類型"': 't("cost_type")',
-    '"總成本 (Total Cost)"': 't("total_cost")',
-    '"平均價格 (Avg Price)"': 't("avg_price")',
-    '"預覽轉換後資料"': 't("preview_parsed_data")',
-    '"請輸入要修改的紀錄 ID (ID)"': 't("edit_tx_id")',
-    'f"正在修改紀錄 ID: {edit_id} ({r[\'action\']} {r[\'symbol\']})"': 't("editing_tx", id=edit_id, act=r["action"], sym=r["symbol"])',
-    '"找不到此 ID 的紀錄，請確認 ID 是否正確。"': 't("tx_not_found")'
-}
+c = c.replace('st.toggle("顯示為台幣 (TWD) 🇹🇼", value=False)', 'st.toggle(t("display_twd"), value=False)')
+c = c.replace('wf_x = ["已實現損益", "未實現損益", "現金配息", "配股現值", "總投資淨利"]', 'wf_x = [t("realized_pl_chart"), t("unrealized_pl_chart"), t("cash_div_chart"), t("stock_div_chart"), t("total_net_profit")]')
+c = c.replace('wf_title = "損益瀑布圖 (P&L Waterfall)" if lang == "zh" else "Biểu đồ Thác nước Lãi/Lỗ"', 'wf_title = t("pl_waterfall")')
+c = c.replace('st.markdown("<h4 style=\'margin-left: 8px;\'>投資組合熱力圖</h4>", unsafe_allow_html=True)', 'st.markdown(f"<h4 style=\'margin-left: 8px;\'>{t(\'portfolio_heatmap\')}</h4>", unsafe_allow_html=True)')
 
-replacements_dividends = {
-    '"📊 歷史實際獲得配息/配股統計"': 't("hist_div_stats")',
-    '"今年已領股利總額"': 't("div_this_year")',
-    '"在途待領股利總額"': 't("div_pending")',
-    '"歷年累計總股利"': 't("div_all_time")',
-    '["全部"]': '[t("all")]',
-    '["按個股聚合"]': '[t("group_by_stock")]',
-    '== "全部"': '== t("all")',
-    '== "按個股聚合"': '== t("group_by_stock")',
-    '"尚無任何配息紀錄"': 't("no_div_records")',
-    '"股票代碼"': 't("symbol")',
-    '"累計現金配息"': 't("acc_cash_div")',
-    '"累計股票配股"': 't("acc_stock_div")',
-    'f"共 {len(sym_df)} 筆紀錄"': 't("total_n_records", n=len(sym_df))',
-    'f"{int(y)} 年度"': 't("year_y", y=int(y))',
-    '"累計現金："': 't("div_acc_cash")',
-    '"累計配股："': 't("div_acc_stock")',
-    '"現金股利"': 't("div_cash_lbl")',
-    '"股票股利"': 't("div_stock_lbl")'
-}
+with open("views/00_dashboard.py", "w", encoding="utf-8") as f:
+    f.write(c)
 
-def replace_in_file(filepath, replacements):
-    with open(filepath, 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    if 'from i18n import t' not in content and 'import t' not in content:
-        content = content.replace('import streamlit as st', 'import streamlit as st\nfrom i18n import t', 1)
-        
-    for k, v in replacements.items():
-        content = content.replace(k, v)
-        
-    with open(filepath, 'w', encoding='utf-8') as f:
-        f.write(content)
+# 01_portfolio.py
+with open("views/01_portfolio.py", "r", encoding="utf-8") as f:
+    c = f.read()
 
-replace_in_file('views/00_dashboard.py', replacements_dashboard)
-replace_in_file('views/02_transactions.py', replacements_transactions)
-replace_in_file('views/03_dividends.py', replacements_dividends)
-print("Replacements complete!")
+c = c.replace('text="<b>券股市值分佈</b>"', 'text=f"<b>{t(\'broker_dist\')}</b>"')
+c = c.replace('text="<b>持股資產配置</b>"', 'text=f"<b>{t(\'asset_dist\')}</b>"')
+
+with open("views/01_portfolio.py", "w", encoding="utf-8") as f:
+    f.write(c)
+
+# 02_transactions.py
+with open("views/02_transactions.py", "r", encoding="utf-8") as f:
+    c = f.read()
+
+c = c.replace('text="<b>資金累積與歷史操作</b>"', 'text=f"<b>{t(\'fund_accum_history\')}</b>"')
+
+with open("views/02_transactions.py", "w", encoding="utf-8") as f:
+    f.write(c)
+
+# 03_dividends.py
+with open("views/03_dividends.py", "r", encoding="utf-8") as f:
+    c = f.read()
+
+c = c.replace('今年累計領取配息 (Cash Div)', '{t("cash_div_ytd")}')
+c = c.replace('即將入帳配息 (Pending Cash)', '{t("cash_div_pending")}')
+c = c.replace('歷史累計配息 (All-time Cash)', '{t("cash_div_all_time")}')
+c = c.replace('今年領取配股現值 (Stock Div Value)', '{t("stock_div_ytd")}')
+c = c.replace('即將發放配股現值 (Pending Stock)', '{t("stock_div_pending")}')
+c = c.replace('歷史累計配股現值 (All-time Stock)', '{t("stock_div_all_time")}')
+
+c = c.replace('df_monthly["type_str"] = df_monthly["type"].map({"CASH": "現金配息", "STOCK": "配股現值"})', 'df_monthly["type_str"] = df_monthly["type"].map({"CASH": t("cash_div_chart"), "STOCK": t("stock_div_chart")})')
+
+c = c.replace('color_discrete_map={"現金配息": "#00F0FF", "配股現值": "#FF007F"}', 'color_discrete_map={t("cash_div_chart"): "#00F0FF", t("stock_div_chart"): "#FF007F"}')
+c = c.replace('bar_title = "每月被動收入趨勢" if lang == "zh" else "Xu hướng thu nhập thụ động hàng tháng"', 'bar_title = "每月被動收入趨勢" if st.session_state.get("lang", "zh") == "zh" else "Xu hướng thu nhập thụ động hàng tháng"')
+
+with open("views/03_dividends.py", "w", encoding="utf-8") as f:
+    f.write(c)
+
+print("Translations replaced")

@@ -125,29 +125,29 @@ with tab_ov:
         st.markdown(f"""
 <div style="display: flex; gap: 16px; margin-bottom: 16px;">
     <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(16, 185, 129, 0.3); box-shadow: var(--shadow-soft); border-left: 4px solid #10b981;">
-        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">💰 今年累計領取配息 (Cash Div)</div>
+        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">💰 {t("cash_div_ytd")}</div>
         <div style="color: #00FF41; font-size: 24px; font-weight: 700;">+{total_received_this_year:,.0f} <span style="font-size:14px;">VNĐ</span></div>
     </div>
     <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(251, 191, 36, 0.3); box-shadow: var(--shadow-soft); border-left: 4px solid #fbbf24;">
-        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">⏳ 即將入帳配息 (Pending Cash)</div>
+        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">⏳ {t("cash_div_pending")}</div>
         <div style="color: #fbbf24; font-size: 24px; font-weight: 700;">+{total_pending:,.0f} <span style="font-size:14px;">VNĐ</span></div>
     </div>
     <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(248, 250, 252, 0.3); box-shadow: var(--shadow-soft); border-left: 4px solid #f8fafc;">
-        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">📈 歷史累計配息 (All-time Cash)</div>
+        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">📈 {t("cash_div_all_time")}</div>
         <div style="color: #f8fafc; font-size: 24px; font-weight: 700;">+{total_received_all_time:,.0f} <span style="font-size:14px;">VNĐ</span></div>
     </div>
 </div>
 <div style="display: flex; gap: 16px; margin-bottom: 24px;">
     <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(59, 130, 246, 0.3); box-shadow: var(--shadow-soft); border-left: 4px solid #3b82f6;">
-        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">🎁 今年領取配股現值 (Stock Div Value)</div>
+        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">🎁 {t("stock_div_ytd")}</div>
         <div style="color: #3b82f6; font-size: 24px; font-weight: 700;">+{total_stock_val_this_year:,.0f} <span style="font-size:14px;">VNĐ</span></div>
     </div>
     <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(168, 85, 247, 0.3); box-shadow: var(--shadow-soft); border-left: 4px solid #a855f7;">
-        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">⏳ 即將發放配股現值 (Pending Stock)</div>
+        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">⏳ {t("stock_div_pending")}</div>
         <div style="color: #a855f7; font-size: 24px; font-weight: 700;">+{total_pending_stock_val:,.0f} <span style="font-size:14px;">VNĐ</span></div>
     </div>
     <div style="flex: 1; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(236, 72, 153, 0.3); box-shadow: var(--shadow-soft); border-left: 4px solid #ec4899;">
-        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">💎 歷史累計配股現值 (All-time Stock)</div>
+        <div style="color: #00F0FF; font-size: 13px; margin-bottom: 8px;">💎 {t("stock_div_all_time")}</div>
         <div style="color: #ec4899; font-size: 24px; font-weight: 700;">+{total_stock_val_all_time:,.0f} <span style="font-size:14px;">VNĐ</span></div>
     </div>
 </div>
@@ -175,15 +175,15 @@ with tab_ov:
                 df_div_chart.at[idx, "val"] = float(r.get("stock_received", 0)) * curr_price
                 
         df_monthly = df_div_chart.groupby(["month", "type"])["val"].sum().reset_index()
-        df_monthly["type_str"] = df_monthly["type"].map({"CASH": "現金配息", "STOCK": "配股現值"})
+        df_monthly["type_str"] = df_monthly["type"].map({"CASH": t("cash_div_chart"), "STOCK": t("stock_div_chart")})
         
         import plotly.express as px
         fig_bar = px.bar(df_monthly, x="month", y="val", color="type_str", 
-                         color_discrete_map={"現金配息": "#00F0FF", "配股現值": "#FF007F"},
+                         color_discrete_map={t("cash_div_chart"): "#00F0FF", t("stock_div_chart"): "#FF007F"},
                          barmode="stack")
         
         lang = st.session_state.get("lang", "zh")
-        bar_title = "每月被動收入趨勢" if lang == "zh" else "Xu hướng thu nhập thụ động hàng tháng"
+        bar_title = "每月被動收入趨勢" if st.session_state.get("lang", "zh") == "zh" else "Xu hướng thu nhập thụ động hàng tháng"
         
         fig_bar.update_layout(
             title=dict(text=f"<b>{bar_title}</b>", font=dict(size=16, color="#E0F7FA")),

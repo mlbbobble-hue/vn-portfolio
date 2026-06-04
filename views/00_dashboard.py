@@ -41,7 +41,7 @@ col_title, col_toggle = st.columns([1, 1])
 with col_title:
     pass # Title is already above
 with col_toggle:
-    show_in_twd = st.toggle("顯示為台幣 (TWD) 🇹🇼", value=False)
+    show_in_twd = st.toggle(t("display_twd"), value=False)
     
 EXCHANGE_RATE = 780
 
@@ -182,7 +182,7 @@ else:
         ))
         
         lang = st.session_state.get("lang", "zh")
-        wf_title = "損益瀑布圖 (P&L Waterfall)" if lang == "zh" else "Biểu đồ Thác nước Lãi/Lỗ"
+        wf_title = t("pl_waterfall")
         
         fig_waterfall.update_layout(
             title=dict(text=f"<b>{wf_title}</b>", font=dict(size=18, color="#FFFFFF"), x=0.015, y=0.9),

@@ -151,6 +151,13 @@ def render_auth_page():
     except Exception:
         cookie_ctrl = None
 
+    # 等待前端傳回 Cookie，避免第一次加載時瞬間顯示登入畫面
+    if cookie_ctrl is not None and not st.session_state.get("authenticated"):
+        cookies = cookie_ctrl.getAll()
+        if cookies is None:
+            st.spinner(t("loading"))
+            st.stop() # 停止渲染，等待組件觸發 re-run
+
     # 自動登入邏輯
     if not st.session_state.get("authenticated") and cookie_ctrl is not None:
         saved_token = cookie_ctrl.get("sb_refresh_token")
