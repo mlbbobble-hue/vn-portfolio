@@ -63,7 +63,7 @@ def parse_broker_email(text, date_str, broker_name):
             
             # 尋找 3 位數的大寫字母作為股票代號
             # 例如: FPT, HPG, VCB
-            symbols = re.findall(r'\b[A-Z0-9]{3}\b', line_clean)
+            symbols = re.findall(r'\b[A-Z]{3}\b', line_clean)
             # 過濾掉常見非股票的三字元 (如 VND, MUA, BAN, BUY)
             symbols = [s for s in symbols if s not in ["VND", "MUA", "BAN", "BUY"]]
             
