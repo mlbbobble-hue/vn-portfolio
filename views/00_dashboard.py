@@ -162,7 +162,17 @@ else:
                     news_items = fetch_and_translate_news(symbol, limit=2)
                 
                 if not news_items:
-                    st.info("暫無新聞" if lang == "zh" else "Không có tin tức")
+                    search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"
+                    st.markdown(f"""
+                    <div class="cathay-card" style="background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 12px; text-align: center;">
+                        <span style="font-size: 13px; color: #94a3b8; display: block; margin-bottom: 6px;">
+                            {"無國際新聞" if lang == "zh" else "Không có tin quốc tế"}
+                        </span>
+                        <a href="https://s.cafef.vn/tim-kiem.chn?keyword={symbol}" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 14px; font-weight: bold;">
+                            🔍 {search_txt}
+                        </a>
+                    </div>
+                    """, unsafe_allow_html=True)
                 else:
                     for item in news_items:
                         st.markdown(f"""
