@@ -61,32 +61,33 @@ def parse_broker_email(text, date_str, broker_name):
     使用 Regex 擷取: 買/賣, 股票代號, 數量, 價格
     """
     transactions = []
-    text = text.upper()
+    text_upper = text.upper()
     
-    # TCBS / SSI 常見關鍵字: "MUA", "BÁN", 加上股號(3碼), 加上數字
-    # 這裡實作一個初步的 heuristic 解析器
+    # 忽略市場報告/日報，避免誤判
+    if "投資日報" in text_upper or "BẢN TIN" in text_upper or "NEWSLETTER" in text_upper:
+        return transactions
     
-    # 尋找類似: MUA 100 FPT 100,000 或 BÁN FPT 100 100000
-    # 我們將文字拆分成多行來尋找
     lines = text.split('\n')
     
     for line in lines:
-        line_clean = line.strip()
+        line_clean = line.strip().upper()
         if not line_clean:
             continue
             
-        # 尋找 MUA (BUY) 或是 BÁN/BAN (SELL)
-        is_buy = "MUA" in line_clean or "BUY" in line_clean
-        is_sell = "BÁN" in line_clean or "BAN" in line_clean or "SELL" in line_clean
+        # 必須是獨立的單字，不能是 THU BAN WARD 這種包含關係
+        is_buy = bool(re.search(r'\b(MUA|BUY)\b', line_clean))
+        is_sell = bool(re.search(r'\b(BÁN|BAN|SELL)\b', line_clean))
         
-        if is_buy or is_sell:
+        # 必須包含成交或價格相關的關鍵字才當作是交易明細行 (避免讀到地址)
+        has_txn_keywords = bool(re.search(r'(GIÁ|PRICE|KHỚP|MATCH|LỆNH|ORDER|VND|ĐỒNG)', line_clean))
+        
+        if (is_buy or is_sell) and has_txn_keywords:
             action = "BUY" if is_buy else "SELL"
             
-            # 尋找 3 位數的大寫字母作為股票代號
-            # 例如: FPT, HPG, VCB
             symbols = re.findall(r'\b[A-Z]{3}\b', line_clean)
-            # 過濾掉常見非股票的三字元 (如 VND, MUA, BAN, BUY)
-            symbols = [s for s in symbols if s not in ["VND", "MUA", "BAN", "BUY"]]
+            # 過濾掉常見的非股票代號3字母
+            ignore_list = {"VND", "USD", "THU", "BAN", "HAI", "HON", "DAO", "VAN", "WAR", "HCM", "HNX", "OTC", "UPC", "MUA", "BUY", "GIA", "PHI", "TNH", "CPN", "JSC"}
+            symbols = [s for s in symbols if s not in ignore_list]
             
             if not symbols:
                 continue
