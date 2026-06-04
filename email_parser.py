@@ -193,9 +193,13 @@ def run_email_sync(user_id):
     elif broker == "ALL (搜尋全部券商)":
         domains_to_search = ["@tcbs.com.vn", "@ssi.com.vn", "@vndirect.com.vn", "@phs.vn"]
     
+    from datetime import datetime
+    today_imap = datetime.now().strftime("%d-%b-%Y") # e.g. 04-Jun-2026
+    
     all_mail_ids = set()
     for domain in domains_to_search:
-        status, messages = mail.search(None, f'(UNSEEN FROM "{domain}")')
+        # 改為搜尋「今天」的所有信件，不管是否已讀
+        status, messages = mail.search(None, f'(SINCE "{today_imap}" FROM "{domain}")')
         if status == "OK":
             ids = messages[0].split()
             all_mail_ids.update(ids)
@@ -219,20 +223,44 @@ def run_email_sync(user_id):
                 text = extract_text_from_email(msg)
                 txns = parse_broker_email(text, date_str, broker)
                 
+                # 為了避免重複匯入，先取得今日已有的交易紀錄
+                from supabase_db import sb_get_all_transactions
+                try:
+                    existing_txns = sb_get_all_transactions(user_id)
+                    # 只過濾出今天的
+                    if not existing_txns.empty:
+                        existing_txns = existing_txns[existing_txns["date"].str.startswith(date_str)]
+                except:
+                    import pandas as pd
+                    existing_txns = pd.DataFrame()
+                
                 for t in txns:
                     try:
-                        sb_add_transaction(
-                            user_id=user_id,
-                            date=t["date"],
-                            broker=broker,
-                            symbol=t["symbol"],
-                            action=t["action"],
-                            shares=t["shares"],
-                            price=t["price"],
-                            fee=t.get("fee", 0),
-                            note="Auto-synced from Email"
-                        )
-                        inserted += 1
+                        # 檢查是否已經存在完全相同的交易紀錄
+                        is_duplicate = False
+                        if not existing_txns.empty:
+                            mask = (
+                                (existing_txns["symbol"] == t["symbol"]) &
+                                (existing_txns["action"] == t["action"]) &
+                                (existing_txns["shares"] == t["shares"]) &
+                                (existing_txns["price"] == t["price"])
+                            )
+                            if mask.any():
+                                is_duplicate = True
+                                
+                        if not is_duplicate:
+                            sb_add_transaction(
+                                user_id=user_id,
+                                date=t["date"],
+                                broker=broker,
+                                symbol=t["symbol"],
+                                action=t["action"],
+                                shares=t["shares"],
+                                price=t["price"],
+                                fee=t.get("fee", 0),
+                                note="Auto-synced from Email"
+                            )
+                            inserted += 1
                     except Exception as e:
                         print(f"Error inserting {t}: {e}")
                         
