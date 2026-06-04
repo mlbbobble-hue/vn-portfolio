@@ -164,7 +164,7 @@ def parse_broker_email(text, date_str, broker_name):
             
     return unique_txns
 
-def run_email_sync(user_id):
+def run_email_sync(user_id, start_date=None):
     settings = sb_load_imap_settings(user_id)
     email_user = settings.get("imap_email")
     email_pass = settings.get("imap_password")
@@ -194,12 +194,14 @@ def run_email_sync(user_id):
         domains_to_search = ["@tcbs.com.vn", "@ssi.com.vn", "@vndirect.com.vn", "@phs.vn"]
     
     from datetime import datetime
-    today_imap = datetime.now().strftime("%d-%b-%Y") # e.g. 04-Jun-2026
+    if start_date is None:
+        start_date = datetime.now()
+    since_imap = start_date.strftime("%d-%b-%Y")
     
     all_mail_ids = set()
     for domain in domains_to_search:
-        # 改為搜尋「今天」的所有信件，不管是否已讀
-        status, messages = mail.search(None, f'(SINCE "{today_imap}" FROM "{domain}")')
+        # 改為搜尋「選定日期」的所有信件，不管是否已讀
+        status, messages = mail.search(None, f'(SINCE "{since_imap}" FROM "{domain}")')
         if status == "OK":
             ids = messages[0].split()
             all_mail_ids.update(ids)

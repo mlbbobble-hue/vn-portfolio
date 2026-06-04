@@ -40,11 +40,22 @@ with st.form("imap_settings_form"):
 st.markdown("---")
 st.markdown(t("manual_sync_title"))
 
-if st.button(t("sync_now"), use_container_width=True):
+import datetime
+
+col1, col2 = st.columns([1, 1])
+with col1:
+    start_date = st.date_input("選擇同步開始日期 (預設為今天)", value=datetime.date.today())
+with col2:
+    st.markdown("<br>", unsafe_allow_html=True)
+    sync_clicked = st.button(t("sync_now"), use_container_width=True)
+
+if sync_clicked:
     from email_parser import run_email_sync
     with st.spinner(t("syncing_msg")):
         try:
-            results = run_email_sync(user_id)
+            # Convert date to datetime for consistency if needed, though email_parser expects a datetime object with strftime
+            sync_start = datetime.datetime.combine(start_date, datetime.datetime.min.time())
+            results = run_email_sync(user_id, start_date=sync_start)
             st.success(t("sync_success", found=results.get("found", 0), inserted=results.get("inserted", 0)))
             if results.get('inserted', 0) > 0:
                 st.balloons()
