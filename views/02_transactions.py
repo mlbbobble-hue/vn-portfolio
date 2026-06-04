@@ -169,8 +169,17 @@ with tab_import:
                 if st.button("プレビュー (預覽轉換後資料)"):
                     mapped_df = pd.DataFrame()
                     mapped_df["date"] = df_up[map_date]
-                    mapped_df["symbol"] = df_up[map_sym]
-                    mapped_df["action"] = df_up[map_act]
+                    
+                    # Normalize symbol: extract first alphanumeric group and uppercase it
+                    mapped_df["symbol"] = df_up[map_sym].astype(str).str.extract(r'([A-Za-z0-9]+)')[0].str.upper()
+                    
+                    # Standardize action: map '買', 'Mua', 'B', 'Buy' to 'BUY', else 'SELL'
+                    def map_act_val(val):
+                        v = str(val).strip().upper()
+                        if v in ["BUY", "買", "買進", "買入", "MUA", "M", "B"]: return "BUY"
+                        return "SELL"
+                    mapped_df["action"] = df_up[map_act].apply(map_act_val)
+                    
                     mapped_df["shares"] = pd.to_numeric(df_up[map_shares].astype(str).str.replace(",",""), errors="coerce")
                     mapped_df["price"] = pd.to_numeric(df_up[map_price].astype(str).str.replace(",",""), errors="coerce")
                     mapped_df["broker"] = manual_broker if map_broker == t("manual_input") else df_up[map_broker]
@@ -192,7 +201,7 @@ with tab_import:
                 
                 if st.button(t("preview_parsed_data"), use_container_width=True):
                     mapped_df = pd.DataFrame()
-                    mapped_df["symbol"] = df_up[map_sym]
+                    mapped_df["symbol"] = df_up[map_sym].astype(str).str.extract(r'([A-Za-z0-9]+)')[0].str.upper()
                     mapped_df["date"] = snapshot_date
                     mapped_df["action"] = "BUY"
                     mapped_df["shares"] = pd.to_numeric(df_up[map_shares].astype(str).str.replace(",",""), errors="coerce")
