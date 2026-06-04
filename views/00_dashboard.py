@@ -141,3 +141,35 @@ else:
         
         if st.button(t("go_to_add_tx"), use_container_width=True):
             st.switch_page("views/02_transactions.py")
+
+    if not holdings.empty and not is_loading_prices:
+        st.markdown("<br>", unsafe_allow_html=True)
+        lang = st.session_state.get("lang", "zh")
+        news_title = "最新持股動態 (自動翻譯)" if lang == "zh" else "Tin tức mới nhất về cổ phiếu"
+        st.markdown(f"<h4 style='margin-left: 8px;'>{news_title}</h4>", unsafe_allow_html=True)
+        
+        from news_utils import fetch_and_translate_news
+        
+        # Get top 3 holdings by market value
+        top_holdings = holdings.nlargest(3, "market_value")["symbol"].tolist()
+        
+        news_cols = st.columns(len(top_holdings))
+        
+        for idx, symbol in enumerate(top_holdings):
+            with news_cols[idx]:
+                st.markdown(f"<h5 style='color: #00F0FF; margin-bottom: 10px;'>{symbol}</h5>", unsafe_allow_html=True)
+                with st.spinner("Fetching..."):
+                    news_items = fetch_and_translate_news(symbol, limit=2)
+                
+                if not news_items:
+                    st.info("暫無新聞" if lang == "zh" else "Không có tin tức")
+                else:
+                    for item in news_items:
+                        st.markdown(f"""
+                        <div class="cathay-card" style="background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 12px;">
+                            <a href="{item['link']}" target="_blank" style="color: #E0F7FA; text-decoration: none; font-weight: bold; font-size: 14px; display: block; margin-bottom: 6px;">
+                                {item['title']}
+                            </a>
+                            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">{item['pubDate'][:10]}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
