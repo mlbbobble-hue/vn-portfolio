@@ -16,8 +16,8 @@ def fetch_and_translate_news(symbol, limit=2):
         translated_news = []
         translator = GoogleTranslator(source='auto', target='zh-TW')
         
-        # Query Google News for the stock symbol in Vietnam
-        query = urllib.parse.quote(f"{symbol} chứng khoán")
+        # Query Google News for the stock symbol in Vietnam, limited to the past 24 hours
+        query = urllib.parse.quote(f"{symbol} chứng khoán when:1d")
         url = f"https://news.google.com/rss/search?q={query}&hl=vi&gl=VN&ceid=VN:vi"
         
         res = requests.get(url, timeout=10)
