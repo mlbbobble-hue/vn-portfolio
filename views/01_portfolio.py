@@ -78,83 +78,80 @@ if not portfolio_df.empty:
     
     if not df_for_charts.empty:
         st.markdown("<br>", unsafe_allow_html=True)
-        chart_col1, chart_col2 = st.columns(2)
         
-        # --- Broker Distribution ---
-        broker_mkt_val = {}
-        for _, r in df_for_charts.iterrows():
-            cp = r.get("current_price", 0)
-            bb = r.get("broker_breakdown", {})
-            if isinstance(bb, dict):
-                for b_name, b_shares in bb.items():
-                    broker_mkt_val[b_name] = broker_mkt_val.get(b_name, 0) + (b_shares * cp)
+        # --- Treemap (Portfolio Heatmap) ---
+        plot_value_col = "market_value" if df_for_charts["market_value"].sum() > 0 else "total_cost"
+        df_plot = df_for_charts[df_for_charts[plot_value_col] > 0]
         
-        broker_mkt_val = {k: v for k, v in broker_mkt_val.items() if v > 0}
-        
-        if broker_mkt_val:
-            b_labels = list(broker_mkt_val.keys())
-            b_values = list(broker_mkt_val.values())
-            
+        if not df_plot.empty:
+            df_plot = df_plot.copy()
+            total_val = df_plot[plot_value_col].sum()
+            df_plot["weight"] = df_plot[plot_value_col] / total_val
+            df_plot["weight_pct"] = (df_plot["weight"] * 100).round(2)
+            df_plot["roi_pct"] = df_plot["roi_pct"].astype(float).round(2)
+
+            df_plot["weight_str"] = df_plot["weight_pct"].apply(lambda x: f"{x:.2f}%")
+            df_plot["roi_str"] = df_plot["roi_pct"].apply(lambda x: f"{x:+.2f}%")
+            df_plot["val_str"] = df_plot[plot_value_col].apply(lambda x: f"{x:,.0f}")
+
+            import plotly.express as px
+            import pandas as pd
+
             lang = st.session_state.get("lang", "zh")
-            b_title = "券商資產分佈" if lang == "zh" else "Phân bổ CTCK"
+            title_text = "投資組合熱力圖" if lang == "zh" else "Bản đồ nhiệt danh mục đầu tư"
             
-            # Premium color palette
-            broker_colors = ["#00F0FF", "#FF2A85", "#9D4EDD", "#FEE715", "#B026FF", "#FF8C00"]
-            
-            fig_broker = go.Figure(data=[go.Pie(
-                labels=b_labels, values=b_values,
-                hole=0.8,
-                marker=dict(colors=broker_colors, line=dict(color='#09090B', width=0)),
-                textinfo='percent',
-                textposition='inside',
-                insidetextfont=dict(color='white', size=13, family="Inter, sans-serif"),
-                hovertemplate="<b>%{label}</b><br>₫%{value:,.0f}<br>%{percent}<extra></extra>"
-            )])
-            
-            fig_broker.update_layout(
-                title=dict(text=f"<b>{b_title}</b>", font=dict(size=16, color="#E0F7FA"), x=0.5, y=0.95),
-                plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-                margin=dict(t=50, b=40, l=20, r=20),
-                height=320,
-                showlegend=True,
-                legend=dict(orientation="h", yanchor="top", y=-0.1, xanchor="center", x=0.5, font=dict(color="#00F0FF", size=12))
+            if lang == "vi":
+                ht = (
+                    "<b>Mã CK: %{customdata[0]}</b><br>"
+                    "Tỷ lệ: %{customdata[1]}<br>"
+                    "Hiệu suất: %{customdata[2]}<br>"
+                    "Tổng giá trị: ₫%{customdata[3]}"
+                    "<extra></extra>"
+                )
+            else:
+                ht = (
+                    "<b>股票代碼: %{customdata[0]}</b><br>"
+                    "持股比例: %{customdata[1]}<br>"
+                    "未實現損益率: %{customdata[2]}<br>"
+                    "目前總市值: ₫%{customdata[3]}"
+                    "<extra></extra>"
+                )
+
+            # Add color logic for treemap
+            df_plot["color_val"] = df_plot["roi_pct"].clip(-20, 20)  # For color scale clipping
+
+            fig = px.treemap(
+                df_plot,
+                path=[px.Constant("Portfolio"), "symbol"],
+                values=plot_value_col,
+                color="color_val",
+                color_continuous_scale=[(0, "#9D4EDD"), (0.5, "rgba(20, 18, 38, 0.6)"), (1, "#FF2A85")],
+                color_continuous_midpoint=0,
+                custom_data=["symbol", "weight_str", "roi_str", "val_str"]
             )
-            with chart_col1:
-                st.markdown("<div class='cathay-card' style='background: var(--bg-card); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);'>", unsafe_allow_html=True)
-                st.plotly_chart(fig_broker, use_container_width=True, config={'displayModeBar': False})
-                st.markdown("</div>", unsafe_allow_html=True)
-        
-        # --- Asset Allocation ---
-        a_labels = df_for_charts["symbol"].tolist()
-        a_values = df_for_charts["market_value"].tolist()
-        
-        lang = st.session_state.get("lang", "zh")
-        a_title = "持股資產配置" if lang == "zh" else "Phân bổ Tài sản"
-        
-        asset_colors = px.colors.qualitative.Pastel + px.colors.qualitative.Set3
-        
-        fig_asset = go.Figure(data=[go.Pie(
-            labels=a_labels, values=a_values,
-            hole=0.8,
-            marker=dict(colors=asset_colors, line=dict(color='#09090B', width=0)),
-            textinfo='label+percent',
-            textposition='outside',
-            insidetextfont=dict(color='white', size=12),
-            outsidetextfont=dict(color='#00F0FF', size=12),
-            hovertemplate="<b>%{label}</b><br>₫%{value:,.0f}<br>%{percent}<extra></extra>"
-        )])
-        
-        fig_asset.update_layout(
-            title=dict(text=f"<b>{a_title}</b>", font=dict(size=16, color="#E0F7FA"), x=0.5, y=0.95),
-            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-            margin=dict(t=50, b=40, l=40, r=40),
-            height=320,
-            showlegend=False
-        )
-        
-        with chart_col2:
+            
+            fig.update_traces(
+                textinfo="label+value+text",
+                text=df_plot["roi_str"],
+                hovertemplate=ht
+            )
+
+            fig.update_layout(
+                title=dict(
+                    text=f"<b>{title_text}</b>",
+                    font=dict(size=18, color="#FFFFFF"),
+                    x=0.015,
+                    y=0.96
+                ),
+                height=580,
+                margin=dict(t=80, b=20, l=20, r=20),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                coloraxis_showscale=False
+            )
+            
             st.markdown("<div class='cathay-card' style='background: var(--bg-card); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);'>", unsafe_allow_html=True)
-            st.plotly_chart(fig_asset, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fig, use_container_width=True, theme=None, config={'displayModeBar': False})
             st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
