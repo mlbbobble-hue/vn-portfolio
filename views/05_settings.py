@@ -19,7 +19,7 @@ with st.form("imap_settings_form"):
     imap_email = st.text_input(t("imap_email"), value=default_email, placeholder="yourname@gmail.com")
     imap_password = st.text_input(t("imap_password"), value=default_password, type="password", placeholder="16位英文字母 (無空白)")
     
-    broker_options = ["TCBS", "SSI", "VNDIRECT", "Other"]
+    broker_options = ["TCBS", "SSI", "VNDIRECT", "PHS", "ALL (搜尋全部券商)"]
     try:
         broker_index = broker_options.index(default_broker)
     except ValueError:

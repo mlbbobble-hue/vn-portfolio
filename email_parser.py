@@ -167,6 +167,10 @@ def run_email_sync(user_id):
         sender_domain = "@ssi.com.vn"
     elif broker == "VNDIRECT":
         sender_domain = "@vndirect.com.vn"
+    elif broker == "PHS":
+        sender_domain = "@phs.vn"
+    elif broker == "ALL (搜尋全部券商)":
+        sender_domain = "" # 空字串代表不限制寄件者
         
     if sender_domain:
         status, messages = mail.search(None, f'(UNSEEN FROM "{sender_domain}")')
