@@ -224,7 +224,7 @@ with tab_ov:
                         st.markdown(f'<div style="color:var(--text-muted); text-align:center; padding: 20px;">{t("no_records")}</div>', unsafe_allow_html=True)
                     else:
                         acc_html = '<div class="acc-table" style="max-height: 400px; overflow-y: auto;">'
-                        acc_html += """
+                        acc_html += f"""
 <div class="acc-header" style="grid-template-columns: 1.5fr 1fr 1fr;">
     <div class="acc-col-left">{t("div_sym")}</div>
     <div class="acc-col-right">{t("div_acc_cash_dist")}</div>
