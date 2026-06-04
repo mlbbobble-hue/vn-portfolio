@@ -145,41 +145,45 @@ else:
     if not holdings.empty and not is_loading_prices:
         st.markdown("<br>", unsafe_allow_html=True)
         lang = st.session_state.get("lang", "zh")
-        news_title = "最新持股動態 (自動翻譯)" if lang == "zh" else "Tin tức mới nhất về cổ phiếu"
-        st.markdown(f"<h4 style='margin-left: 8px;'>{news_title}</h4>", unsafe_allow_html=True)
+        news_title = "今日最新持股動態" if lang == "zh" else "Tin tức mới nhất về cổ phiếu"
+        st.markdown(f"<h4 style='margin-left: 8px; margin-bottom: 16px;'>{news_title}</h4>", unsafe_allow_html=True)
         
-        from news_utils import fetch_and_translate_news
+        from news_utils import fetch_news
         
         # Get top 3 holdings by market value
         top_holdings = holdings.nlargest(3, "market_value")["symbol"].tolist()
         
-        news_cols = st.columns(len(top_holdings))
+        all_news = []
+        with st.spinner("Fetching latest news..." if lang == "zh" else "Đang tải tin tức..."):
+            for symbol in top_holdings:
+                all_news.extend(fetch_news(symbol, limit=2))
         
-        for idx, symbol in enumerate(top_holdings):
-            with news_cols[idx]:
-                st.markdown(f"<h5 style='color: #00F0FF; margin-bottom: 10px;'>{symbol}</h5>", unsafe_allow_html=True)
-                with st.spinner("Fetching..."):
-                    news_items = fetch_and_translate_news(symbol, limit=2)
-                
-                if not news_items:
-                    search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"
-                    st.markdown(f"""
-                    <div class="cathay-card" style="background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 12px; text-align: center;">
-                        <span style="font-size: 13px; color: #94a3b8; display: block; margin-bottom: 6px;">
-                            {"無相關新聞" if lang == "zh" else "Không có tin tức"}
-                        </span>
-                        <a href="https://s.cafef.vn/tim-kiem.chn?keyword={symbol}" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 14px; font-weight: bold;">
-                            🔍 {search_txt}
-                        </a>
+        if not all_news:
+            search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"
+            st.markdown(f"""
+            <div class="cathay-card" style="background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 20px; text-align: center;">
+                <span style="font-size: 15px; color: #94a3b8; display: block; margin-bottom: 10px;">
+                    {"今日無相關新聞" if lang == "zh" else "Không có tin tức nào hôm nay"}
+                </span>
+                <a href="https://s.cafef.vn/tim-kiem.chn" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 15px; font-weight: bold; background: rgba(0, 240, 255, 0.1); padding: 8px 16px; border-radius: 20px;">
+                    🔍 {search_txt}
+                </a>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            for item in all_news:
+                st.markdown(f"""
+                <div class="cathay-card" style="background: var(--bg-card); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 12px; display: flex; align-items: flex-start; gap: 16px;">
+                    <div style="background: rgba(37, 99, 235, 0.2); border: 1px solid #2563eb; color: #60a5fa; padding: 4px 12px; border-radius: 6px; font-weight: bold; font-size: 14px; min-width: 65px; text-align: center; flex-shrink: 0; align-self: flex-start; margin-top: 2px;">
+                        {item['symbol']}
                     </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    for item in news_items:
-                        st.markdown(f"""
-                        <div class="cathay-card" style="background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 12px;">
-                            <a href="{item['link']}" target="_blank" style="color: #E0F7FA; text-decoration: none; font-weight: bold; font-size: 14px; display: block; margin-bottom: 6px;">
-                                {item['title']}
-                            </a>
-                            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">{item['pubDate'][:10]}</div>
+                    <div>
+                        <a href="{item['link']}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px; display: block; margin-bottom: 8px; line-height: 1.5; transition: color 0.2s;" onmouseover="this.style.color='#00F0FF'" onmouseout="this.style.color='#ffffff'">
+                            {item['title']}
+                        </a>
+                        <div style="font-size: 13px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                            <span>🕒 {item['pubDate'][:16]}</span>
                         </div>
-                        """, unsafe_allow_html=True)
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
