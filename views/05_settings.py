@@ -59,8 +59,7 @@ if sync_clicked:
             st.success(t("sync_success", found=results.get("found", 0), inserted=results.get("inserted", 0)))
             if results.get('inserted', 0) > 0:
                 st.balloons()
-            
-            if results.get('found', 0) > 0 and results.get('debug_text'):
+            elif results.get('found', 0) > 0 and results.get('debug_text'):
                 with st.expander("🔍 除錯資訊：查看系統萃取出的 PDF 原始文字 (點擊展開)"):
                     st.markdown("如果解析出的股號、買賣或價格有錯，請將下方這段文字複製貼上給 AI 助理，讓他幫您精準調整解析邏輯！")
                     st.code(results.get('debug_text'))
