@@ -84,50 +84,7 @@ else:
 
 
 
-# 1. 頂部總資產橫幅
-    st.markdown(f'''
-    <div class="cathay-app-header" style="margin: 0 0 20px 0;">
-        <span class="app-title-small">{t("my_assets_overview")}</span>
-        <div class="total-value">{display_value}</div>
-    </div>
-    ''', unsafe_allow_html=True)
 
-    # 2. 投資績效 Badges & Cards
-    st.markdown(f"<h4 style='margin-left: 8px;'>{t('invest_performance')}</h4>", unsafe_allow_html=True)
-    if is_loading_prices:
-        c_color = "var(--text-primary)"
-        c_bg = "var(--bg-card)"
-        trend = ""
-        sign = ""
-        amount_text = display_unrealized
-        pct_text = display_roi
-    else:
-        if total_unrealized > 0:
-            c_color = "#FF2A85"
-            c_bg = "var(--bg-card)"
-            trend = "▲ "
-            sign = "+"
-        elif total_unrealized < 0:
-            c_color = "#9D4EDD"
-            c_bg = "var(--bg-card)"
-            trend = "▼ "
-            sign = "-"
-        else:
-            c_color = "var(--text-primary)"
-            c_bg = "var(--bg-card)"
-            trend = ""
-            sign = ""
-        
-        amount_text = f"{sign}{formatted_unreal} {currency_label}"
-        pct_text = f"{trend}{abs(roi_pct):.2f}%"
-
-    st.markdown(f'''
-    <div class="cathay-card" style="background: {c_bg}; border-left: 6px solid {c_color}; padding: 20px; text-align: left; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-bottom: 20px;">
-        <div style="font-size: 14px; color: #94a3b8; margin-bottom: 12px;">{t("unrealized_pl")}</div>
-        <div style="font-size: 24px; font-weight: bold; color: {c_color}; margin-bottom: 8px;">{amount_text}</div>
-        <div style="font-size: 14px; font-weight: bold; color: {c_color};">{pct_text}</div>
-    </div>
-    ''', unsafe_allow_html=True)
     
     # Removed P&L Waterfall Chart as requested
 
