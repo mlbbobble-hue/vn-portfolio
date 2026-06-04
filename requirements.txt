@@ -10,3 +10,4 @@ streamlit-cookies-controller==0.0.4
 pypdf>=4.0.0
 yfinance
 deep-translator
+ddgs
