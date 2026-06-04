@@ -150,8 +150,8 @@ else:
         
         from news_utils import fetch_news
         
-        # Get all current holdings where quantity > 0
-        all_symbols = holdings[holdings["quantity"] > 0]["symbol"].tolist()
+        # Get all current holdings where total_shares > 0
+        all_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
         
         all_news = []
         with st.spinner("Fetching latest news..." if lang == "zh" else "Đang tải tin tức..."):
