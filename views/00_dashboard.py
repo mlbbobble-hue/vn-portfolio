@@ -148,15 +148,13 @@ else:
         news_title = "今日最新持股動態" if lang == "zh" else "Tin tức mới nhất về cổ phiếu"
         st.markdown(f"<h4 style='margin-left: 8px; margin-bottom: 16px;'>{news_title}</h4>", unsafe_allow_html=True)
         
-        from news_utils import fetch_news
+        from news_utils import fetch_all_news_parallel
         
         # Get all current holdings where total_shares > 0
         all_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
         
-        all_news = []
         with st.spinner("Fetching latest news..." if lang == "zh" else "Đang tải tin tức..."):
-            for symbol in all_symbols:
-                all_news.extend(fetch_news(symbol, limit=2))
+            all_news = fetch_all_news_parallel(all_symbols, limit=2)
         
         if not all_news:
             search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"
