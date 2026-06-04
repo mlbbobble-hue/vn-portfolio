@@ -224,5 +224,25 @@ def run_email_sync(user_id):
     return {"found": found, "inserted": inserted}
 
 if __name__ == "__main__":
-    # For local testing
-    pass
+    import sys
+    if "--run-all-users" in sys.argv:
+        print("Starting batch email sync for all users...")
+        from supabase_db import _table
+        # Get all users with IMAP settings
+        try:
+            res = _table("notification_settings").select("user_id").eq("key", "imap_email").execute()
+            user_ids = list(set([r["user_id"] for r in (res.data or [])]))
+            print(f"Found {len(user_ids)} users with IMAP configured.")
+            
+            for uid in user_ids:
+                try:
+                    print(f"Syncing for user {uid}...")
+                    result = run_email_sync(uid)
+                    print(f"User {uid}: Found {result['found']} emails, Inserted {result['inserted']} txns.")
+                except Exception as e:
+                    print(f"User {uid} failed: {e}")
+        except Exception as e:
+            print(f"Error fetching users: {e}")
+    else:
+        print("Run with --run-all-users to sync all accounts.")
+
