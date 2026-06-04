@@ -247,99 +247,50 @@ with tab_view:
         st.markdown(f"<small style='color:#64748b;'>{t('total_records')} {len(f)} {t('records')}</small>", unsafe_allow_html=True)
         f = f.copy()
         f["淨金額"] = f.apply(lambda r: r["shares"]*r["price"] + (r["fee"] if r["action"]=="BUY" else -r["fee"]), axis=1)
-        show = f[["id","date","broker","symbol","action","shares","price","fee","淨金額","note"]].rename(columns={
-            "id":t("col_id"),"date":t("date"),"broker":t("broker"),"symbol":t("symbol"),
-            "action":t("col_action"),"shares":t("shares"),"price":t("price"),
-            "fee":t("fee"),"淨金額":t("net_amount"),"note":t("note"),
-        })
-        def hl(val):
-            if val == "BUY":  return "color:#34d399;font-weight:600"
-            if val == "SELL": return "color:#f87171;font-weight:600"
-            return ""
-        styled = (show.style.format({t("shares"):"{:,.0f}",t("price"):"{:,.0f}",
-                                     t("fee"):"{:,.0f}",t("net_amount"):"{:,.0f}"})
-                  .map(hl, subset=[t("col_action")]))
-        st.dataframe(styled, use_container_width=True, height=360, hide_index=True)
-
-        st.markdown("---")
+        f = f.reset_index(drop=True)
         
-        # 建立兩個分頁來處理修改和刪除，避免畫面太長
-        edit_tab, delete_tab = st.tabs(["✏️ 修改紀錄 (Edit)", "🗑️ 刪除紀錄 (Delete)"])
+        st.markdown("### ✏️ 快速編輯與刪除 (Inline Edit & Delete)")
+        st.info("💡 提示：您可以直接雙擊表格內的值進行修改，或是選取最左側的核取方塊後按下鍵盤的「Delete」鍵來刪除紀錄。修改完成後請點擊下方的「💾 儲存變更」。")
         
-        with edit_tab:
-            st.markdown("### ✏️ 修改交易記錄")
-            edit_id = st.number_input(t("edit_tx_id"), min_value=1, step=1, key="edit_id")
+        edit_cols = ["id", "date", "broker", "symbol", "action", "shares", "price", "fee", "note"]
+        
+        edited_df = st.data_editor(
+            f[edit_cols],
+            use_container_width=True,
+            num_rows="dynamic",
+            hide_index=True,
+            key="tx_data_editor",
+            column_config={
+                "id": st.column_config.NumberColumn(t("col_id"), disabled=True),
+                "date": st.column_config.DateColumn(t("date")),
+                "broker": st.column_config.SelectboxColumn(t("broker"), options=BROKERS),
+                "symbol": st.column_config.TextColumn(t("symbol")),
+                "action": st.column_config.SelectboxColumn(t("col_action"), options=["BUY", "SELL"]),
+                "shares": st.column_config.NumberColumn(t("shares")),
+                "price": st.column_config.NumberColumn(t("price")),
+                "fee": st.column_config.NumberColumn(t("fee")),
+                "note": st.column_config.TextColumn(t("note")),
+            }
+        )
+        
+        if st.button("💾 儲存所有變更 (Save Changes)", type="primary", use_container_width=True):
+            changes = st.session_state.get("tx_data_editor", {})
+            has_changes = False
             
-            # 尋找這筆紀錄
-            target_record = all_txns[all_txns["id"] == edit_id]
-            
-            if not target_record.empty:
-                r = target_record.iloc[0]
-                st.info(t("editing_tx", id=edit_id, act=r["action"], sym=r["symbol"]))
+            # Process deleted
+            for idx in changes.get("deleted_rows", []):
+                row_id = f.loc[int(idx), "id"]
+                delete_transaction(int(row_id))
+                has_changes = True
                 
-                with st.form(key="edit_tx_form"):
-                    e1, e2, e3 = st.columns(3)
-                    with e1:
-                        # 轉換為 date 物件
-                        try:
-                            d_val = pd.to_datetime(r["date"]).date()
-                        except:
-                            d_val = date.today()
-                        new_date = st.date_input(t("tx_date"), value=d_val, key="e_date")
-                        
-                        try:
-                            broker_idx = BROKERS.index(r["broker"])
-                        except ValueError:
-                            broker_idx = 0
-                        new_broker = st.selectbox(t("tx_broker"), BROKERS, index=broker_idx, key="e_broker")
-                    
-                    with e2:
-                        new_symbol = st.text_input(t("tx_symbol"), value=r["symbol"], key="e_sym").upper()
-                        act_idx = 0 if r["action"] == "BUY" else 1
-                        new_action = st.radio(t("tx_action"), ["BUY", "SELL"], index=act_idx, horizontal=True, key="e_act")
-                    
-                    with e3:
-                        new_shares = st.number_input(t("tx_shares"), min_value=1.0, value=float(r["shares"]), step=100.0, key="e_shares")
-                        new_price = st.number_input(t("tx_price"), min_value=0.0, value=float(r["price"]), step=100.0, key="e_price")
-                        
-                    new_fee = st.number_input(t("tx_fee"), min_value=0.0, value=float(r.get("fee", 0)), step=1000.0, key="e_fee")
-                    new_note = st.text_input(t("tx_note"), value=r.get("note", ""), key="e_note")
-                    
-                    if st.form_submit_button("✅ 儲存修改 (Save)", use_container_width=True):
-                        if not new_symbol:
-                            st.error(t("enter_symbol"))
-                        else:
-                            updates = {
-                                "date": str(new_date),
-                                "broker": new_broker,
-                                "symbol": new_symbol,
-                                "action": new_action,
-                                "shares": new_shares,
-                                "price": new_price,
-                                "fee": new_fee,
-                                "note": new_note
-                            }
-                            update_transaction(int(edit_id), updates)
-                            st.success(f"✅ 紀錄 ID {edit_id} 修改成功！")
-                            st.rerun()
+            # Process edited
+            for idx, col_changes in changes.get("edited_rows", {}).items():
+                row_id = f.loc[int(idx), "id"]
+                update_transaction(int(row_id), col_changes)
+                has_changes = True
+                
+            if has_changes:
+                st.success("✅ 變更已成功儲存！")
+                st.rerun()
             else:
-                if edit_id:
-                    st.warning(t("tx_not_found"))
-                    
-        with delete_tab:
-            st.markdown("### 🗑️ 刪除交易記錄")
-            del_id = st.number_input(t("delete_tx_hint"), min_value=1, step=1, key="del_id")
-            
-            # 尋找這筆紀錄預覽
-            del_record = all_txns[all_txns["id"] == del_id]
-            if not del_record.empty:
-                r = del_record.iloc[0]
-                st.warning(f"⚠️ 即將刪除: {r['date']} | {r['action']} {r['symbol']} | {r['shares']:,.0f} 股")
-            
-            if st.button(t("delete_tx_btn"), use_container_width=True, type="primary"):
-                if del_id in all_txns["id"].values:
-                    delete_transaction(int(del_id))
-                    st.success(t("delete_ok", id=del_id))
-                    st.rerun()
-                else:
-                    st.error(t("not_found", id=del_id))
+                st.info("您沒有做出任何修改。")
