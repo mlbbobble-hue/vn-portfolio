@@ -31,19 +31,7 @@ if not check_auth():
 
 # 獲取資料
 
-def format_vnd(amount: float) -> str:
-    if abs(amount) >= 100_000_000:
-        return f"{amount / 100_000_000:.2f} 億"
-    else:
-        return f"{amount:,.0f}"
 
-col_title, col_toggle = st.columns([1, 1])
-with col_title:
-    pass # Title is already above
-with col_toggle:
-    show_in_twd = st.toggle(t("display_twd"), value=False)
-    
-EXCHANGE_RATE = 780
 
 holdings = compute_portfolio_with_prices()
 
@@ -61,29 +49,7 @@ if not holdings.empty:
 is_loading_prices = not holdings.empty and total_value == 0 and total_cost > 0
 
 if is_loading_prices:
-    display_value = t("syncing_prices")
-    display_unrealized = t("loading_values")
-    display_roi = "🔄"
     st_autorefresh(interval=2000, limit=15, key="wait_for_prices")
-else:
-    if show_in_twd:
-        display_val_num = total_value / EXCHANGE_RATE
-        display_unreal_num = total_unrealized / EXCHANGE_RATE
-        currency_label = "TWD"
-    else:
-        display_val_num = total_value
-        display_unreal_num = total_unrealized
-        currency_label = "VND"
-        
-    formatted_val = format_vnd(display_val_num)
-    formatted_unreal = format_vnd(abs(display_unreal_num))
-    
-    display_value = f"{formatted_val} {currency_label}"
-    display_unrealized = f"{'-' if display_unreal_num < 0 else ''}{formatted_unreal} {currency_label}"
-    display_roi = f"{roi_pct:.2f}%"
-
-
-
 
     
     # Removed P&L Waterfall Chart as requested
