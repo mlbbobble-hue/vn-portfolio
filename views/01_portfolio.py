@@ -99,12 +99,12 @@ if not portfolio_df.empty:
             b_title = "券商資產分佈" if lang == "zh" else "Phân bổ CTCK"
             
             # Premium color palette
-            broker_colors = ["#8A9A5B", "#8BA3C7", "#D9C589", "#A68A64", "#C97A7E", "#B0A8B9"]
+            broker_colors = ["#00FF41", "#00F0FF", "#FEE715", "#FF007F", "#B026FF", "#FF8C00"]
             
             fig_broker = go.Figure(data=[go.Pie(
                 labels=b_labels, values=b_values,
                 hole=0.65,
-                marker=dict(colors=broker_colors, line=dict(color='#FFFFFF', width=1)),
+                marker=dict(colors=broker_colors, line=dict(color='#09090B', width=2)),
                 textinfo='percent',
                 textposition='inside',
                 insidetextfont=dict(color='white', size=13, family="Inter, sans-serif"),
@@ -112,12 +112,12 @@ if not portfolio_df.empty:
             )])
             
             fig_broker.update_layout(
-                title=dict(text=f"<b>{b_title}</b>", font=dict(size=16, color="#4A4A4A"), x=0.5, y=0.95),
+                title=dict(text=f"<b>{b_title}</b>", font=dict(size=16, color="#E0F7FA"), x=0.5, y=0.95),
                 plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
                 margin=dict(t=50, b=40, l=20, r=20),
                 height=320,
                 showlegend=True,
-                legend=dict(orientation="h", yanchor="top", y=-0.1, xanchor="center", x=0.5, font=dict(color="#8C8C8C", size=12))
+                legend=dict(orientation="h", yanchor="top", y=-0.1, xanchor="center", x=0.5, font=dict(color="#00F0FF", size=12))
             )
             with chart_col1:
                 st.markdown("<div class='cathay-card' style='background: var(--bg-card); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);'>", unsafe_allow_html=True)
@@ -136,16 +136,16 @@ if not portfolio_df.empty:
         fig_asset = go.Figure(data=[go.Pie(
             labels=a_labels, values=a_values,
             hole=0.65,
-            marker=dict(colors=asset_colors, line=dict(color='#FFFFFF', width=1)),
+            marker=dict(colors=asset_colors, line=dict(color='#09090B', width=2)),
             textinfo='label+percent',
             textposition='outside',
             insidetextfont=dict(color='white', size=12),
-            outsidetextfont=dict(color='#8C8C8C', size=12),
+            outsidetextfont=dict(color='#00F0FF', size=12),
             hovertemplate="<b>%{label}</b><br>₫%{value:,.0f}<br>%{percent}<extra></extra>"
         )])
         
         fig_asset.update_layout(
-            title=dict(text=f"<b>{a_title}</b>", font=dict(size=16, color="#4A4A4A"), x=0.5, y=0.95),
+            title=dict(text=f"<b>{a_title}</b>", font=dict(size=16, color="#E0F7FA"), x=0.5, y=0.95),
             plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
             margin=dict(t=50, b=40, l=40, r=40),
             height=320,

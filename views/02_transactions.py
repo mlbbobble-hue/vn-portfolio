@@ -254,17 +254,17 @@ with tab_view:
         
         import plotly.express as px
         fig_area = px.area(df_chart, x="date", y="cumulative_cost")
-        fig_area.update_traces(line_color="#8BA3C7", fillcolor="rgba(139, 163, 199, 0.4)")
+        fig_area.update_traces(line_color="#00F0FF", fillcolor="rgba(0, 240, 255, 0.4)")
         
         lang = st.session_state.get("lang", "zh")
         a_title = "投入資金累積趨勢" if lang == "zh" else "Xu hướng vốn đầu tư"
         
         fig_area.update_layout(
-            title=dict(text=f"<b>{a_title}</b>", font=dict(size=16, color="#4A4A4A")),
+            title=dict(text=f"<b>{a_title}</b>", font=dict(size=16, color="#E0F7FA")),
             plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
             margin=dict(t=40, b=20, l=40, r=20),
             height=280,
-            yaxis=dict(title="", gridcolor="#E6E1D8", zeroline=False),
+            yaxis=dict(title="", gridcolor="rgba(0, 240, 255, 0.2)", zeroline=False),
             xaxis=dict(title="", gridcolor="rgba(0,0,0,0)", zeroline=False)
         )
         st.markdown("<div class='cathay-card' style='background: var(--bg-card); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 20px;'>", unsafe_allow_html=True)
