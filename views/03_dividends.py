@@ -179,7 +179,7 @@ with tab_ov:
         
         import plotly.express as px
         fig_bar = px.bar(df_monthly, x="month", y="val", color="type_str", 
-                         color_discrete_map={"現金配息": "#FEE715", "配股現值": "#FF007F"},
+                         color_discrete_map={"現金配息": "#00F0FF", "配股現值": "#FF007F"},
                          barmode="stack")
         
         lang = st.session_state.get("lang", "zh")
@@ -190,7 +190,7 @@ with tab_ov:
             plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
             margin=dict(t=40, b=20, l=40, r=20),
             height=280,
-            yaxis=dict(title="", gridcolor="rgba(0, 240, 255, 0.2)", zeroline=False),
+            yaxis=dict(title="", gridcolor="visible=False", zeroline=False),
             xaxis=dict(title="", gridcolor="rgba(0,0,0,0)", zeroline=False, type='category'),
             legend=dict(title="", orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5, font=dict(color="#E0F7FA"))
         )
@@ -259,7 +259,7 @@ with tab_ov:
                 <span class="tlt-main" style="color: #00FF41;">{c_str}</span>
             </div>
             <div class="acc-col-right">
-                <span class="tlt-main" style="color: #FEE715;">{s_str}</span>
+                <span class="tlt-main" style="color: #00F0FF;">{s_str}</span>
             </div>
         </div>
     </summary>"""

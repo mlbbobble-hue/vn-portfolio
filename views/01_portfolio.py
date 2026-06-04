@@ -99,12 +99,12 @@ if not portfolio_df.empty:
             b_title = "券商資產分佈" if lang == "zh" else "Phân bổ CTCK"
             
             # Premium color palette
-            broker_colors = ["#00FF41", "#00F0FF", "#FEE715", "#FF007F", "#B026FF", "#FF8C00"]
+            broker_colors = ["#00F0FF", "#FF2A85", "#9D4EDD", "#FEE715", "#B026FF", "#FF8C00"]
             
             fig_broker = go.Figure(data=[go.Pie(
                 labels=b_labels, values=b_values,
-                hole=0.65,
-                marker=dict(colors=broker_colors, line=dict(color='#09090B', width=2)),
+                hole=0.8,
+                marker=dict(colors=broker_colors, line=dict(color='#09090B', width=0)),
                 textinfo='percent',
                 textposition='inside',
                 insidetextfont=dict(color='white', size=13, family="Inter, sans-serif"),
@@ -135,8 +135,8 @@ if not portfolio_df.empty:
         
         fig_asset = go.Figure(data=[go.Pie(
             labels=a_labels, values=a_values,
-            hole=0.65,
-            marker=dict(colors=asset_colors, line=dict(color='#09090B', width=2)),
+            hole=0.8,
+            marker=dict(colors=asset_colors, line=dict(color='#09090B', width=0)),
             textinfo='label+percent',
             textposition='outside',
             insidetextfont=dict(color='white', size=12),

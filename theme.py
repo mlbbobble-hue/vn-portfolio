@@ -8,26 +8,26 @@ def load_css():
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
 
 :root {
-    /* 賽博龐克與科幻風格 (Cyberpunk & Sci-Fi) 配色 */
-    --bg-main: #09090B;       /* 深淵黑/暗夜黑大背景 */
-    --bg-card: #181825;       /* 全息面板深邃藍灰 */
-    --text-primary: #E0F7FA;  /* 高對比科技冷白 */
-    --text-secondary: #00F0FF;/* 次要文字亮青色 (發光感) */
+    /* Synthwave 霓虹復古風與毛玻璃特效 配色 */
+    --bg-main: #0B0914;       /* 星空暗紫黑大背景 */
+    --bg-card: rgba(20, 18, 38, 0.6); /* 半透明深紫色 (毛玻璃) */
+    --text-primary: #FFFFFF;  /* 純白主文字 */
+    --text-secondary: #D8B4E2;/* 淡紫粉色次要文字 */
     
-    --financial-up: #00FF41;  /* 獲利：駭客螢光綠 */
-    --financial-down: #FF007F;/* 虧損：雷射粉紅 */
-    --financial-none: #FEE715;/* 平盤：電氣黃 */
+    --financial-up: #FF2A85;  /* 獲利：亮粉紅 */
+    --financial-down: #9D4EDD;/* 虧損：螢光紫 */
+    --financial-none: #00F0FF;/* 平盤：電馭青 */
 
     /* 相容原本的變數名以確保排版不崩潰 */
     --cathay-green: var(--financial-up);
-    --cathay-dark-green: #008F11; /* 較暗的駭客綠 */
+    --cathay-dark-green: #C91864; /* 較暗的粉紅 */
     --cathay-red: var(--financial-down);
     --cathay-yellow: var(--financial-none); 
     --cathay-bg-light: var(--bg-main);
     --cathay-white: var(--bg-card);
-    --border-color: #00F0FF;  /* 霓虹青色邊框 */
+    --border-color: rgba(255, 42, 133, 0.2);  /* 亮粉紅微光邊框 */
     
-    --shadow-soft: 0 0 10px rgba(0, 240, 255, 0.2), 0 0 20px rgba(0, 240, 255, 0.1); /* 霓虹發光陰影 */
+    --shadow-soft: 0 8px 32px 0 rgba(255, 42, 133, 0.1); /* 柔和的粉色發光陰影 */
 }
 
 html, body, [class*="css"] {
@@ -74,9 +74,11 @@ html, body, [class*="css"] {
     color: var(--text-primary);
 }
 
-/* 白色卡片 */
+/* 毛玻璃卡片 */
 .card, [data-testid="metric-container"], .cathay-card {
     background-color: var(--cathay-white) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
     border: 1px solid var(--border-color) !important;
     border-radius: 12px !important;
     padding: 20px;

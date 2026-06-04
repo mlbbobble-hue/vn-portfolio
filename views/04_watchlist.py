@@ -70,11 +70,11 @@ with tab_wl:
                 fig_gauge = go.Figure(go.Indicator(
                     mode = "gauge+number",
                     value = g_val,
-                    number = {'suffix': "%", 'font': {'size': 24, 'color': '#E0F7FA'}},
-                    title = {'text': f"<b>{sym}</b><br><span style='font-size:0.8em;color:#00F0FF'>Target: {target:,.0f}</span>", 'font': {'size': 16, 'color': '#E0F7FA'}},
+                    number = {'suffix': "%", 'font': {'size': 24, 'color': '#FFFFFF'}},
+                    title = {'text': f"<b>{sym}</b><br><span style='font-size:0.8em;color:#D8B4E2'>Target: {target:,.0f}</span>", 'font': {'size': 16, 'color': '#FFFFFF'}},
                     gauge = {
-                        'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "rgba(0, 240, 255, 0.2)", 'visible': False},
-                        'bar': {'color': "#00FF41" if g_val >= 90 else "#FEE715"},
+                        'axis': {'range': [None, 100], 'tickwidth': 0, 'tickcolor': "rgba(255,255,255,0.05)", 'visible': False},
+                        'bar': {'color': "#FF2A85" if g_val >= 90 else "#9D4EDD"},
                         'bgcolor': "#09090B",
                         'borderwidth': 0,
                         'shape': "angular"
@@ -88,7 +88,7 @@ with tab_wl:
                 with cols[i]:
                     st.markdown("<div class='cathay-card' style='background: var(--bg-card); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); text-align:center;'>", unsafe_allow_html=True)
                     st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
-                    st.markdown(f"<div style='font-size:14px;color:#00F0FF;'>目前市價: {cur_price:,.0f}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-size:14px;color:#D8B4E2;'>目前市價: {cur_price:,.0f}</div>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
                     
         st.markdown("<br>", unsafe_allow_html=True)
@@ -98,17 +98,17 @@ with tab_wl:
             change    = price_map.get(sym,{}).get("change_pct",0)
             target    = item.get("target_price") or 0
             enabled   = bool(item.get("alert_enabled",1))
-            dist_str  = ""; dist_color = "#00F0FF"
+            dist_str  = ""; dist_color = "#D8B4E2"
             if target > 0 and cur_price > 0:
                 dp = (cur_price-target)/target*100
                 dist_str = t("dist_to_target", pct=dp)
-                dist_color = "#00FF41" if dp<=2 else "#FEE715" if dp<=10 else "#00F0FF"
+                dist_color = "#FF2A85" if dp<=2 else "#9D4EDD" if dp<=10 else "#D8B4E2"
             annual_dps = dps_map.get(sym, 0)
             ey_str = ""
             if annual_dps > 0 and cur_price > 0:
                 ey_str = f"　{t('est_yield_label', y=get_estimated_yield(sym, cur_price, annual_dps))}"
             price_str = f"{cur_price:,.0f} {t('vnd')}" if cur_price > 0 else "─"
-            cc = "#00FF41" if change>0 else "#FF007F" if change<0 else "#00F0FF"
+            cc = "#FF2A85" if change>0 else "#FF007F" if change<0 else "#D8B4E2"
             cs = "▲" if change>0 else "▼" if change<0 else "─"
             badges = []
             if target > 0: badges.append(t("target_price_label", p=target))
