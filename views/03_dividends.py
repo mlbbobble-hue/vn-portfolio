@@ -154,10 +154,14 @@ with tab_ov:
 """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        # --- MUJI Style Bar Chart ---
+        # --- Cyberpunk Style Bar Chart (CASH ONLY) ---
         df_div_chart = all_divs[all_divs["ex_date"] != ""].copy()
         df_div_chart["ex_date"] = pd.to_datetime(df_div_chart["ex_date"], errors="coerce")
         df_div_chart = df_div_chart.dropna(subset=["ex_date"])
+        
+        # 依照使用者要求：只看現金配息 (CASH ONLY)
+        df_div_chart = df_div_chart[df_div_chart["type"] == "CASH"]
+        
         df_div_chart["month"] = df_div_chart["ex_date"].dt.strftime("%Y-%m")
         
         df_div_chart["val"] = 0.0
