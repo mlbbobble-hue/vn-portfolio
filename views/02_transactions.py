@@ -142,7 +142,7 @@ with tab_import:
             df_up = pd.read_csv(uploaded)
             cols = list(df_up.columns)
             st.write(t("preview_raw_data"))
-            st.dataframe(df_up.head(3), use_container_width=True)
+            st.dataframe(df_up.head(3), use_container_width=True, hide_index=True)
             
             st.markdown("### 🔗 欄位對應 (Column Mapping)")
             
@@ -259,7 +259,7 @@ with tab_view:
         styled = (show.style.format({t("shares"):"{:,.0f}",t("price"):"{:,.0f}",
                                      t("fee"):"{:,.0f}",t("net_amount"):"{:,.0f}"})
                   .map(hl, subset=[t("col_action")]))
-        st.dataframe(styled, use_container_width=True, height=360)
+        st.dataframe(styled, use_container_width=True, height=360, hide_index=True)
 
         st.markdown("---")
         
