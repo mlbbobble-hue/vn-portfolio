@@ -190,8 +190,8 @@ with tab_ov:
             plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
             margin=dict(t=40, b=20, l=40, r=20),
             height=280,
-            yaxis=dict(title="", gridcolor="visible=False", zeroline=False),
-            xaxis=dict(title="", gridcolor="rgba(0,0,0,0)", zeroline=False, type='category'),
+            yaxis=dict(visible=False),
+            xaxis=dict(visible=False),
             legend=dict(title="", orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5, font=dict(color="#E0F7FA"))
         )
         st.markdown("<div class='cathay-card' style='background: var(--bg-card); padding: 10px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 24px;'>", unsafe_allow_html=True)
