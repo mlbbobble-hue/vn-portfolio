@@ -166,15 +166,15 @@ else:
         val_unrealized = total_unrealized / divisor
         val_cash_div = total_cash_div / divisor
         val_stock_div = total_stock_div_val / divisor
-        total_worth = val_cost + val_realized + val_unrealized + val_cash_div + val_stock_div
+        total_profit = val_realized + val_unrealized + val_cash_div + val_stock_div
         
         fig_waterfall = go.Figure(go.Waterfall(
             name="P&L", orientation="v",
-            measure=["absolute", "relative", "relative", "relative", "relative", "total"],
-            x=["當前投入本金", "已實現損益", "未實現損益", "現金配息", "配股現值", "總經濟價值"],
+            measure=["relative", "relative", "relative", "relative", "total"],
+            x=["已實現損益", "未實現損益", "現金配息", "配股現值", "總投資淨利"],
             textposition="outside",
-            text=[f"{v:,.0f}" for v in [val_cost, val_realized, val_unrealized, val_cash_div, val_stock_div, total_worth]],
-            y=[val_cost, val_realized, val_unrealized, val_cash_div, val_stock_div, 0],
+            text=[f"{v:,.0f}" for v in [val_realized, val_unrealized, val_cash_div, val_stock_div, total_profit]],
+            y=[val_realized, val_unrealized, val_cash_div, val_stock_div, 0],
             connector={"line":{"color":"#00F0FF", "dash":"dot"}},
             decreasing={"marker":{"color":"#9D4EDD"}},
             increasing={"marker":{"color":"#FF2A85"}},
