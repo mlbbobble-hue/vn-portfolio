@@ -36,14 +36,10 @@ new_translations = """
     "stock_div_all_time":   {"vi": "Cổ tức CP Lịch sử", "zh": "歷史累計配股現值 (All-time Stock)"},
 """
 
-# find the last closing brace of TRANSLATIONS
-# TRANSLATIONS = { ... }
-# To be safe, let's insert it before the last '}' that is at indentation level 0 or 1.
-# Or better, just regex replace the definition.
 if '"display_twd"' not in content:
-    content = re.sub(r'(\s*\}\s*def t\()', r'\n' + new_translations + r'\1', content)
+    content = content.replace('\n}\n\n\ndef get_lang()', new_translations + '\n}\n\n\ndef get_lang()')
     with open("i18n.py", "w", encoding="utf-8") as f:
         f.write(content)
-    print("i18n updated successfully")
+    print("i18n updated correctly!")
 else:
-    print("Already updated")
+    print("Already there.")

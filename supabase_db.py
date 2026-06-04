@@ -393,6 +393,20 @@ def sb_get_price_cache() -> pd.DataFrame:
 #  通知設定（Supabase）
 # ══════════════════════════════════════════════════════════════
 
+
+def sb_save_imap_settings(user_id: str, imap_email: str, imap_password: str, broker_name: str):
+    for key, val in [("imap_email", imap_email),
+                     ("imap_password", imap_password),
+                     ("broker_name", broker_name)]:
+        _table("notification_settings").upsert({
+            "user_id": user_id, "key": key, "value": val
+        }, on_conflict="user_id,key").execute()
+
+def sb_load_imap_settings(user_id: str) -> dict:
+    res = _table("notification_settings").select("key,value").eq("user_id", user_id).in_("key", ["imap_email", "imap_password", "broker_name"]).execute()
+    return {r["key"]: r["value"] for r in (res.data or [])}
+
+
 def sb_save_notification_settings(user_id: str, telegram_token: str,
                                    telegram_chat_id: str, line_token: str):
     for key, val in [("telegram_token", telegram_token),
