@@ -207,6 +207,7 @@ def run_email_sync(user_id):
     mail_ids = list(all_mail_ids)
     found = len(mail_ids)
     inserted = 0
+    debug_text = "" 
     
     for mid in mail_ids:
         res, msg_data = mail.fetch(mid, "(RFC822)")
@@ -221,6 +222,7 @@ def run_email_sync(user_id):
                     date_str = datetime.now().strftime("%Y-%m-%d")
                 
                 text = extract_text_from_email(msg)
+                debug_text = text # 記錄最後一封信的文字內容
                 txns = parse_broker_email(text, date_str, broker)
                 
                 # 為了避免重複匯入，先取得今日已有的交易紀錄
@@ -269,7 +271,7 @@ def run_email_sync(user_id):
         mail.store(mid, '+FLAGS', '\\Seen')
                         
     mail.logout()
-    return {"found": found, "inserted": inserted}
+    return {"found": found, "inserted": inserted, "debug_text": debug_text}
 
 if __name__ == "__main__":
     import sys
