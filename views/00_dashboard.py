@@ -129,72 +129,7 @@ else:
     </div>
     ''', unsafe_allow_html=True)
     
-    # 2.5 瀑布圖 (P&L Waterfall Chart)
-    if not is_loading_prices and not holdings.empty:
-        import plotly.graph_objects as go
-        from datetime import date
-        
-        total_realized_pl = get_total_realized_pl()
-        total_cash_div = 0.0
-        total_stock_div_val = 0.0
-        
-        _, _, div_details = compute_received_dividends()
-        if div_details:
-            price_cache_df = get_price_cache()
-            price_cache = price_cache_df.set_index("symbol")["price"].to_dict() if not price_cache_df.empty else {}
-            
-            for div in div_details:
-                pay_date = div.get("pay_date", "")
-                is_done = False
-                if pay_date and pd.notnull(pay_date) and str(pay_date).strip():
-                    try:
-                        pdt = pd.to_datetime(pay_date).date()
-                        is_done = pdt <= date.today()
-                    except:
-                        pass
-                if is_done:
-                    if div["type"] == "CASH":
-                        total_cash_div += div.get("cash_received", 0)
-                    elif div["type"] == "STOCK":
-                        sym = div["symbol"]
-                        curr_price = price_cache.get(sym, 0)
-                        total_stock_div_val += div.get("stock_received", 0) * curr_price
-                        
-        divisor = EXCHANGE_RATE if show_in_twd else 1
-        val_cost = total_cost / divisor
-        val_realized = total_realized_pl / divisor
-        val_unrealized = total_unrealized / divisor
-        val_cash_div = total_cash_div / divisor
-        val_stock_div = total_stock_div_val / divisor
-        total_profit = val_realized + val_unrealized + val_cash_div + val_stock_div
-        
-        fig_waterfall = go.Figure(go.Waterfall(
-            name="P&L", orientation="v",
-            measure=["relative", "relative", "relative", "relative", "total"],
-            x=["已實現損益", "未實現損益", "現金配息", "配股現值", "總投資淨利"],
-            textposition="outside",
-            text=[f"{v:,.0f}" for v in [val_realized, val_unrealized, val_cash_div, val_stock_div, total_profit]],
-            y=[val_realized, val_unrealized, val_cash_div, val_stock_div, 0],
-            connector={"line":{"color":"#00F0FF", "dash":"dot"}},
-            decreasing={"marker":{"color":"#9D4EDD"}},
-            increasing={"marker":{"color":"#FF2A85"}},
-            totals={"marker":{"color":"#00F0FF", "line": {"color":"#FFFFFF", "width":1}}}
-        ))
-        
-        lang = st.session_state.get("lang", "zh")
-        wf_title = t("pl_waterfall")
-        
-        fig_waterfall.update_layout(
-            title=dict(text=f"<b>{wf_title}</b>", font=dict(size=18, color="#FFFFFF"), x=0.015, y=0.9),
-            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#D8B4E2"),
-            margin=dict(t=60, b=40, l=40, r=40),
-            height=420,
-            showlegend=False,
-            yaxis=dict(visible=False),
-            xaxis=dict(visible=False)
-        )
-        st.plotly_chart(fig_waterfall, use_container_width=True, config={'displayModeBar': False})
+    # Removed P&L Waterfall Chart as requested
 
     # 3. 資產分佈圖表 (Treemap) 或 空狀態
     if not holdings.empty:
