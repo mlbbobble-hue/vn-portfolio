@@ -10,8 +10,12 @@ def _fetch_and_translate_single(symbol, lang="zh", limit=2):
         news_list = []
         translator = GoogleTranslator(source='auto', target='zh-TW') if lang == "zh" else None
         
+        # Restrict to reputable Vietnamese financial news sites
+        trusted_sites = ["cafef.vn", "vietstock.vn", "vneconomy.vn", "tinnhanhchungkhoan.vn"]
+        site_query = " OR ".join([f"site:{site}" for site in trusted_sites])
+        
         # Query Google News for the stock symbol in Vietnam, limited to the past 24 hours
-        query = urllib.parse.quote(f"{symbol} chứng khoán when:1d")
+        query = urllib.parse.quote(f"{symbol} chứng khoán ({site_query}) when:1d")
         url = f"https://news.google.com/rss/search?q={query}&hl=vi&gl=VN&ceid=VN:vi"
         
         res = requests.get(url, timeout=10)
