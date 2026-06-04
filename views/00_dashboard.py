@@ -103,12 +103,12 @@ else:
         pct_text = display_roi
     else:
         if total_unrealized > 0:
-            c_color = "#10b981"
+            c_color = "#8A9A5B"
             c_bg = "var(--bg-card)"
             trend = "▲ "
             sign = "+"
         elif total_unrealized < 0:
-            c_color = "#ef4444"
+            c_color = "#C97A7E"
             c_bg = "var(--bg-card)"
             trend = "▼ "
             sign = "-"
@@ -175,24 +175,24 @@ else:
             textposition="outside",
             text=[f"{v:,.0f}" for v in [val_cost, val_realized, val_unrealized, val_cash_div, val_stock_div, total_worth]],
             y=[val_cost, val_realized, val_unrealized, val_cash_div, val_stock_div, 0],
-            connector={"line":{"color":"#475569", "dash":"dot"}},
-            decreasing={"marker":{"color":"#ef4444"}},
-            increasing={"marker":{"color":"#10b981"}},
-            totals={"marker":{"color":"#3b82f6", "line": {"color":"#60a5fa", "width":2}}}
+            connector={"line":{"color":"#C2B8AD", "dash":"dot"}},
+            decreasing={"marker":{"color":"#C97A7E"}},
+            increasing={"marker":{"color":"#8A9A5B"}},
+            totals={"marker":{"color":"#8BA3C7", "line": {"color":"#6D85AB", "width":1}}}
         ))
         
         lang = st.session_state.get("lang", "zh")
         wf_title = "損益瀑布圖 (P&L Waterfall)" if lang == "zh" else "Biểu đồ Thác nước Lãi/Lỗ"
         
         fig_waterfall.update_layout(
-            title=dict(text=f"<b>{wf_title}</b>", font=dict(size=18, color="#f8fafc"), x=0.015, y=0.9),
-            plot_bgcolor="#0f172a", paper_bgcolor="#0f172a",
-            font=dict(color="#94a3b8"),
+            title=dict(text=f"<b>{wf_title}</b>", font=dict(size=18, color="#4A4A4A"), x=0.015, y=0.9),
+            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#8C8C8C"),
             margin=dict(t=60, b=40, l=40, r=40),
             height=420,
             showlegend=False,
-            yaxis=dict(zeroline=True, zerolinecolor="#334155", gridcolor="#1e293b"),
-            xaxis=dict(gridcolor="#1e293b")
+            yaxis=dict(zeroline=True, zerolinecolor="#E6E1D8", gridcolor="#F2EDE4"),
+            xaxis=dict(gridcolor="#F2EDE4")
         )
         st.plotly_chart(fig_waterfall, use_container_width=True, config={'displayModeBar': False})
 
@@ -245,7 +245,7 @@ else:
                 path=[px.Constant("Portfolio"), "symbol"],
                 values=plot_value_col,
                 color="color_val",
-                color_continuous_scale=[(0, "#ef4444"), (0.5, "#64748b"), (1, "#10b981")],
+                color_continuous_scale=[(0, "#C97A7E"), (0.5, "#E6E1D8"), (1, "#8A9A5B")],
                 color_continuous_midpoint=0,
                 custom_data=["symbol", "weight_str", "roi_str", "val_str"]
             )
@@ -259,14 +259,14 @@ else:
             fig.update_layout(
                 title=dict(
                     text=f"<b>{title_text}</b>",
-                    font=dict(size=18, color="#f8fafc"),
+                    font=dict(size=18, color="#4A4A4A"),
                     x=0.015,
                     y=0.96
                 ),
                 height=580,
                 margin=dict(t=80, b=20, l=20, r=20),
-                paper_bgcolor="#0f172a",
-                plot_bgcolor="#0f172a",
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
                 coloraxis_showscale=False
             )
             

@@ -1,0 +1,26 @@
+2026-06-03 09:11:58.502 Uvicorn server started on 0.0.0.0:8501
+/Users/frederick/.gemini/antigravity/scratch/vn-portfolio/app.py:81: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now_utc = datetime.utcnow()
+2026-06-03 09:12:45.865 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+/Users/frederick/.gemini/antigravity/scratch/vn-portfolio/app.py:81: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now_utc = datetime.utcnow()
+2026-06-03 09:12:55.553 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+/Users/frederick/.gemini/antigravity/scratch/vn-portfolio/app.py:81: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now_utc = datetime.utcnow()
+2026-06-03 09:13:04.312 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-06-04 14:40:36.131 Uvicorn server started on 0.0.0.0:8501
+2026-06-04 15:40:02.827 Uvicorn server started on 0.0.0.0:8501
+2026-06-04 16:51:42.779 Uvicorn server started on 0.0.0.0:8501
+2026-06-04 16:57:56.451 Uvicorn server started on 0.0.0.0:8501

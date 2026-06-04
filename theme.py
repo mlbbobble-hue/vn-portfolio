@@ -8,26 +8,26 @@ def load_css():
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
 
 :root {
-    /* 專業金融風配色 (Tailwind CSS 顏色規格) */
-    --bg-main: #0f172a;       /* 深藍黑大背景 */
-    --bg-card: #1e293b;       /* 卡片背景 */
-    --text-primary: #f8fafc;  /* 主文字純白 */
-    --text-secondary: #94a3b8;/* 次要文字淡灰 */
+    /* 日式無印風 (MUJI Style) 配色 */
+    --bg-main: #F9F7F1;       /* 燕麥白/極淺米色大背景 */
+    --bg-card: #FFFFFF;       /* 卡片純白背景 */
+    --text-primary: #4A4A4A;  /* 主文字深灰咖啡色 */
+    --text-secondary: #8C8C8C;/* 次要文字中淺灰 */
     
-    --financial-up: #10b981;  /* 獲利：翠綠色 */
-    --financial-down: #ef4444;/* 虧損：內斂紅 */
-    --financial-none: #64748b;/* 平盤：中性灰 */
+    --financial-up: #8A9A5B;  /* 獲利：抹茶綠 */
+    --financial-down: #C97A7E;/* 虧損：豆沙紅 */
+    --financial-none: #A6A6A6;/* 平盤：暖灰色 */
 
     /* 相容原本的變數名以確保排版不崩潰 */
     --cathay-green: var(--financial-up);
-    --cathay-dark-green: #059669;
+    --cathay-dark-green: #6C7A43;
     --cathay-red: var(--financial-down);
-    --cathay-yellow: #f59e0b;
+    --cathay-yellow: #D9C589; /* 芥末黃 */
     --cathay-bg-light: var(--bg-main);
     --cathay-white: var(--bg-card);
-    --border-color: #334155;
+    --border-color: #E6E1D8;  /* 溫暖的淺灰邊框 */
     
-    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-soft: 0 2px 8px rgba(92, 84, 77, 0.08); /* 極淡的暖色陰影 */
 }
 
 html, body, [class*="css"] {
