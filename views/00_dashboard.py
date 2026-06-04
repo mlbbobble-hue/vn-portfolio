@@ -150,12 +150,12 @@ else:
         
         from news_utils import fetch_news
         
-        # Get top 3 holdings by market value
-        top_holdings = holdings.nlargest(3, "market_value")["symbol"].tolist()
+        # Get all current holdings where quantity > 0
+        all_symbols = holdings[holdings["quantity"] > 0]["symbol"].tolist()
         
         all_news = []
         with st.spinner("Fetching latest news..." if lang == "zh" else "Đang tải tin tức..."):
-            for symbol in top_holdings:
+            for symbol in all_symbols:
                 all_news.extend(fetch_news(symbol, limit=2))
         
         if not all_news:
