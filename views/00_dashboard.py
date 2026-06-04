@@ -154,7 +154,7 @@ else:
         all_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
         
         with st.spinner("Fetching latest news..." if lang == "zh" else "Đang tải tin tức..."):
-            all_news = fetch_all_news_parallel(all_symbols, limit=2)
+            all_news = fetch_all_news_parallel(all_symbols, lang=lang, limit=2)
         
         if not all_news:
             search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"

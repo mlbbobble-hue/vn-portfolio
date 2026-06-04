@@ -5,10 +5,10 @@ import streamlit as st
 from deep_translator import GoogleTranslator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-def _fetch_and_translate_single(symbol, limit=2):
+def _fetch_and_translate_single(symbol, lang="zh", limit=2):
     try:
         news_list = []
-        translator = GoogleTranslator(source='auto', target='zh-TW')
+        translator = GoogleTranslator(source='auto', target='zh-TW') if lang == "zh" else None
         
         # Query Google News for the stock symbol in Vietnam, limited to the past 24 hours
         query = urllib.parse.quote(f"{symbol} chứng khoán when:1d")
@@ -29,11 +29,11 @@ def _fetch_and_translate_single(symbol, limit=2):
                 continue
                 
             try:
-                # Translate title
-                title_zh = translator.translate(title)
+                # Only translate if language is zh
+                title_final = translator.translate(title) if lang == "zh" else title
                 news_list.append({
                     "symbol": symbol,
-                    "title": title_zh,
+                    "title": title_final,
                     "link": link,
                     "pubDate": pub_date,
                     "original_title": title
@@ -54,18 +54,17 @@ def _fetch_and_translate_single(symbol, limit=2):
         return []
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
-def fetch_news(symbol, limit=2):
-    return _fetch_and_translate_single(symbol, limit)
+def fetch_news(symbol, lang="zh", limit=2):
+    return _fetch_and_translate_single(symbol, lang, limit)
 
 @st.cache_data(ttl=3600)
-def fetch_all_news_parallel(symbols, limit=2):
+def fetch_all_news_parallel(symbols, lang="zh", limit=2):
     """
-    Fetches and translates news for multiple symbols in parallel.
-    This drastically reduces the time taken when checking multiple holdings.
+    Fetches and optionally translates news for multiple symbols in parallel.
     """
     all_news = []
     with ThreadPoolExecutor(max_workers=min(10, len(symbols))) as executor:
-        future_to_symbol = {executor.submit(_fetch_and_translate_single, sym, limit): sym for sym in symbols}
+        future_to_symbol = {executor.submit(_fetch_and_translate_single, sym, lang, limit): sym for sym in symbols}
         
         for future in as_completed(future_to_symbol):
             try:
@@ -76,7 +75,4 @@ def fetch_all_news_parallel(symbols, limit=2):
                 sym = future_to_symbol[future]
                 print(f"Parallel fetch failed for {sym}: {e}")
                 
-    # Sort the combined news by pubDate descending (latest first)
-    # Using a simple string sort works nicely since the date format from Google starts with Day of week,
-    # but to be perfectly accurate we'd parse. For now, it's grouped mostly by time anyway.
     return all_news
