@@ -169,19 +169,30 @@ else:
             </div>
             """, unsafe_allow_html=True)
         else:
-            for item in all_news:
-                st.markdown(f"""
-                <div class="cathay-card" style="background: var(--bg-card); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 12px; display: flex; align-items: flex-start; gap: 16px;">
-                    <div style="background: rgba(37, 99, 235, 0.2); border: 1px solid #2563eb; color: #60a5fa; padding: 4px 12px; border-radius: 6px; font-weight: bold; font-size: 14px; min-width: 65px; text-align: center; flex-shrink: 0; align-self: flex-start; margin-top: 2px;">
-                        {item['symbol']}
-                    </div>
-                    <div>
-                        <a href="{item['link']}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: bold; font-size: 16px; display: block; margin-bottom: 8px; line-height: 1.5; transition: color 0.2s;" onmouseover="this.style.color='#00F0FF'" onmouseout="this.style.color='#ffffff'">
-                            {item['title']}
-                        </a>
-                        <div style="font-size: 13px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
-                            <span>🕒 {item['pubDate'][:16]}</span>
+            # Sort news by parsing the RFC 2822 date string to ensure chronological order
+            import email.utils
+            from datetime import datetime, timezone
+            def _parse_pubdate(dstr):
+                try:
+                    return email.utils.parsedate_to_datetime(dstr)
+                except:
+                    return datetime.now(timezone.utc)
+            all_news.sort(key=lambda x: _parse_pubdate(x.get("pubDate", "")), reverse=True)
+            
+            with st.container(height=450):
+                for item in all_news:
+                    st.markdown(f"""
+                    <div class="cathay-card" style="background: var(--bg-card); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.5); color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; min-width: 55px; text-align: center; flex-shrink: 0; align-self: flex-start; margin-top: 3px;">
+                            {item['symbol']}
+                        </div>
+                        <div>
+                            <a href="{item['link']}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: 500; font-size: 15px; display: block; margin-bottom: 6px; line-height: 1.4; transition: color 0.2s;" onmouseover="this.style.color='#00F0FF'" onmouseout="this.style.color='#ffffff'">
+                                {item['title']}
+                            </a>
+                            <div style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                                <span>🕒 {item['pubDate'][:16]}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
