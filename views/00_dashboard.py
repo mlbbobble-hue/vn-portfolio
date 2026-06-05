@@ -248,60 +248,60 @@ if not holdings.empty and not is_loading_prices:
     st.markdown("<br>", unsafe_allow_html=True)
     lang = st.session_state.get("lang", "zh")
     
-    col_left, col_right = st.columns([1, 1])
+    # 1. 今日最新持股動態 (News Section)
+    news_title = "今日最新持股動態" if lang == "zh" else "Tin tức mới nhất về cổ phiếu"
+    st.markdown(f"<h4 style='margin-left: 8px; margin-bottom: 16px;'>{news_title}</h4>", unsafe_allow_html=True)
     
-    with col_left:
-        news_title = "今日最新持股動態" if lang == "zh" else "Tin tức mới nhất về cổ phiếu"
-        st.markdown(f"<h4 style='margin-left: 8px; margin-bottom: 16px;'>{news_title}</h4>", unsafe_allow_html=True)
+    from news_utils import fetch_all_news_parallel
+    
+    # Get all current holdings where total_shares > 0
+    all_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
+    
+    with st.spinner("Fetching latest news..." if lang == "zh" else "Đang tải tin tức..."):
+        all_news = fetch_all_news_parallel(all_symbols, lang=lang, limit=2)
+    
+    if not all_news:
+        search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"
+        st.markdown(f"""
+        <div class="cathay-card" style="background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 20px; text-align: center;">
+            <span style="font-size: 15px; color: #94a3b8; display: block; margin-bottom: 10px;">
+                {"今日無相關新聞" if lang == "zh" else "Không có tin tức nào hôm nay"}
+            </span>
+            <a href="https://s.cafef.vn/tim-kiem.chn" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 15px; font-weight: bold; background: rgba(0, 240, 255, 0.1); padding: 8px 16px; border-radius: 20px;">
+                🔍 {search_txt}
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # Sort news by parsing the RFC 2822 date string to ensure chronological order
+        import email.utils
+        from datetime import datetime, timezone
+        def _parse_pubdate(dstr):
+            try:
+                return email.utils.parsedate_to_datetime(dstr)
+            except:
+                return datetime.now(timezone.utc)
+        all_news.sort(key=lambda x: _parse_pubdate(x.get("pubDate", "")), reverse=True)
         
-        from news_utils import fetch_all_news_parallel
-        
-        # Get all current holdings where total_shares > 0
-        all_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
-        
-        with st.spinner("Fetching latest news..." if lang == "zh" else "Đang tải tin tức..."):
-            all_news = fetch_all_news_parallel(all_symbols, lang=lang, limit=2)
-        
-        if not all_news:
-            search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"
-            st.markdown(f"""
-            <div class="cathay-card" style="background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 20px; text-align: center;">
-                <span style="font-size: 15px; color: #94a3b8; display: block; margin-bottom: 10px;">
-                    {"今日無相關新聞" if lang == "zh" else "Không có tin tức nào hôm nay"}
-                </span>
-                <a href="https://s.cafef.vn/tim-kiem.chn" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 15px; font-weight: bold; background: rgba(0, 240, 255, 0.1); padding: 8px 16px; border-radius: 20px;">
-                    🔍 {search_txt}
-                </a>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            # Sort news by parsing the RFC 2822 date string to ensure chronological order
-            import email.utils
-            from datetime import datetime, timezone
-            def _parse_pubdate(dstr):
-                try:
-                    return email.utils.parsedate_to_datetime(dstr)
-                except:
-                    return datetime.now(timezone.utc)
-            all_news.sort(key=lambda x: _parse_pubdate(x.get("pubDate", "")), reverse=True)
-            
-            with st.container(height=450):
-                for item in all_news:
-                    st.markdown(f"""
-                    <div class="cathay-card" style="background: var(--bg-card); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;">
-                        <div style="background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.5); color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; min-width: 55px; text-align: center; flex-shrink: 0; align-self: flex-start; margin-top: 3px;">
-                            {item['symbol']}
-                        </div>
-                        <div>
-                            <a href="{item['link']}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: 500; font-size: 15px; display: block; margin-bottom: 6px; line-height: 1.4; transition: color 0.2s;" onmouseover="this.style.color='#00F0FF'" onmouseout="this.style.color='#ffffff'">
-                                {item['title']}
-                            </a>
-                            <div style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
-                                <span>🕒 {item['pubDate'][:16]}</span>
-                            </div>
+        with st.container(height=380):
+            for item in all_news:
+                st.markdown(f"""
+                <div class="cathay-card" style="background: var(--bg-card); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;">
+                    <div style="background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.5); color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; min-width: 55px; text-align: center; flex-shrink: 0; align-self: flex-start; margin-top: 3px;">
+                        {item['symbol']}
+                    </div>
+                    <div>
+                        <a href="{item['link']}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: 500; font-size: 15px; display: block; margin-bottom: 6px; line-height: 1.4; transition: color 0.2s;" onmouseover="this.style.color='#00F0FF'" onmouseout="this.style.color='#ffffff'">
+                            {item['title']}
+                        </a>
+                        <div style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                            <span>🕒 {item['pubDate'][:16]}</span>
                         </div>
                     </div>
-                    """, unsafe_allow_html=True)
-                    
-    with col_right:
-        show_earnings_calendar(lang, is_empty=False)
+                </div>
+                """, unsafe_allow_html=True)
+                
+    st.markdown("<br><hr style='border-color: var(--border-color); opacity: 0.5;'><br>", unsafe_allow_html=True)
+    
+    # 2. 財報預告時間表 (Earnings Calendar Section)
+    show_earnings_calendar(lang, is_empty=False)
