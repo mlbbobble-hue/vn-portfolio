@@ -616,14 +616,6 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             color: #e2e8f0 !important;
             padding: 8px 12px !important;
         }
-        /* === RESPONSIVE: hide grid on mobile, show timeline list === */
-        @media (max-width: 640px) {
-            .st-key-calendar_grid_container { display: none !important; }
-            .calendar-mobile-view { display: block !important; }
-        }
-        @media (min-width: 641px) {
-            .calendar-mobile-view { display: none !important; }
-        }
         """
     ]
     
@@ -633,10 +625,9 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             sym = ev["symbol"]
             color_bg = ev["color"]
             favicon_url = get_favicon_url(sym)
-            btn_key = f"cal_btn_{q_key}_{day}_{sym}"
             
             rule = f"""
-            .st-key-{btn_key} button {{
+            .st-key-btn_grid_{q_key}_{day}_{sym} button, .st-key-btn_list_{q_key}_{day}_{sym} button {{
                 width: 100% !important;
                 background: {color_bg}18 !important;
                 border: 1px solid {color_bg}55 !important;
@@ -661,7 +652,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 transition: all 0.2s ease-in-out !important;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
             }}
-            .st-key-{btn_key} button:hover {{
+            .st-key-btn_grid_{q_key}_{day}_{sym} button:hover, .st-key-btn_list_{q_key}_{day}_{sym} button:hover {{
                 border-color: #00F0FF !important;
                 background: {color_bg}30 !important;
                 transform: translateY(-1px) !important;
@@ -672,221 +663,102 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             
     st.markdown(f"<style>{''.join(css_rules)}</style>", unsafe_allow_html=True)
     
-    
+    # View Mode Toggle
+    v_mode_opts = ["📅 網格 (Grid)", "📱 列表 (List)"] if lang == "zh" else ["📅 Grid", "📱 List"]
+    view_mode = st.radio("顯示模式", v_mode_opts, horizontal=True, label_visibility="collapsed")
+    is_list_view = "📱" in view_mode
 
-    with st.container(key="calendar_grid_container"):
-        # Header row
-        cols = st.columns(5, gap="small")
-        for col_idx, h in enumerate(headers):
-            cols[col_idx].markdown(f"<div class='calendar-header-cell'>{h}</div>", unsafe_allow_html=True)
-
-        # Day rows — stock buttons use st.popover() for inline detail card
-        for week in selected_grid:
-            cols = st.columns(5, gap="small")
-            for col_idx, day in enumerate(week):
-                with cols[col_idx]:
-                    if day is not None:
-                        st.markdown(f"<div class='calendar-day-num'>{day:02d}</div>", unsafe_allow_html=True)
-                        if day in q_events:
-                            for ev in q_events[day]:
-                                sym = ev["symbol"]
-                                star = " ⭐" if ev.get("is_holding") else ""
-                                btn_label = f"{sym}{star}"
-                                btn_key = f"cal_btn_{q_key}_{day}_{sym}"
-
-                                # Resolve info for popover
-                                if q_key == "Q1":
-                                    raw = details_q1.get(sym) or details_base.get(sym)
-                                else:
-                                    raw = details_base.get(sym)
-
-                                if raw:
-                                    gk = ("淨利成長" if lang == "zh" else "Tăng trưởng LNST") if q_key == "Q1" else ("預期成長" if lang == "zh" else "Tăng trưởng dự kiến")
-                                    gv = raw.get("actual_growth") or raw.get("expected_growth", "—")
-                                    stype = raw.get("type", "")
-                                    desc = raw.get("desc", "")
-                                else:
-                                    gk = "財報狀態" if lang == "zh" else "BCTC"
-                                    gv = "已發布" if q_key == "Q1" else "預計"
-                                    stype = "持股中" if ev.get("is_holding") else "追蹤中"
-                                    desc = ""
-
-                                with st.popover(btn_label, use_container_width=True):
-                                    fav = get_favicon_url(sym)
-                                    yr_mo = {"Q1": "2026-04", "Q2": "2026-07", "Q3": "2026-10", "Q4": "2027-01"}.get(q_key, "2026-07")
-                                    dl = "實際發布" if (q_key == "Q1" and lang == "zh") else ("Ngày công bố" if q_key == "Q1" else ("預計發布" if lang == "zh" else "Dự kiến"))
-                                    gneg = "-" in gv or "giảm" in gv.lower()
-                                    gc = "#f87171" if gneg else "#34d399"
-                                    held_badge = "✅ 持股中" if ev.get("is_holding") else ""
-                                    st.markdown(f"**{sym}** {held_badge}  \n*{stype}*")
-                                    st.markdown(f"📅 **{dl}**: `{yr_mo}-{day:02d}`")
-                                    st.markdown(f"🚀 **{gk}**: :{('green' if not gneg else 'red')}[{gv}]")
-                                    if desc:
-                                        st.caption(desc)
-                                    # Holdings stats
-                                    if ev.get("is_holding") and not holdings.empty:
-                                        rows = holdings[holdings["symbol"] == sym]
-                                        if not rows.empty:
-                                            r = rows.iloc[0]
-                                            sh = r["total_shares"]; co = r["total_cost"]
-                                            va = r["market_value"]; un = r["unrealized_pl"]
-                                            pp = (un / co * 100) if co > 0 else 0.0
-                                            c1, c2 = st.columns(2)
-                                            c1.metric("持股數" if lang == "zh" else "SL", f"{sh:,.0f}")
-                                            c2.metric("市值" if lang == "zh" else "GT TT", f"{va:,.0f}")
-                                            c3, c4 = st.columns(2)
-                                            c3.metric("成本" if lang == "zh" else "Vốn", f"{co/sh:,.0f}" if sh > 0 else "—")
-                                            c4.metric("未實現損益" if lang == "zh" else "LNTT", f"{un:+,.0f}", delta=f"{pp:+.2f}%")
-
-                                    
-    st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
-    
-    # === MOBILE-ONLY: Pure HTML vertical timeline with inline-expand detail ===
-    day_labels_zh = {"Mon": "週一", "Tue": "週二", "Wed": "週三", "Thu": "週四", "Fri": "週五"}
-    day_names_en  = ["Mon", "Tue", "Wed", "Thu", "Fri"]
-    year_month    = {"Q1": "2026-04", "Q2": "2026-07", "Q3": "2026-10", "Q4": "2027-01"}.get(q_key, "2026-07")
-
-    def build_inline_detail(sym, day, ev):
-        """Build inline detail card HTML for one stock."""
-        favicon_url = get_favicon_url(sym)
-        is_held     = ev.get("is_holding", False)
-        color       = ev["color"]
+    def render_popover(ev, day, sym, prefix):
+        star = " ⭐" if ev.get("is_holding") else ""
+        btn_label = f"{sym}{star}"
+        
+        # Resolve info for popover
         if q_key == "Q1":
             raw = details_q1.get(sym) or details_base.get(sym)
         else:
             raw = details_base.get(sym)
+
         if raw:
-            gk  = ("淨利成長" if lang == "zh" else "Tăng trưởng LNST") if q_key == "Q1" else ("預期成長" if lang == "zh" else "Tăng trưởng dự kiến")
-            gv  = raw.get("actual_growth") or raw.get("expected_growth", "—")
-            stp = raw.get("type", "")
-            dsc = raw.get("desc", "")
+            gk = ("淨利成長" if lang == "zh" else "Tăng trưởng LNST") if q_key == "Q1" else ("預期成長" if lang == "zh" else "Tăng trưởng dự kiến")
+            gv = raw.get("actual_growth") or raw.get("expected_growth", "—")
+            stype = raw.get("type", "")
+            desc = raw.get("desc", "")
         else:
-            gk  = "財報狀態" if lang == "zh" else "BCTC"
-            gv  = "已發布"   if q_key == "Q1" else "預計"
-            stp = "持股中"   if is_held else "追蹤中"
-            dsc = ""
-        gneg   = "-" in gv or "giảm" in gv.lower()
-        gc     = "#f87171" if gneg else "#34d399"
-        g_bg   = "rgba(239,68,68,0.1)"   if gneg else "rgba(16,185,129,0.1)"
-        g_bdr  = "rgba(239,68,68,0.3)"   if gneg else "rgba(16,185,129,0.3)"
-        dl     = ("實際發布" if lang == "zh" else "Ngày công bố") if q_key == "Q1" else ("預計發布" if lang == "zh" else "Dự kiến")
-        hbadge = f'<span style="font-size:10px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#34d399;padding:2px 8px;border-radius:20px;font-weight:bold;margin-left:6px;">{"持股中" if lang=="zh" else "Nắm giữ"}</span>' if is_held else ""
-        # Holdings grid
-        h_html = ""
-        if is_held and not holdings.empty:
-            rows = holdings[holdings["symbol"] == sym]
-            if not rows.empty:
-                r = rows.iloc[0]
-                sh = r["total_shares"]; co = r["total_cost"]; va = r["market_value"]; un = r["unrealized_pl"]
-                ac = co/sh if sh > 0 else 0; cp = va/sh if sh > 0 else 0
-                pp = (un/co*100) if co > 0 else 0.0
-                cc = "#10B981" if un >= 0 else "#FF007F"
-                lbl_h = "持倉明細" if lang == "zh" else "Vị thế"
-                h_html = f"""<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;">
-                <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:8px;">📊 {lbl_h}</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-                <div style="background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;text-align:center;">
-                  <div style="font-size:10px;color:#64748b;">{"持股數" if lang=="zh" else "SL"}</div>
-                  <div style="font-size:14px;font-weight:700;">{sh:,.0f}</div></div>
-                <div style="background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;text-align:center;">
-                  <div style="font-size:10px;color:#64748b;">{"市值" if lang=="zh" else "GT TT"}</div>
-                  <div style="font-size:13px;font-weight:700;">{va:,.0f}</div></div>
-                <div style="background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;text-align:center;">
-                  <div style="font-size:10px;color:#64748b;">{"成本/市價" if lang=="zh" else "Vốn/HT"}</div>
-                  <div style="font-size:12px;font-weight:700;">{ac:,.0f} / <span style="color:#a5b4fc;">{cp:,.0f}</span></div></div>
-                <div style="background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;text-align:center;">
-                  <div style="font-size:10px;color:#64748b;">{"損益" if lang=="zh" else "LNTT"}</div>
-                  <div style="font-size:13px;font-weight:700;color:{cc};">{un:+,.0f}</div>
-                  <div style="font-size:10px;color:{cc};">({pp:+.2f}%)</div></div>
-                </div></div>"""
-        return f"""<div style="margin:8px 0 4px;background:rgba(10,18,40,0.85);
-                border:1px solid {color}44;border-radius:12px;padding:14px 16px;
-                animation:fadeIn .2s ease;">
-            <div style="display:flex;align-items:center;margin-bottom:12px;">
-              <img src="{favicon_url}" style="width:34px;height:34px;border-radius:8px;margin-right:12px;border:1px solid rgba(255,255,255,0.1);">
-              <div><div style="font-size:18px;font-weight:800;">{sym} {hbadge}</div>
-                   <div style="font-size:11px;color:#94a3b8;">{stp}</div></div>
-            </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-              <span style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#c084fc;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">📅 {dl}: {year_month}-{day:02d}</span>
-              <span style="background:{g_bg};border:1px solid {g_bdr};color:{gc};padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">🚀 {gk}: {gv}</span>
-            </div>
-            {f'<div style="font-size:13px;color:#cbd5e1;line-height:1.65;border-left:3px solid rgba(139,92,246,0.5);padding-left:12px;margin-bottom:4px;">{dsc}</div>' if dsc else ""}
-            {h_html}
-        </div>"""
+            gk = "財報狀態" if lang == "zh" else "BCTC"
+            gv = "已發布" if q_key == "Q1" else "預計"
+            stype = "持股中" if ev.get("is_holding") else "追蹤中"
+            desc = ""
 
-    # --- Build week rows with inline detail cards ---
-    mobile_weeks_html = ""
-    for week_idx, week in enumerate(selected_grid):
-        week_days_with_events = []
-        for col_idx, day in enumerate(week):
-            if day is not None:
-                evs = q_events.get(day, [])
-                week_days_with_events.append((day, day_names_en[col_idx], evs))
-        if not week_days_with_events:
-            continue
-        first_day  = week_days_with_events[0][0]
-        last_day   = week_days_with_events[-1][0]
-        week_label = f"第 {week_idx+1} 週 ({first_day:02d} – {last_day:02d} 日)" if lang == "zh" else f"Week {week_idx+1} ({first_day:02d} – {last_day:02d})"
-        days_html  = ""
-        for day, day_name, evs in week_days_with_events:
-            day_label = f"{day_labels_zh.get(day_name, day_name)} {day:02d}日" if lang == "zh" else f"{day_name} {day:02d}"
-            if evs:
-                tags_html   = ""
-                detail_html = ""
-                for ev in evs:
-                    det_id = f"det-{q_key}-{day}-{sym}"
-                    tags_html += f"""<details class="stock-details">
-                        <summary class="mobile-stock-tag"
-                            style="display:inline-flex;align-items:center;gap:6px;
-                                   background:{color}18;border:1px solid {color}55;
-                                   border-radius:10px;padding:8px 14px;margin:3px 6px 3px 0;
-                                   font-size:14px;font-weight:700;color:#fff;
-                                   cursor:pointer;-webkit-tap-highlight-color:transparent;
-                                   transition:opacity .2s, transform .1s;
-                                   list-style:none;">
-                            <img src="{favicon_url}" style="width:18px;height:18px;border-radius:4px;">
-                            <span>{sym}{star}</span>
-                            <span class="arrow" style="font-size:11px;color:{color};transition:transform .2s;">▼</span>
-                        </summary>
-                        <div class="detail-content">{build_inline_detail(sym, day, ev)}</div>
-                    </details>"""
-                days_html += f"""<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
-                    <div style="display:flex;align-items:flex-start;">
-                        <div style="min-width:76px;font-size:13px;font-weight:700;color:#a5b4fc;padding-top:9px;">{day_label}</div>
-                        <div style="flex:1;display:flex;flex-wrap:wrap;">{tags_html}</div>
-                    </div>
-                </div>"""
-            else:
-                days_html += f"""<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <div style="min-width:76px;font-size:13px;font-weight:700;color:#334155;">{day_label}</div>
-                    <div style="font-size:12px;color:#334155;">—</div>
-                </div>"""
-        mobile_weeks_html += f"""<div style="margin-bottom:12px;background:rgba(20,30,50,0.6);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px;">
-            <div style="font-size:11px;font-weight:700;color:#8b5cf6;letter-spacing:0.8px;margin-bottom:8px;text-transform:uppercase;">{week_label}</div>
-            {days_html}
-        </div>"""
+        with st.popover(btn_label, use_container_width=True):
+            yr_mo = {"Q1": "2026-04", "Q2": "2026-07", "Q3": "2026-10", "Q4": "2027-01"}.get(q_key, "2026-07")
+            dl = "實際發布" if (q_key == "Q1" and lang == "zh") else ("Ngày công bố" if q_key == "Q1" else ("預計發布" if lang == "zh" else "Dự kiến"))
+            gneg = "-" in gv or "giảm" in gv.lower()
+            gc = "#f87171" if gneg else "#34d399"
+            held_badge = "✅ 持股中" if ev.get("is_holding") else ""
+            st.markdown(f"**{sym}** {held_badge}  \n*{stype}*")
+            st.markdown(f"📅 **{dl}**: `{yr_mo}-{day:02d}`")
+            st.markdown(f"🚀 **{gk}**: :{('green' if not gneg else 'red')}[{gv}]")
+            if desc:
+                st.caption(desc)
+            # Holdings stats
+            if ev.get("is_holding") and not holdings.empty:
+                rows = holdings[holdings["symbol"] == sym]
+                if not rows.empty:
+                    r = rows.iloc[0]
+                    sh = r["total_shares"]; co = r["total_cost"]
+                    va = r["market_value"]; un = r["unrealized_pl"]
+                    pp = (un / co * 100) if co > 0 else 0.0
+                    c1, c2 = st.columns(2)
+                    c1.metric("持股數" if lang == "zh" else "SL", f"{sh:,.0f}")
+                    c2.metric("市值" if lang == "zh" else "GT TT", f"{va:,.0f}")
+                    c3, c4 = st.columns(2)
+                    c3.metric("成本" if lang == "zh" else "Vốn", f"{co/sh:,.0f}" if sh > 0 else "—")
+                    c4.metric("未實現損益" if lang == "zh" else "LNTT", f"{un:+,.0f}", delta=f"{pp:+.2f}%")
 
-    if not mobile_weeks_html:
-        mobile_weeks_html = f'<div style="text-align:center;padding:24px;color:#475569;font-size:14px;">{"📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter"}</div>'
 
-    tap_hint = "點擊股票標籤展開財報詳情" if lang == "zh" else "Tap a stock tag to expand details"
+    if not is_list_view:
+        with st.container(key="calendar_grid_container"):
+            # Header row
+            cols = st.columns(5, gap="small")
+            for col_idx, h in enumerate(headers):
+                cols[col_idx].markdown(f"<div class='calendar-header-cell'>{h}</div>", unsafe_allow_html=True)
 
-    st.html(f"""
-<style>
-@keyframes fadeIn {{ from {{ opacity:0; transform:translateY(-4px); }} to {{ opacity:1; transform:translateY(0); }} }}
-@media (min-width: 641px) {{ .cal-mobile {{ display:none !important; }} }}
-* {{ box-sizing:border-box; }}
-.mobile-stock-tag:active {{ opacity: 0.6; transform: scale(0.96); }}
-.stock-details summary::-webkit-details-marker {{ display: none; }}
-.stock-details[open] summary .arrow {{ transform: rotate(180deg); }}
-.detail-content {{ margin-top: 8px; margin-bottom: 12px; }}
-</style>
-<div class="cal-mobile" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#f1f5f9;padding:2px;">
-  <div style="font-size:11px;color:#64748b;text-align:center;margin-bottom:12px;">⬇ {tap_hint}</div>
-  {mobile_weeks_html}
-</div>
-""")
+            # Day rows — stock buttons use st.popover() for inline detail card
+            for week in selected_grid:
+                cols = st.columns(5, gap="small")
+                for col_idx, day in enumerate(week):
+                    with cols[col_idx]:
+                        if day is not None:
+                            st.markdown(f"<div class='calendar-day-num'>{day:02d}</div>", unsafe_allow_html=True)
+                            if day in q_events:
+                                for ev in q_events[day]:
+                                    sym = ev["symbol"]
+                                    with st.container(key=f"btn_grid_{q_key}_{day}_{sym}"):
+                                        render_popover(ev, day, sym, "grid")
+
+    else:
+        with st.container(key="calendar_list_container"):
+            day_labels_zh = {"Mon": "週一", "Tue": "週二", "Wed": "週三", "Thu": "週四", "Fri": "週五"}
+            day_names_en = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+            
+            has_any = False
+            for week in selected_grid:
+                for col_idx, day in enumerate(week):
+                    if day is not None and day in q_events:
+                        has_any = True
+                        day_name = day_names_en[col_idx]
+                        day_label = f"{day_labels_zh.get(day_name, day_name)} {day:02d}日" if lang == "zh" else f"{day_name} {day:02d}"
+                        st.markdown(f"<div style='font-size:14px;font-weight:800;color:#a5b4fc;margin-top:12px;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:4px;'>{day_label}</div>", unsafe_allow_html=True)
+                        for ev in q_events[day]:
+                            sym = ev["symbol"]
+                            with st.container(key=f"btn_list_{q_key}_{day}_{sym}"):
+                                render_popover(ev, day, sym, "list")
+            
+            if not has_any:
+                st.info("📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter")
+
+    st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
+
 
 
     
