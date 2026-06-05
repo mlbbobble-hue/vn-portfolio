@@ -69,6 +69,24 @@ st.html(clean_html("""
 .empty-icon { font-size: 48px; margin-bottom: 16px; color: var(--text-secondary); }
 .empty-text { color: var(--text-secondary); font-size: 16px; margin-bottom: 24px; }
 
+/* === Mobile-responsive calendar scroll wrapper === */
+.calendar-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    padding-bottom: 8px;
+}
+.calendar-scroll-wrapper::-webkit-scrollbar {
+    height: 5px;
+}
+.calendar-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.4);
+    border-radius: 4px;
+}
+.calendar-inner {
+    min-width: 680px;
+}
+
 /* Custom Segmented Radio Buttons */
 div[data-testid="stRadio"] div[role="radiogroup"] {
     display: flex !important;
@@ -149,6 +167,38 @@ div[data-testid="stRadio"] > label[data-testid="stWidgetLabel"] {
     background: rgba(16, 185, 129, 0.15) !important;
     border: 1px solid rgba(16, 185, 129, 0.3) !important;
     color: #34d399 !important;
+}
+
+/* === Mobile overrides (max-width: 640px) === */
+@media (max-width: 640px) {
+    /* Radio buttons: each option takes ~half the row */
+    div[data-testid="stRadio"] div[role="radiogroup"] label {
+        padding: 8px 10px !important;
+        font-size: 13px !important;
+        flex: 1 1 calc(50% - 8px) !important;
+        text-align: center !important;
+    }
+    /* Holding stats: switch from 4-col to 2-col grid */
+    .holding-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    /* News card: stack badge above title */
+    .news-card {
+        flex-direction: column !important;
+        gap: 8px !important;
+        padding: 12px !important;
+    }
+    /* Tighter detail card padding on mobile */
+    .detail-card {
+        padding: 14px 14px !important;
+    }
+    /* Scroll hint label */
+    .calendar-scroll-hint {
+        display: block !important;
+    }
+}
+@media (min-width: 641px) {
+    .calendar-scroll-hint { display: none !important; }
 }
 </style>
 """))
@@ -613,6 +663,13 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             
     st.markdown(f"<style>{''.join(css_rules)}</style>", unsafe_allow_html=True)
     
+    # Scroll hint for mobile
+    st.markdown("""
+    <div class="calendar-scroll-hint" style="text-align:center; color:#94a3b8; font-size:12px; margin-bottom:6px; display:none;">
+        ← 左右滑動查看完整月曆 →
+    </div>
+    """, unsafe_allow_html=True)
+    
     with st.container(key="calendar_grid_container"):
         # Header row
         cols = st.columns(5, gap="small")
@@ -636,6 +693,33 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                                     st.rerun()
                                     
     st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
+    
+    # JS: wrap calendar container in horizontal scroll div for mobile
+    st.markdown("""
+    <script>
+    (function() {
+        function wrapCalendar() {
+            var container = document.querySelector('[data-testid="stVerticalBlock"] .st-key-calendar_grid_container');
+            if (!container) {
+                var allKeys = document.querySelectorAll('[class*="st-key-calendar_grid_container"]');
+                if (allKeys.length > 0) container = allKeys[0];
+            }
+            if (container && !container.closest('.calendar-scroll-wrapper')) {
+                var wrapper = document.createElement('div');
+                wrapper.className = 'calendar-scroll-wrapper';
+                var inner = document.createElement('div');
+                inner.className = 'calendar-inner';
+                container.parentNode.insertBefore(wrapper, container);
+                wrapper.appendChild(inner);
+                inner.appendChild(container);
+            }
+        }
+        // Try immediately and also after a short delay for Streamlit hydration
+        setTimeout(wrapCalendar, 300);
+        setTimeout(wrapCalendar, 900);
+    })();
+    </script>
+    """, unsafe_allow_html=True)
     
     # Build select list of symbols for this quarter
     quarter_symbols = []
@@ -688,22 +772,22 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             holding_html = clean_html(f"""
             <div style="margin-top: 16px; margin-bottom: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px;">
                 <div style="font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 8px; letter-spacing: 0.5px;">{title_holding}</div>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                    <div style="background: rgba(15, 23, 42, 0.4); padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
-                        <div style="font-size: 9px; color: #94a3b8; font-weight: 500;">{label_shares}</div>
-                        <div style="font-size: 13px; font-weight: bold; color: #ffffff; margin-top: 3px;">{shares:,.0f}</div>
+                <div class="holding-stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                    <div style="background: rgba(15, 23, 42, 0.4); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.06); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
+                        <div style="font-size: 10px; color: #94a3b8; font-weight: 500; margin-bottom: 4px;">{label_shares}</div>
+                        <div style="font-size: 14px; font-weight: bold; color: #ffffff;">{shares:,.0f}</div>
                     </div>
-                    <div style="background: rgba(15, 23, 42, 0.4); padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
-                        <div style="font-size: 9px; color: #94a3b8; font-weight: 500;">{label_cost}</div>
-                        <div style="font-size: 12px; font-weight: bold; color: #ffffff; margin-top: 3px;">{avg_cost:,.0f}/{cur_price:,.0f}</div>
+                    <div style="background: rgba(15, 23, 42, 0.4); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.06); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
+                        <div style="font-size: 10px; color: #94a3b8; font-weight: 500; margin-bottom: 4px;">{label_cost}</div>
+                        <div style="font-size: 12px; font-weight: bold; color: #ffffff;">{avg_cost:,.0f}<br><span style='font-size:11px; color:#a5b4fc;'>{cur_price:,.0f}</span></div>
                     </div>
-                    <div style="background: rgba(15, 23, 42, 0.4); padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
-                        <div style="font-size: 9px; color: #94a3b8; font-weight: 500;">{label_value}</div>
-                        <div style="font-size: 12px; font-weight: bold; color: #ffffff; margin-top: 3px;">{value:,.0f}</div>
+                    <div style="background: rgba(15, 23, 42, 0.4); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.06); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
+                        <div style="font-size: 10px; color: #94a3b8; font-weight: 500; margin-bottom: 4px;">{label_value}</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #ffffff;">{value:,.0f}</div>
                     </div>
-                    <div style="background: rgba(15, 23, 42, 0.4); padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
-                        <div style="font-size: 9px; color: #94a3b8; font-weight: 500;">{label_pl}</div>
-                        <div style="font-size: 12px; font-weight: bold; color: {color_pl}; margin-top: 3px;">{unrealized:+,.0f}<br><span style="font-size:9.5px; font-weight: 600;">({pl_pct:+.2f}%)</span></div>
+                    <div style="background: rgba(15, 23, 42, 0.4); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.06); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
+                        <div style="font-size: 10px; color: #94a3b8; font-weight: 500; margin-bottom: 4px;">{label_pl}</div>
+                        <div style="font-size: 13px; font-weight: bold; color: {color_pl};">{unrealized:+,.0f}<br><span style="font-size:10px; font-weight: 600;">({pl_pct:+.2f}%)</span></div>
                     </div>
                 </div>
             </div>
@@ -791,7 +875,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             growth_color = "#f87171"
             
         card_html = clean_html(f"""
-        <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.65) 0%, rgba(15, 23, 42, 0.85) 100%); 
+        <div class="detail-card" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.65) 0%, rgba(15, 23, 42, 0.85) 100%); 
                     padding: 20px 24px; 
                     border-radius: 16px; 
                     border: 1px solid rgba(255, 255, 255, 0.08); 
@@ -799,14 +883,14 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                     backdrop-filter: blur(20px);">
             {title_html}
             <div style="margin: 8px 0 14px; display: flex; gap: 8px; flex-wrap: wrap;">
-                <span style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.25); color: #c084fc; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; letter-spacing: 0.5px;">
+                <span style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.25); color: #c084fc; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">
                     📅 {date_label}: {date_str}
                 </span>
-                <span style="background: {growth_bg}; border: 1px solid {growth_border}; color: {growth_color}; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; letter-spacing: 0.5px;">
+                <span style="background: {growth_bg}; border: 1px solid {growth_border}; color: {growth_color}; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">
                     🚀 {info['growth_key']}: {info['growth_val']}
                 </span>
             </div>
-            <div style="font-size: 13.5px; color: #cbd5e1; line-height: 1.6; border-left: 3px solid rgba(139, 92, 246, 0.5); padding-left: 12px; margin: 12px 0 16px; font-family: 'Inter', sans-serif;">
+            <div style="font-size: 14px; color: #cbd5e1; line-height: 1.7; border-left: 3px solid rgba(139, 92, 246, 0.5); padding-left: 12px; margin: 12px 0 16px; font-family: 'Inter', sans-serif;">
                 {info['desc']}
             </div>
             {holding_html}
