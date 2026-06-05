@@ -284,44 +284,6 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 })
         return events_map
 
-    def render_grid_html(title_str, grid_data, events_map, q_key):
-        html = []
-        html.append('<div class="calendar-container">')
-        html.append(f'<div class="calendar-title">{title_str}</div>')
-        html.append('<div class="calendar-grid">')
-        
-        for h in headers:
-            html.append(f'<div class="calendar-header-cell">{h}</div>')
-            
-        for week in grid_data:
-            for day in week:
-                if day is None:
-                    html.append('<div class="calendar-empty-cell"></div>')
-                else:
-                    html.append('<div class="calendar-day-cell">')
-                    html.append(f'<div class="calendar-day-num">{day:02d}</div>')
-                    if day in events_map:
-                        html.append('<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">')
-                        for ev in events_map[day]:
-                            color_bg = ev["color"]
-                            prefix = "⭐ " if ev.get("is_holding") else ""
-                            tooltip = f"{prefix}{ev['symbol']}"
-                            
-                            border_color = f"{color_bg}55"
-                            bg_style = f"background: {color_bg}15; border: 1px solid {border_color};"
-                            
-                            img_style = f"width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.08); flex-shrink: 0;"
-                            
-                            html.append(f'<a href="/dashboard?select_stock={ev["symbol"]}&q_tab={q_key}#earnings-section" target="_self" class="calendar-stock-tag" style="{bg_style}" title="{tooltip}">')
-                            html.append(f'<img src="{get_favicon_url(ev["symbol"])}" style="{img_style}" onerror="this.style.display=\'none\';">')
-                            html.append(f'<span class="calendar-tag-text">{prefix}{ev["symbol"]}</span>')
-                            html.append('</a>')
-                        html.append('</div>')
-                    html.append('</div>')
-                    
-        html.append('</div></div>')
-        return "".join(html)
-
     # 2. Parse URL query parameters to maintain selection state
     query_params = st.query_params
     selected_stock_param = query_params.get("select_stock", None)
@@ -389,7 +351,98 @@ def show_earnings_calendar(lang="zh", is_empty=False):
     
     selected_grid, title_str = grid_map.get(q_key, (grid_q2, ""))
     
-    st.markdown(render_grid_html(title_str, selected_grid, q_events, q_key), unsafe_allow_html=True)
+    # 2. Render Calendar Grid in Python using st.columns
+    st.markdown(f"<h5 style='margin-bottom: 12px; color: #ffffff;'>{title_str}</h5>", unsafe_allow_html=True)
+    
+    # CSS injection for columns and buttons
+    css_rules = [
+        """
+        .st-key-calendar_grid_container div[data-testid="column"]:has(.calendar-day-num) {
+            background: rgba(255, 255, 255, 0.01) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-radius: 6px !important;
+            min-height: 85px !important;
+            padding: 6px !important;
+            transition: all 0.2s !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+        }
+        .st-key-calendar_grid_container div[data-testid="column"]:has(.calendar-day-num):hover {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border-color: #9D4EDD !important;
+        }
+        .st-key-calendar_grid_container .stButton {
+            display: inline-block !important;
+            margin-right: 4px !important;
+            margin-top: 2px !important;
+        }
+        """
+    ]
+    
+    # Generate button-specific styles for favicons and border colors
+    for day, evs in q_events.items():
+        for ev in evs:
+            sym = ev["symbol"]
+            color_bg = ev["color"]
+            favicon_url = get_favicon_url(sym)
+            btn_key = f"cal_btn_{q_key}_{day}_{sym}"
+            
+            rule = f"""
+            .st-key-{btn_key} button {{
+                background: {color_bg}12 !important;
+                border: 1px solid {color_bg}44 !important;
+                color: #ffffff !important;
+                padding-left: 28px !important;
+                padding-right: 8px !important;
+                padding-top: 4px !important;
+                padding-bottom: 4px !important;
+                min-height: 28px !important;
+                height: 28px !important;
+                font-size: 11px !important;
+                font-weight: bold !important;
+                background-image: url("{favicon_url}") !important;
+                background-repeat: no-repeat !important;
+                background-position: 6px center !important;
+                background-size: 16px 16px !important;
+                border-radius: 6px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: flex-start !important;
+                transition: all 0.2s ease-in-out !important;
+            }}
+            .st-key-{btn_key} button:hover {{
+                border-color: #00F0FF !important;
+                transform: translateY(-1px) !important;
+                box-shadow: 0 0 8px rgba(0, 240, 255, 0.3) !important;
+            }}
+            """
+            css_rules.append(rule)
+            
+    st.markdown(f"<style>{''.join(css_rules)}</style>", unsafe_allow_html=True)
+    
+    with st.container(key="calendar_grid_container"):
+        # Header row
+        cols = st.columns(5, gap="small")
+        for col_idx, h in enumerate(headers):
+            cols[col_idx].markdown(f"<div class='calendar-header-cell'>{h}</div>", unsafe_allow_html=True)
+            
+        # Day rows
+        for week in selected_grid:
+            cols = st.columns(5, gap="small")
+            for col_idx, day in enumerate(week):
+                with cols[col_idx]:
+                    if day is not None:
+                        st.markdown(f"<div class='calendar-day-num'>{day:02d}</div>", unsafe_allow_html=True)
+                        if day in q_events:
+                            for ev in q_events[day]:
+                                prefix = "⭐ " if ev.get("is_holding") else ""
+                                btn_key = f"cal_btn_{q_key}_{day}_{ev['symbol']}"
+                                if st.button(f"{prefix}{ev['symbol']}", key=btn_key):
+                                    st.query_params["select_stock"] = ev["symbol"]
+                                    st.query_params["q_tab"] = q_key
+                                    st.rerun()
+                                    
     st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
     
     # Build select list of symbols for this quarter
