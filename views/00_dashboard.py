@@ -507,8 +507,8 @@ def show_earnings_calendar(lang="zh", is_empty=False):
     css_rules = [
         """
         .st-key-calendar_grid_container div[data-testid="column"]:has(.calendar-day-num) {
-            background: rgba(30, 41, 59, 0.45) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            background: rgba(20, 30, 50, 0.65) !important;
+            border: 1px solid rgba(255, 255, 255, 0.18) !important;
             border-radius: 10px !important;
             min-height: 145px !important;
             padding: 12px !important;
@@ -516,12 +516,12 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             display: flex !important;
             flex-direction: column !important;
             justify-content: flex-start !important;
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 4px 6px -1px rgba(0, 0, 0, 0.2) !important;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 4px 8px -1px rgba(0, 0, 0, 0.3) !important;
         }
         .st-key-calendar_grid_container div[data-testid="column"]:has(.calendar-day-num):hover {
-            background: rgba(30, 41, 59, 0.65) !important;
+            background: rgba(30, 41, 59, 0.80) !important;
             border-color: #8B5CF6 !important;
-            box-shadow: 0 0 12px rgba(139, 92, 246, 0.25) !important;
+            box-shadow: 0 0 16px rgba(139, 92, 246, 0.35) !important;
         }
         .st-key-calendar_grid_container .stButton {
             display: block !important;
@@ -535,20 +535,20 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             color: #f1f5f9;
             font-size: 15px;
             padding: 12px 0;
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(99, 102, 241, 0.2);
             border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(139, 92, 246, 0.35);
             margin-bottom: 10px;
             letter-spacing: 0.5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
         .calendar-day-num {
             font-size: 15px;
-            color: #94a3b8;
+            color: #e2e8f0;
             font-weight: 800;
             margin-bottom: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 3px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.20);
+            padding-bottom: 5px;
         }
         div[data-testid="stExpander"] {
             background: rgba(30, 41, 59, 0.35) !important;
@@ -846,13 +846,13 @@ if not holdings.empty and not is_loading_prices:
     
     held_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
     
-    # 1. 🔍 手動新增其他追蹤股票 (Watchlist Manager)
-    render_watchlist_manager(lang, held_symbols)
-    
-    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
-    
-    # 2. 財報預告時間表 (Earnings Calendar Section)
+    # 1. 財報預告時間表 (Earnings Calendar Section)
     show_earnings_calendar(lang, is_empty=False)
+    
+    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+    
+    # 2. 🔍 手動新增其他追蹤股票 (Watchlist Manager - placed below calendar)
+    render_watchlist_manager(lang, held_symbols)
     
     st.markdown("<div style='margin-bottom: 35px;'></div>", unsafe_allow_html=True)
     
