@@ -263,6 +263,22 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         "❄️ Q4/全年 財報季 (1月)" if lang == "zh" else "❄️ Mùa BCTC Q4/Cả năm (T1)"
     ])
 
+    details_q1 = {
+        "FPT": {"type": "科技與外包" if lang == "zh" else "Công nghệ", "actual_growth": "YoY +19.4%", "desc": "Q1 營收 14,093 億 VND，淨利 2,160 億 VND。受惠於海外軟體外包訂單爆發與 AI 封測佈局，獲利持續穩健成長。" if lang == "zh" else "Doanh thu Q1 đạt 14.093 tỷ VND, LNST đạt 2.160 tỷ VND. Tăng trưởng mạnh từ mảng xuất khẩu phần mềm và chuyển đổi số."},
+        "SCS": {"type": "航空物流" if lang == "zh" else "Logistics", "actual_growth": "YoY +29.8%", "desc": "Q1 營收 212 億 VND，淨利 148 億 VND。進出口貿易回溫，空運貨量大增，毛利率維持在 75% 的超高水準。" if lang == "zh" else "Doanh thu Q1 đạt 212 tỷ VND, LNST đạt 148 tỷ VND. Sản lượng hàng hóa sân bay phục hồi mạnh mẽ, biên lợi nhuận cực cao."},
+        "VEA": {"type": "汽車製造" if lang == "zh" else "Sản xuất ô tô", "actual_growth": "YoY -4.0%", "desc": "Q1 淨利 1,350 億 VND。本田與豐田銷量微幅下滑，但聯營公司投資收益仍極為充沛，提供強大的分紅防禦力。" if lang == "zh" else "LNST Q1 đạt 1.350 tỷ VND. Doanh số Honda & Toyota giảm nhẹ nhưng nguồn thu từ liên doanh liên kết vẫn rất dồi dào."},
+        "TCB": {"type": "金融銀行" if lang == "zh" else "Ngân hàng", "actual_growth": "YoY +38.7%", "desc": "Q1 營收 12,200 億 VND，淨利 7,800 億 VND。手續費與信貸成長超越預期，且地產復甦使壞帳撥備回撥，淨利爆發。" if lang == "zh" else "LNST Q1 đạt 7.800 tỷ VND. Tăng trưởng tín dụng mạnh mẽ kết hợp hoàn nhập dự phòng từ sự phục hồi của BĐS."},
+        "ACB": {"type": "金融銀行" if lang == "zh" else "Ngân hàng", "actual_growth": "YoY +1.9%", "desc": "Q1 營收 8,100 億 VND，淨利 4,900 億 VND。零售金融與消費貸信貸增長持平，壞帳控制全越第一，獲利保持平穩。" if lang == "zh" else "LNST Q1 đạt 4.900 tỷ VND. ACB kiểm soát tốt nợ xấu và duy trì sự ổn định cao trong hoạt động cốt lõi."},
+        "HPG": {"type": "鋼鐵工業" if lang == "zh" else "Thép & Vật liệu", "actual_growth": "YoY +700%+", "desc": "Q1 營收 31,000 億 VND，淨利 2,869 億 VND。去年同期基期極低，隨鋼鐵內需回溫與煤炭成本下滑，獲利呈現爆發式增長。" if lang == "zh" else "LNST Q1 đạt 2.869 tỷ VND, tăng gấp nhiều lần cùng kỳ nhờ giá bán thép phục hồi và giá nguyên liệu đầu vào hạ nhiệt."},
+        "MBB": {"type": "金融銀行" if lang == "zh" else "Ngân hàng", "actual_growth": "YoY -11.0%", "desc": "Q1 營收 11,900 億 VND，淨利 5,795 億 VND。因支持體系弱勢銀行以及部分壞帳提撥增加，獲利較去年同期微幅下滑。" if lang == "zh" else "LNST Q1 đạt 5.795 tỷ VND. Lợi nhuận giảm nhẹ do tăng trích lập dự phòng rủi ro nợ xấu."},
+        "BMP": {"type": "建材製造" if lang == "zh" else "VLXD", "actual_growth": "YoY -33.0%", "desc": "Q1 營收 1,002 億 VND，淨利 190 億 VND。主因 PVC 原料價格上漲與首季建材需求較淡，但帳上現金充裕仍將維持高分紅。" if lang == "zh" else "LNST Q1 đạt 190 tỷ VND. Biên lợi nhuận gộp chịu áp lực do giá hạt nhựa PVC biến động tăng."},
+        "VHC": {"type": "海鮮出口" if lang == "zh" else "Thủy hải sản", "actual_growth": "YoY -22.0%", "desc": "Q1 營收 2,729 億 VND，淨利 170 億 VND。美國市場庫存去化比預期慢，出口均價偏低，導致首季獲利下滑。" if lang == "zh" else "LNST Q1 đạt 170 tỷ VND. Doanh số xuất khẩu cá tra gặp khó khăn về giá bán bình quân tại thị trường Mỹ."},
+        "QNS": {"type": "食品飲料" if lang == "zh" else "Thực phẩm", "actual_growth": "YoY +68.0%", "desc": "Q1 營收 2,520 億 VND，淨利 532 億 VND。受惠於國際糖價維持高檔、自產原糖利潤改善以及豆奶剛需強勁，獲利大增。" if lang == "zh" else "LNST Q1 đạt 532 tỷ VND. Mảng đường ghi nhận biên lợi nhuận gộp bứt phá nhờ giá đường Neo ở mức cao."},
+        "VNM": {"type": "食品飲料" if lang == "zh" else "Thực phẩm", "actual_growth": "YoY +16.0%", "desc": "Q1 營收 14,100 億 VND，淨利 2,207 億 VND。奶粉與液態奶內銷回溫，海外附屬公司銷量穩增，防禦型業績出色。" if lang == "zh" else "LNST Q1 đạt 2.207 tỷ VND. Doanh thu nội địa ổn định kết hợp tối ưu hóa chi phí nguyên liệu sữa bột nhập khẩu."},
+        "MWG": {"type": "民生零售" if lang == "zh" else "Bán lẻ", "actual_growth": "YoY +4200%+", "desc": "Q1 營收 31,480 億 VND，淨利 902 億 VND。旗下「百家綠」生鮮超市損益平衡點改善，「行動世界」手機店毛利大幅回升。" if lang == "zh" else "LNST Q1 đạt 902 tỷ VND. Chuỗi Bách Hóa Xanh cải thiện mạnh doanh số trung bình cửa hàng, đưa lợi nhuận hồi sinh ngoạn mục."},
+        "FRT": {"type": "醫藥零售" if lang == "zh" else "Bán lẻ dược phẩm", "actual_growth": "YoY +300%+", "desc": "Q1 營收 9,040 億 VND，淨利 61 億 VND。龍洲藥局連鎖店數增至 1,600 家，單店坪效維持高檔，正式進入獲利貢獻期。" if lang == "zh" else "LNST Q1 đạt 61 tỷ VND. Chuỗi nhà thuốc Long Châu tiếp tục là động lực tăng trưởng cốt lõi với doanh thu bùng nổ."}
+    }
+
     details_base = {
         "FPT": {"type": "科技與外包" if lang == "zh" else "Công nghệ", "expected_growth": "YoY +22%", "desc": "越南科技業霸主。軟體出口訂單飽滿，AI 封測業務發酵，預期獲利穩定高成長。" if lang == "zh" else "Đơn hàng xuất khẩu phần mềm dồi dào, doanh thu tăng trưởng hai con số vững chắc."},
         "SCS": {"type": "航空物流" if lang == "zh" else "Logistics", "expected_growth": "YoY +18%", "desc": "新山一機場航空貨運壟斷者。受惠進出口貿易回溫，毛利率維持在 70% 以上高檔。" if lang == "zh" else "Độc quyền dịch vụ hàng hóa sân bay Tân Sơn Nhất, biên lợi nhuận ròng rất cao."},
@@ -305,7 +321,11 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             )
             
         # Check if custom detail or base detail
-        info = details_base.get(selected_sym, None)
+        if q_key == "Q1":
+            info = details_q1.get(selected_sym, None)
+        else:
+            info = details_base.get(selected_sym, None)
+            
         year_month = {"Q1": "2026-04", "Q2": "2026-07", "Q3": "2026-10", "Q4": "2027-01"}.get(q_key, "2026-07")
         
         # Determine actual day assigned
@@ -330,15 +350,44 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                     f"Số lượng sở hữu: {shares:,.0f} CP, Giá vốn: {cost:,.0f} VND, Lợi nhuận tạm tính: {unrealized:+,.0f} VND."
                 )
             
-            info = {
-                "type": "您的持股" if lang == "zh" else "Cổ phiếu sở hữu",
-                "expected_growth": "密切追蹤" if lang == "zh" else "Theo dõi sát",
-                "desc": f"這是您的投資組合持股。{holding_info_str} 預計於該日附近公布財報，請密切注意損益變化與公司公告。" if lang == "zh" else f"Đây là cổ phiếu trong danh mục của bạn. {holding_info_str} BCTC dự kiến công bố quanh ngày này, hãy theo dõi sát sao."
-            }
+            if q_key == "Q1":
+                info = {
+                    "type": "您的持股" if lang == "zh" else "Cổ phiếu sở hữu",
+                    "growth_key": "已公布" if lang == "zh" else "Đã công bố",
+                    "growth_val": "請查看明細" if lang == "zh" else "Xem chi tiết",
+                    "desc": f"這是您的投資組合持股 {selected_sym}。Q1 財報已於該日附近公布。{holding_info_str} 建議前往交易明細或新聞專欄查看 Q1 損益與分紅發放決議。" if lang == "zh" else f"Đây là cổ phiếu {selected_sym} của bạn. BCTC Q1 đã được công bố. {holding_info_str} Vui lòng xem chi tiết giao dịch hoặc tin tức để biết thêm chi tiết."
+                }
+            else:
+                info = {
+                    "type": "您的持股" if lang == "zh" else "Cổ phiếu sở hữu",
+                    "growth_key": "預期成長" if lang == "zh" else "Tăng trưởng dự kiến",
+                    "growth_val": "密切追蹤" if lang == "zh" else "Theo dõi sát",
+                    "desc": f"這是您的投資組合持股。{holding_info_str} 預計於該日附近公布財報，請密切注意損益變化與公司公告。" if lang == "zh" else f"Đây là cổ phiếu trong danh mục của bạn. {holding_info_str} BCTC dự kiến công bố quanh ngày này, hãy theo dõi sát sao."
+                }
+        else:
+            if q_key == "Q1":
+                info = {
+                    "type": info["type"],
+                    "growth_key": "淨利成長" if lang == "zh" else "Tăng trưởng LNST",
+                    "growth_val": info["actual_growth"],
+                    "desc": info["desc"]
+                }
+            else:
+                info = {
+                    "type": info["type"],
+                    "growth_key": "預期成長" if lang == "zh" else "Tăng trưởng dự kiến",
+                    "growth_val": info["expected_growth"],
+                    "desc": info["desc"]
+                }
             
         st_color = "#10B981" if selected_sym in held_symbols else "#00F0FF"
         badge_html = f'<span style="font-size:16px; font-weight:bold; color:{st_color};">{"⭐ " if selected_sym in held_symbols else ""}{selected_sym}</span>'
         
+        # Render the card with dynamic labels
+        date_label = "實際發布" if q_key == "Q1" else "預計發布"
+        if lang != "zh":
+            date_label = "Ngày công bố" if q_key == "Q1" else "Dự kiến công bố"
+            
         with col_det:
             st.markdown(f"""
             <div class="cathay-card" style="background: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
@@ -348,10 +397,10 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 </div>
                 <div style="margin: 4px 0; display:flex; gap: 6px; flex-wrap: wrap;">
                     <span style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.3); color:#f472b6; padding:1px 4px; border-radius:4px; font-size:10px; font-weight:bold;">
-                        📅 預計發布: {date_str}
+                        📅 {date_label}: {date_str}
                     </span>
                     <span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:1px 4px; border-radius:4px; font-size:10px; font-weight:bold;">
-                        🚀 預期成長: {info['expected_growth']}
+                        🚀 {info['growth_key']}: {info['growth_val']}
                     </span>
                 </div>
                 <div style="font-size:12px; color:#cbd5e1; line-height:1.4; margin-top:4px;">
