@@ -627,7 +627,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             favicon_url = get_favicon_url(sym)
             
             rule = f"""
-            .st-key-btn_grid_{q_key}_{day}_{sym} button {{
+            .st-key-btn_grid_{q_key}_{day}_{sym} button, .st-key-btn_list_{q_key}_{day}_{sym} button {{
                 width: 100% !important;
                 background: {color_bg}18 !important;
                 border: 1px solid {color_bg}55 !important;
@@ -652,7 +652,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 transition: all 0.2s ease-in-out !important;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
             }}
-            .st-key-btn_grid_{q_key}_{day}_{sym} button:hover {{
+            .st-key-btn_grid_{q_key}_{day}_{sym} button:hover, .st-key-btn_list_{q_key}_{day}_{sym} button:hover {{
                 border-color: #00F0FF !important;
                 background: {color_bg}30 !important;
                 transform: translateY(-1px) !important;
@@ -661,26 +661,32 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             """
             css_rules.append(rule)
             
-    # Force horizontal scroll on mobile for the grid, preventing vertical collapse
+    # Auto-switch to Flow Layout on mobile
     css_rules.append("""
         @media (max-width: 640px) {
-            .st-key-calendar_grid_container {
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch;
-                padding-bottom: 12px;
+            .st-key-calendar_grid_container { display: none !important; }
+            .st-key-calendar_list_container { display: block !important; }
+
+            /* Force Flow (inline) layout inside day rows */
+            [class*="st-key-mob_day_row_"] > div > div > div > div.element-container {
+                display: inline-block !important;
+                width: auto !important;
+                vertical-align: middle !important;
+                margin-right: 8px !important;
+                margin-bottom: 6px !important;
             }
-            .st-key-calendar_grid_container div[data-testid="stVerticalBlockBorderWrapper"] {
-                min-width: 600px !important;
+            .mobile-day-label {
+                font-size: 15px;
+                font-weight: 800;
+                color: #a5b4fc;
+                margin-right: 6px;
+                display: inline-block;
+                padding-top: 8px;
             }
-            .st-key-calendar_grid_container div[data-testid="stHorizontalBlock"] {
-                flex-direction: row !important;
-                flex-wrap: nowrap !important;
-            }
-            .st-key-calendar_grid_container div[data-testid="column"] {
-                flex: 1 1 0% !important;
-                width: 20% !important;
-                min-width: 100px !important;
-            }
+        }
+        @media (min-width: 641px) {
+            .st-key-calendar_grid_container { display: block !important; }
+            .st-key-calendar_list_container { display: none !important; }
         }
     """)
             
@@ -728,6 +734,12 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 c3.metric("成本" if lang == "zh" else "Vốn", f"{co/sh:,.0f}" if sh > 0 else "—")
                 c4.metric("未實現損益" if lang == "zh" else "LNTT", f"{un:+,.0f}", delta=f"{pp:+.2f}%")
 
+    def render_popover(ev, day, sym):
+        star = " ⭐" if ev.get("is_holding") else ""
+        btn_label = f"{sym}{star}"
+        with st.popover(btn_label, use_container_width=True):
+            render_content(ev, day, sym)
+
     @st.dialog("財報詳情" if lang == "zh" else "Earnings Details")
     def show_details_dialog(ev, day, sym):
         render_content(ev, day, sym)
@@ -748,11 +760,36 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                         if day in q_events:
                             for ev in q_events[day]:
                                 sym = ev["symbol"]
-                                star = " ⭐" if ev.get("is_holding") else ""
-                                btn_label = f"{sym}{star}"
                                 with st.container(key=f"btn_grid_{q_key}_{day}_{sym}"):
-                                    if st.button(btn_label, key=f"btn_trigger_{q_key}_{day}_{sym}", use_container_width=True):
-                                        show_details_dialog(ev, day, sym)
+                                    render_popover(ev, day, sym)
+
+    with st.container(key="calendar_list_container"):
+        day_labels_zh = {"Mon": "週一", "Tue": "週二", "Wed": "週三", "Thu": "週四", "Fri": "週五"}
+        day_names_en = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+        
+        has_any = False
+        st.markdown("<div style='margin-bottom:8px;'></div>", unsafe_allow_html=True)
+        for week in selected_grid:
+            for col_idx, day in enumerate(week):
+                if day is not None and day in q_events:
+                    has_any = True
+                    day_name = day_names_en[col_idx]
+                    day_label = f"{day_labels_zh.get(day_name, day_name)} {day:02d}日" if lang == "zh" else f"{day_name} {day:02d}"
+                    
+                    with st.container(key=f"mob_day_row_{q_key}_{day}"):
+                        st.markdown(f"<div class='mobile-day-label'>{day_label}</div>", unsafe_allow_html=True)
+                        for ev in q_events[day]:
+                            sym = ev["symbol"]
+                            star = " ⭐" if ev.get("is_holding") else ""
+                            btn_label = f"{sym}{star}"
+                            with st.container(key=f"btn_list_{q_key}_{day}_{sym}"):
+                                if st.button(btn_label, key=f"btn_trigger_list_{q_key}_{day}_{sym}"):
+                                    show_details_dialog(ev, day, sym)
+                    
+                    st.markdown("<div style='border-bottom:1px solid rgba(255,255,255,0.08); margin: 6px 0;'></div>", unsafe_allow_html=True)
+        
+        if not has_any:
+            st.info("📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter")
 
     st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
 
