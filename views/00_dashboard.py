@@ -472,33 +472,77 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 break
         date_str = f"{year_month}-{assigned_day:02d}"
         
-        if info is None:
-            # Generate custom dynamic detail for user holdings
-            holding_info_str = ""
-            if not holdings.empty and selected_sym in holdings["symbol"].values:
-                row = holdings[holdings["symbol"] == selected_sym].iloc[0]
-                shares = row["total_shares"]
-                cost = row["total_cost"]
-                unrealized = row["unrealized_pl"]
-                holding_info_str = (
-                    f"您的持股數: {shares:,.0f} 股，持有成本: {cost:,.0f} VND，未實現損益: {unrealized:+,.0f} VND。"
-                    if lang == "zh" else
-                    f"Số lượng sở hữu: {shares:,.0f} CP, Giá vốn: {cost:,.0f} VND, Lợi nhuận tạm tính: {unrealized:+,.0f} VND."
-                )
+        # Check if user holds this stock to show their portfolio stats
+        holding_html = ""
+        is_held = not holdings.empty and selected_sym in holdings["symbol"].values
+        if is_held:
+            row = holdings[holdings["symbol"] == selected_sym].iloc[0]
+            shares = row["total_shares"]
+            cost = row["total_cost"]
+            value = row["market_value"]
+            unrealized = row["unrealized_pl"]
+            avg_cost = cost / shares if shares > 0 else 0
+            cur_price = value / shares if shares > 0 else 0
+            pl_pct = (unrealized / cost) * 100 if cost > 0 else 0.0
             
+            color_pl = "#10B981" if unrealized >= 0 else "#FF007F"
+            
+            title_holding = "📊 您的持倉明細" if lang == "zh" else "📊 Chi tiết vị thế của bạn"
+            label_shares = "持股數量" if lang == "zh" else "Số lượng"
+            label_cost = "平均成本/市價" if lang == "zh" else "Giá vốn/HT"
+            label_value = "持股總值" if lang == "zh" else "Giá trị tài sản"
+            label_pl = "未實現損益" if lang == "zh" else "Lợi nhuận tạm tính"
+            
+            holding_html = f"""
+            <div style="margin-top: 12px; margin-bottom: 12px; border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                <div style="font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 6px;">{title_holding}</div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                    <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
+                        <div style="font-size: 9px; color: #888;">{label_shares}</div>
+                        <div style="font-size: 12px; font-weight: bold; color: #ffffff; margin-top: 2px;">{shares:,.0f}</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
+                        <div style="font-size: 9px; color: #888;">{label_cost}</div>
+                        <div style="font-size: 11px; font-weight: bold; color: #ffffff; margin-top: 2px;">{avg_cost:,.0f}/{cur_price:,.0f}</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
+                        <div style="font-size: 9px; color: #888;">{label_value}</div>
+                        <div style="font-size: 11px; font-weight: bold; color: #ffffff; margin-top: 2px;">{value:,.0f}</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
+                        <div style="font-size: 9px; color: #888;">{label_pl}</div>
+                        <div style="font-size: 11px; font-weight: bold; color: {color_pl}; margin-top: 2px;">{unrealized:+,.0f}<br><span style="font-size:9px;">({pl_pct:+.2f}%)</span></div>
+                    </div>
+                </div>
+            </div>
+            """
+
+        # Construct CafeF external link
+        cafef_url = f"https://s.cafef.vn/hose/{selected_sym}.chn"
+        cafef_label = f"🔍 前往 CafeF 查看 {selected_sym} 官方財報新聞" if lang == "zh" else f"🔍 Xem tin tức BCTC {selected_sym} trên CafeF"
+        
+        cafef_link_html = f"""
+        <div style="margin-top: 10px; text-align: right;">
+            <a href="{cafef_url}" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 11px; font-weight: bold; background: rgba(0, 240, 255, 0.1); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(0, 240, 255, 0.3); display: inline-block;">
+                {cafef_label} ↗
+            </a>
+        </div>
+        """
+
+        if info is None:
             if q_key == "Q1":
                 info = {
                     "type": "您的持股" if lang == "zh" else "Cổ phiếu sở hữu",
-                    "growth_key": "已公布" if lang == "zh" else "Đã công bố",
-                    "growth_val": "請查看明細" if lang == "zh" else "Xem chi tiết",
-                    "desc": f"這是您的投資組合持股 {selected_sym}。Q1 財報已於該日附近公布。{holding_info_str} 建議前往交易明細或新聞專欄查看 Q1 損益與分紅發放決議。" if lang == "zh" else f"Đây là cổ phiếu {selected_sym} của bạn. BCTC Q1 đã được công bố. {holding_info_str} Vui lòng xem chi tiết giao dịch hoặc tin tức để biết thêm chi tiết."
+                    "growth_key": "財報狀態" if lang == "zh" else "BCTC",
+                    "growth_val": "已發布" if lang == "zh" else "Đã công bố",
+                    "desc": f"這是您的投資組合持股 {selected_sym}。Q1 財報已於該日附近公布。以下為您目前的持倉明細。您亦可點選下方外部連結，前往 CafeF 官方網站查看詳細的資產負債表與利潤表。" if lang == "zh" else f"Đây là cổ phiếu {selected_sym} của bạn. BCTC Q1 đã được công bố. Dưới đây là vị thế hiện tại của bạn. Bạn cũng có thể xem BCTC chi tiết trên CafeF."
                 }
             else:
                 info = {
                     "type": "您的持股" if lang == "zh" else "Cổ phiếu sở hữu",
-                    "growth_key": "預期成長" if lang == "zh" else "Tăng trưởng dự kiến",
+                    "growth_key": "預期發布" if lang == "zh" else "Dự kiến",
                     "growth_val": "密切追蹤" if lang == "zh" else "Theo dõi sát",
-                    "desc": f"這是您的投資組合持股。{holding_info_str} 預計於該日附近公布財報，請密切注意損益變化與公司公告。" if lang == "zh" else f"Đây là cổ phiếu trong danh mục của bạn. {holding_info_str} BCTC dự kiến công bố quanh ngày này, hãy theo dõi sát sao."
+                    "desc": f"這是您的投資組合持股 {selected_sym}。預計於該日附近公布財報。請密切注意公司官方公告與損益變化。" if lang == "zh" else f"Đây là cổ phiếu {selected_sym} của bạn. BCTC dự kiến công bố quanh ngày này, hãy theo dõi sát sao."
                 }
         else:
             if q_key == "Q1":
@@ -540,6 +584,8 @@ def show_earnings_calendar(lang="zh", is_empty=False):
 <div style="font-size:13px; color:#cbd5e1; line-height:1.5; margin-top:6px;">
 {info['desc']}
 </div>
+{holding_html}
+{cafef_link_html}
 </div>""", unsafe_allow_html=True)
 
 
