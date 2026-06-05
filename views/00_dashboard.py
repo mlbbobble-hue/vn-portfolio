@@ -627,7 +627,8 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             favicon_url = get_favicon_url(sym)
             
             rule = f"""
-            .st-key-btn_grid_{q_key}_{day}_{sym} button, .st-key-btn_list_{q_key}_{day}_{sym} button {{
+            /* DESKTOP GRID BUTTON */
+            .st-key-btn_grid_{q_key}_{day}_{sym} button {{
                 width: 100% !important;
                 background: {color_bg}18 !important;
                 border: 1px solid {color_bg}55 !important;
@@ -645,18 +646,63 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 background-position: 12px center !important;
                 background-size: 18px 18px !important;
                 border-radius: 8px !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: flex-start !important;
-                text-align: left !important;
                 transition: all 0.2s ease-in-out !important;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
             }}
-            .st-key-btn_grid_{q_key}_{day}_{sym} button:hover, .st-key-btn_list_{q_key}_{day}_{sym} button:hover {{
+            .st-key-btn_grid_{q_key}_{day}_{sym} button div[data-testid="stMarkdownContainer"] {{
+                width: 100% !important;
+            }}
+            .st-key-btn_grid_{q_key}_{day}_{sym} button p {{
+                text-align: left !important;
+                margin: 0 !important;
+            }}
+            .st-key-btn_grid_{q_key}_{day}_{sym} button:hover {{
                 border-color: #00F0FF !important;
                 background: {color_bg}30 !important;
                 transform: translateY(-1px) !important;
                 box-shadow: 0 4px 10px rgba(0, 240, 255, 0.2) !important;
+            }}
+
+            /* MOBILE LIST BUTTON (Native iOS Style) */
+            .st-key-btn_list_{q_key}_{day}_{sym} button {{
+                width: 100% !important;
+                background: transparent !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+                color: #ffffff !important;
+                padding-left: 52px !important;
+                padding-right: 16px !important;
+                min-height: 56px !important;
+                height: 56px !important;
+                background-image: url("{favicon_url}") !important;
+                background-repeat: no-repeat !important;
+                background-position: 16px center !important;
+                background-size: 24px 24px !important;
+                border-radius: 0 !important;
+                position: relative !important;
+            }}
+            .st-key-btn_list_{q_key}_{day}_{sym} button div[data-testid="stMarkdownContainer"] {{
+                width: 100% !important;
+            }}
+            .st-key-btn_list_{q_key}_{day}_{sym} button p {{
+                text-align: left !important;
+                font-size: 16px !important;
+                font-weight: 600 !important;
+                margin: 0 !important;
+                letter-spacing: 0.5px !important;
+            }}
+            .st-key-btn_list_{q_key}_{day}_{sym} button::after {{
+                content: "›" !important;
+                position: absolute !important;
+                right: 16px !important;
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+                font-size: 24px !important;
+                color: #64748b !important;
+                font-family: sans-serif !important;
+            }}
+            .st-key-btn_list_{q_key}_{day}_{sym} button:hover, .st-key-btn_list_{q_key}_{day}_{sym} button:active {{
+                background: rgba(255,255,255,0.04) !important;
             }}
             """
             css_rules.append(rule)
@@ -666,6 +712,23 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         @media (max-width: 640px) {
             .st-key-calendar_grid_container { display: none !important; }
             .st-key-calendar_list_container { display: block !important; }
+
+            /* Style the native card grouping */
+            [class*="st-key-mob_day_group_"] {
+                background: rgba(255, 255, 255, 0.03);
+                border-radius: 12px;
+                margin-top: 8px;
+                margin-bottom: 20px;
+                overflow: hidden;
+                border: 1px solid rgba(255,255,255,0.05);
+            }
+            [class*="st-key-mob_day_group_"] > div[data-testid="stVerticalBlock"] {
+                gap: 0 !important;
+            }
+            /* Remove bottom border from last item in group */
+            [class*="st-key-mob_day_group_"] > div > div:last-child button {
+                border-bottom: none !important;
+            }
         }
         @media (min-width: 641px) {
             .st-key-calendar_grid_container { display: block !important; }
@@ -760,14 +823,15 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                         day_name = day_names_en[col_idx]
                         day_label = f"{day_labels_zh.get(day_name, day_name)} {day:02d}日" if lang == "zh" else f"{day_name} {day:02d}"
                         
-                        st.markdown(f"<div style='font-size:14px;font-weight:800;color:#a5b4fc;margin-top:12px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:4px;'>{day_label}</div>", unsafe_allow_html=True)
-                        for ev in q_events[day]:
-                            sym = ev["symbol"]
-                            star = " ⭐" if ev.get("is_holding") else ""
-                            btn_label = f"{sym}{star}"
-                            with st.container(key=f"btn_list_{q_key}_{day}_{sym}"):
-                                if st.button(btn_label, key=f"btn_trigger_list_{q_key}_{day}_{sym}", use_container_width=True):
-                                    show_details_dialog(ev, day, sym)
+                        st.markdown(f"<div style='font-size:15px;font-weight:800;color:#a5b4fc;margin-top:16px;margin-bottom:0px;padding-left:12px;'>{day_label}</div>", unsafe_allow_html=True)
+                        with st.container(key=f"mob_day_group_{q_key}_{day}"):
+                            for ev in q_events[day]:
+                                sym = ev["symbol"]
+                                star = " ⭐" if ev.get("is_holding") else ""
+                                btn_label = f"{sym}{star}"
+                                with st.container(key=f"btn_list_{q_key}_{day}_{sym}"):
+                                    if st.button(btn_label, key=f"btn_trigger_list_{q_key}_{day}_{sym}", use_container_width=True):
+                                        show_details_dialog(ev, day, sym)
             
             if not has_any:
                 st.info("📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter")
