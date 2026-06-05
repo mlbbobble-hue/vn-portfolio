@@ -839,17 +839,16 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                     favicon_url = get_favicon_url(sym)
                     star = " ⭐" if ev.get("is_holding") else ""
                     det_id = f"det-{q_key}-{day}-{sym}"
-                    tags_html += f"""<div onclick="toggleDetail('{det_id}', this)"
+                    tags_html += f"""<div class="mobile-stock-tag" data-target="{det_id}"
                         style="display:inline-flex;align-items:center;gap:6px;
                                background:{color}18;border:1px solid {color}55;
                                border-radius:10px;padding:8px 14px;margin:3px 6px 3px 0;
                                font-size:14px;font-weight:700;color:#fff;
-                               cursor:pointer;-webkit-tap-highlight-color:transparent;"
-                        ontouchstart="this.style.opacity='0.7'"
-                        ontouchend="this.style.opacity='1'">
-                        <img src="{favicon_url}" style="width:18px;height:18px;border-radius:4px;">
-                        <span>{sym}{star}</span>
-                        <span class="arrow-{det_id}" style="font-size:11px;color:{color};transition:transform .2s;">▼</span>
+                               cursor:pointer;-webkit-tap-highlight-color:transparent;
+                               transition:opacity .2s, transform .1s;">
+                        <img src="{favicon_url}" style="width:18px;height:18px;border-radius:4px;pointer-events:none;">
+                        <span style="pointer-events:none;">{sym}{star}</span>
+                        <span class="arrow-{det_id}" style="font-size:11px;color:{color};transition:transform .2s;pointer-events:none;">▼</span>
                     </div>"""
                     detail_html += f'<div id="{det_id}" style="display:none;">{build_inline_detail(sym, day, ev)}</div>'
                 days_html += f"""<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
@@ -879,28 +878,39 @@ def show_earnings_calendar(lang="zh", is_empty=False):
 @keyframes fadeIn {{ from {{ opacity:0; transform:translateY(-4px); }} to {{ opacity:1; transform:translateY(0); }} }}
 @media (min-width: 641px) {{ .cal-mobile {{ display:none !important; }} }}
 * {{ box-sizing:border-box; }}
+.mobile-stock-tag:active {{ opacity: 0.6; transform: scale(0.96); }}
 </style>
 <div class="cal-mobile" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#f1f5f9;padding:2px;">
   <div style="font-size:11px;color:#64748b;text-align:center;margin-bottom:12px;">⬇ {tap_hint}</div>
   {mobile_weeks_html}
 </div>
 <script>
-function toggleDetail(id, btn) {{
-  var el = document.getElementById(id);
-  if (!el) return;
-  var open = el.style.display !== 'none';
-  // Close all others first
-  document.querySelectorAll('[id^="det-"]').forEach(function(d) {{
-    d.style.display = 'none';
+// Use event delegation to handle clicks even if elements mount later
+var container = document.querySelector('.cal-mobile');
+if (container) {{
+  container.addEventListener('click', function(e) {{
+    var tag = e.target.closest('.mobile-stock-tag');
+    if (!tag) return;
+    var id = tag.getAttribute('data-target');
+    var el = document.getElementById(id);
+    if (!el) return;
+    
+    var open = el.style.display !== 'none';
+    
+    // Close all others first
+    document.querySelectorAll('[id^="det-"]').forEach(function(d) {{
+      d.style.display = 'none';
+    }});
+    document.querySelectorAll('[class^="arrow-"]').forEach(function(a) {{
+      a.style.transform = '';
+    }});
+    
+    if (!open) {{
+      el.style.display = 'block';
+      var arrow = tag.querySelector('.arrow-' + id);
+      if (arrow) arrow.style.transform = 'rotate(180deg)';
+    }}
   }});
-  document.querySelectorAll('[class^="arrow-"]').forEach(function(a) {{
-    a.style.transform = '';
-  }});
-  if (!open) {{
-    el.style.display = 'block';
-    var arrow = document.querySelector('.arrow-' + id);
-    if (arrow) arrow.style.transform = 'rotate(180deg)';
-  }}
 }}
 </script>
 """)
