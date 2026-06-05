@@ -501,7 +501,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
     selected_grid, title_str = grid_map.get(q_key, (grid_q2, ""))
     
     # 2. Render Calendar Grid in Python using st.columns
-    st.markdown(f"<h5 style='margin-bottom: 12px; color: #ffffff;'>{title_str}</h5>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='margin-top: 10px; margin-bottom: 18px; color: #ffffff; font-size: 20px; font-weight: bold;'>{title_str}</h3>", unsafe_allow_html=True)
     
     # CSS injection for columns and buttons
     css_rules = [
@@ -510,8 +510,8 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             background: rgba(30, 41, 59, 0.45) !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
             border-radius: 10px !important;
-            min-height: 105px !important;
-            padding: 8px !important;
+            min-height: 145px !important;
+            padding: 12px !important;
             transition: all 0.25s ease-in-out !important;
             display: flex !important;
             flex-direction: column !important;
@@ -526,15 +526,15 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         .st-key-calendar_grid_container .stButton {
             display: block !important;
             width: 100% !important;
-            margin-top: 3px !important;
-            margin-bottom: 3px !important;
+            margin-top: 4px !important;
+            margin-bottom: 4px !important;
         }
         .calendar-header-cell {
             text-align: center;
             font-weight: 700;
             color: #f1f5f9;
-            font-size: 11px;
-            padding: 8px 0;
+            font-size: 15px;
+            padding: 12px 0;
             background: rgba(30, 41, 59, 0.7);
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -543,7 +543,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             box-shadow: 0 2px 4px rgba(0,0,0,0.15);
         }
         .calendar-day-num {
-            font-size: 11px;
+            font-size: 15px;
             color: #94a3b8;
             font-weight: 800;
             margin-bottom: 8px;
@@ -582,18 +582,18 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 background: {color_bg}18 !important;
                 border: 1px solid {color_bg}55 !important;
                 color: #ffffff !important;
-                padding-left: 28px !important;
+                padding-left: 38px !important;
                 padding-right: 8px !important;
-                padding-top: 5px !important;
-                padding-bottom: 5px !important;
-                min-height: 30px !important;
-                height: 30px !important;
-                font-size: 11px !important;
+                padding-top: 6px !important;
+                padding-bottom: 6px !important;
+                min-height: 36px !important;
+                height: 36px !important;
+                font-size: 14px !important;
                 font-weight: bold !important;
                 background-image: url("{favicon_url}") !important;
                 background-repeat: no-repeat !important;
-                background-position: 8px center !important;
-                background-size: 14px 14px !important;
+                background-position: 12px center !important;
+                background-size: 18px 18px !important;
                 border-radius: 8px !important;
                 display: flex !important;
                 align-items: center !important;
@@ -844,73 +844,71 @@ if not holdings.empty and not is_loading_prices:
     
 
     
-    # 2. 雙欄式版面配置 (2-Column Split Layout)
-    col_left, col_right = st.columns([7, 5], gap="large")
+    held_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
     
-    with col_left:
-        # 財報預告時間表 (Earnings Calendar Section)
-        show_earnings_calendar(lang, is_empty=False)
+    # 1. 🔍 手動新增其他追蹤股票 (Watchlist Manager)
+    render_watchlist_manager(lang, held_symbols)
+    
+    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+    
+    # 2. 財報預告時間表 (Earnings Calendar Section)
+    show_earnings_calendar(lang, is_empty=False)
+    
+    st.markdown("<div style='margin-bottom: 35px;'></div>", unsafe_allow_html=True)
+    
+    # 3. 今日最新持股動態 (News Section)
+    news_title = "今日最新持股動態" if lang == "zh" else "Tin tức mới nhất về cổ phiếu"
+    st.markdown(f"<h3 style='margin-left: 8px; margin-bottom: 20px; font-size: 22px; font-weight: bold; color: #ffffff;'>📰 {news_title}</h3>", unsafe_allow_html=True)
+    
+    from news_utils import fetch_all_news_parallel
+    
+    with st.spinner("Fetching latest news..." if lang == "zh" else "Đang tải tin tức..."):
+        all_news = fetch_all_news_parallel(held_symbols, lang=lang, limit=2)
         
-    with col_right:
-        # 🔍 手動新增其他追蹤股票 (Watchlist Manager)
-        held_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
-        render_watchlist_manager(lang, held_symbols)
-        
-        st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
-        
-        # 今日最新持股動態 (News Section)
-        news_title = "今日最新持股動態" if lang == "zh" else "Tin tức mới nhất về cổ phiếu"
-        st.markdown(f"<h4 style='margin-left: 8px; margin-bottom: 16px;'>📰 {news_title}</h4>", unsafe_allow_html=True)
-        
-        from news_utils import fetch_all_news_parallel
-        
-        with st.spinner("Fetching latest news..." if lang == "zh" else "Đang tải tin tức..."):
-            all_news = fetch_all_news_parallel(held_symbols, lang=lang, limit=2)
-            
-        if not all_news:
-            search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"
-            st.html(clean_html(f"""
-            <div class="empty-state" style="padding: 24px; border: 1px dashed var(--border-color); text-align: center; border-radius: 12px; background: var(--bg-card);">
-                <div style="font-size: 32px; margin-bottom: 8px;">📰</div>
-                <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5; margin-bottom: 16px;">
-                    {"今日無相關新聞" if lang == "zh" else "Không có tin tức nào hôm nay"}
-                </div>
-                <a href="https://s.cafef.vn/tim-kiem.chn" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 12px; font-weight: bold; background: rgba(0, 240, 255, 0.08); padding: 6px 16px; border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.25); display: inline-block;">
-                    🔍 {search_txt}
-                </a>
+    if not all_news:
+        search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"
+        st.html(clean_html(f"""
+        <div class="empty-state" style="padding: 30px; border: 1px dashed var(--border-color); text-align: center; border-radius: 12px; background: var(--bg-card);">
+            <div style="font-size: 36px; margin-bottom: 10px;">📰</div>
+            <div style="font-size: 15px; color: #cbd5e1; line-height: 1.5; margin-bottom: 18px;">
+                {"今日無相關新聞" if lang == "zh" else "Không có tin tức nào hôm nay"}
             </div>
-            """))
-        else:
-            # Sort news by parsing the RFC 2822 date string to ensure chronological order
-            import email.utils
-            from datetime import datetime, timezone
-            def _parse_pubdate(dstr):
-                try:
-                    return email.utils.parsedate_to_datetime(dstr)
-                except:
-                    return datetime.now(timezone.utc)
-            all_news.sort(key=lambda x: _parse_pubdate(x.get("pubDate", "")), reverse=True)
-            
-            with st.container(height=480):
-                for item in all_news:
-                    is_held = item['symbol'] in held_symbols
-                    badge_class = "news-badge held" if is_held else "news-badge"
-                    favicon_url = get_favicon_url(item['symbol'])
-                    
-                    news_card_html = f"""
-                    <div class="news-card">
-                        <div class="{badge_class}">
-                            <img src="{favicon_url}" style="width: 12px; height: 12px; border-radius: 3px;">
-                            <span>{item['symbol']}</span>
-                        </div>
-                        <div style="flex-grow: 1;">
-                            <a href="{item['link']}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14.5px; display: block; margin-bottom: 6px; line-height: 1.4; transition: all 0.2s;" onmouseover="this.style.color='#00F0FF'" onmouseout="this.style.color='#ffffff'">
-                                {item['title']}
-                            </a>
-                            <div style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
-                                <span>🕒 {item['pubDate'][:16]}</span>
-                            </div>
+            <a href="https://s.cafef.vn/tim-kiem.chn" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 13.5px; font-weight: bold; background: rgba(0, 240, 255, 0.08); padding: 8px 20px; border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.25); display: inline-block;">
+                🔍 {search_txt}
+            </a>
+        </div>
+        """))
+    else:
+        # Sort news by parsing the RFC 2822 date string to ensure chronological order
+        import email.utils
+        from datetime import datetime, timezone
+        def _parse_pubdate(dstr):
+            try:
+                return email.utils.parsedate_to_datetime(dstr)
+            except:
+                return datetime.now(timezone.utc)
+        all_news.sort(key=lambda x: _parse_pubdate(x.get("pubDate", "")), reverse=True)
+        
+        with st.container(height=520):
+            for item in all_news:
+                is_held = item['symbol'] in held_symbols
+                badge_class = "news-badge held" if is_held else "news-badge"
+                favicon_url = get_favicon_url(item['symbol'])
+                
+                news_card_html = f"""
+                <div class="news-card">
+                    <div class="{badge_class}">
+                        <img src="{favicon_url}" style="width: 15px; height: 15px; border-radius: 3px;">
+                        <span>{item['symbol']}</span>
+                    </div>
+                    <div style="flex-grow: 1;">
+                        <a href="{item['link']}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; display: block; margin-bottom: 6px; line-height: 1.4; transition: all 0.2s;" onmouseover="this.style.color='#00F0FF'" onmouseout="this.style.color='#ffffff'">
+                            {item['title']}
+                        </a>
+                        <div style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                            <span>🕒 {item['pubDate'][:16]}</span>
                         </div>
                     </div>
-                    """
-                    st.html(clean_html(news_card_html))
+                </div>
+                """
+                st.html(clean_html(news_card_html))
