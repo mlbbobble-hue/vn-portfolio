@@ -166,21 +166,26 @@ def show_earnings_calendar(lang="zh", is_empty=False):
     margin-bottom: 2px;
 }
 .calendar-stock-tag {
-    border-radius: 4px;
-    padding: 2px 5px;
-    font-size: 9px;
-    font-weight: bold;
-    text-align: center;
-    margin-top: 2px;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    transition: all 0.15s ease-in-out;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
     text-decoration: none !important;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    margin-top: 2px;
 }
 .calendar-stock-tag:hover {
-    transform: scale(1.05);
+    transform: translateY(-1px);
+    border-color: #00F0FF !important;
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+}
+.calendar-tag-text {
+    font-size: 11px;
+    font-weight: bold;
+    color: #ffffff;
+    vertical-align: middle;
 }
 </style>""", unsafe_allow_html=True)
 
@@ -296,18 +301,20 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                     html.append('<div class="calendar-day-cell">')
                     html.append(f'<div class="calendar-day-num">{day:02d}</div>')
                     if day in events_map:
-                        html.append('<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px;">')
+                        html.append('<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">')
                         for ev in events_map[day]:
                             color_bg = ev["color"]
                             prefix = "⭐ " if ev.get("is_holding") else ""
                             tooltip = f"{prefix}{ev['symbol']}"
-                            img_style = f"width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border-color); padding: 1px; background: rgba(255,255,255,0.08); transition: all 0.15s ease-in-out; vertical-align: middle; cursor: pointer;"
-                            span_id = f"fallback_{q_key}_{day}_{ev['symbol']}"
-                            span_style = f"display: none; font-size: 9px; font-weight: bold; color: {color_bg}; background: {color_bg}22; border: 1px solid {color_bg}88; padding: 1px 3px; border-radius: 4px;"
                             
-                            html.append(f'<a href="?select_stock={ev["symbol"]}&q_tab={q_key}" target="_parent" style="text-decoration: none;" title="{tooltip}">')
-                            html.append(f'<img src="{get_favicon_url(ev["symbol"])}" style="{img_style}" onmouseover="this.style.transform=\'scale(1.15)\'; this.style.borderColor=\'#00F0FF\';" onmouseout="this.style.transform=\'scale(1)\'; this.style.borderColor=\'var(--border-color)\';" onerror="this.style.display=\'none\'; document.getElementById(\'{span_id}\').style.display=\'inline-block\';">')
-                            html.append(f'<span id="{span_id}" style="{span_style}">{prefix}{ev["symbol"]}</span>')
+                            border_color = f"{color_bg}55"
+                            bg_style = f"background: {color_bg}15; border: 1px solid {border_color};"
+                            
+                            img_style = f"width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.08); flex-shrink: 0;"
+                            
+                            html.append(f'<a href="?select_stock={ev["symbol"]}&q_tab={q_key}" target="_self" class="calendar-stock-tag" style="{bg_style}" title="{tooltip}">')
+                            html.append(f'<img src="{get_favicon_url(ev["symbol"])}" style="{img_style}" onerror="this.style.display=\'none\';">')
+                            html.append(f'<span class="calendar-tag-text">{prefix}{ev["symbol"]}</span>')
                             html.append('</a>')
                         html.append('</div>')
                     html.append('</div>')
