@@ -556,6 +556,24 @@ def show_earnings_calendar(lang="zh", is_empty=False):
     # CSS injection for columns and buttons
     css_rules = [
         """
+        /* === FORCE CALENDAR HORIZONTAL ON MOBILE (override Streamlit stacking) === */
+        .st-key-calendar_grid_container {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        .st-key-calendar_grid_container [data-testid="stHorizontalBlock"] {
+            flex-wrap: nowrap !important;
+            flex-direction: row !important;
+            min-width: 560px !important;
+            gap: 6px !important;
+        }
+        .st-key-calendar_grid_container [data-testid="column"] {
+            min-width: 100px !important;
+            flex: 1 0 100px !important;
+            width: 100px !important;
+        }
+        /* ======================================================================= */
+        
         .st-key-calendar_grid_container div[data-testid="column"]:has(.calendar-day-num) {
             background: rgba(20, 30, 50, 0.65) !important;
             border: 1px solid rgba(255, 255, 255, 0.18) !important;
