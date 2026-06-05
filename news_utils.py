@@ -24,13 +24,28 @@ def _fetch_and_translate_single(symbol, lang="zh", limit=2):
         if not feed.entries:
             return []
             
-        for item in feed.entries[:limit]:
+        import email.utils
+        from datetime import datetime, timezone, timedelta
+        vn_tz = timezone(timedelta(hours=7))
+        today_date = datetime.now(vn_tz).date()
+            
+        valid_count = 0
+        for item in feed.entries:
             title = getattr(item, 'title', '')
             link = getattr(item, 'link', '')
             pub_date = getattr(item, 'published', '')
             
-            if not title:
+            if not title or not pub_date:
                 continue
+                
+            # Strictly filter for TODAY's news only
+            try:
+                parsed_dt = email.utils.parsedate_to_datetime(pub_date)
+                news_date = parsed_dt.astimezone(vn_tz).date()
+                if news_date != today_date:
+                    continue
+            except Exception:
+                continue # Skip if date cannot be parsed
                 
             try:
                 # Only translate if language is zh
@@ -51,6 +66,10 @@ def _fetch_and_translate_single(symbol, lang="zh", limit=2):
                     "pubDate": pub_date,
                     "original_title": title
                 })
+            
+            valid_count += 1
+            if valid_count >= limit:
+                break
                 
         return news_list
     except Exception as e:
