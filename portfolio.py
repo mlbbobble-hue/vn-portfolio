@@ -199,24 +199,34 @@ def compute_portfolio_with_prices(holdings: pd.DataFrame = None,
 def get_dividend_income_summary(holdings_symbols: list[str]) -> pd.DataFrame:
     """
     計算各股票預估年度現金股利收入
-    基於過去的配息記錄推算
+    基於過去的配息記錄推算 (採用最新除息日往前推 365 天的滾動加總，避免重複加總歷年配息)
     """
     all_divs = get_dividend_events()
     if all_divs.empty:
         return pd.DataFrame()
 
     holdings = compute_holdings()
-    if holdings.empty:
-        return pd.DataFrame()
-
-    shares_map = holdings.set_index("symbol")["total_shares"].to_dict()
+    shares_map = {}
+    if not holdings.empty:
+        shares_map = holdings.set_index("symbol")["total_shares"].to_dict()
 
     rows = []
     for sym in holdings_symbols:
         sym_divs = all_divs[
             (all_divs["symbol"] == sym) & (all_divs["type"] == "CASH")
-        ]
-        annual_cash = sym_divs["cash_amount"].sum()
+        ].copy()
+        
+        annual_cash = 0.0
+        if not sym_divs.empty:
+            sym_divs["ex_date_dt"] = pd.to_datetime(sym_divs["ex_date"], errors="coerce")
+            sym_divs = sym_divs.dropna(subset=["ex_date_dt"])
+            
+            if not sym_divs.empty:
+                latest_ex_date = sym_divs["ex_date_dt"].max()
+                cutoff_date = latest_ex_date - pd.Timedelta(days=365)
+                rolling_divs = sym_divs[sym_divs["ex_date_dt"] > cutoff_date]
+                annual_cash = rolling_divs["cash_amount"].sum()
+                
         my_shares   = shares_map.get(sym, 0)
         est_income  = annual_cash * my_shares
         rows.append({

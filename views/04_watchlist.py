@@ -91,42 +91,120 @@ with tab_wl:
                     st.markdown(f"<div style='font-size:14px;color:#D8B4E2;'>目前市價: {cur_price:,.0f}</div>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
                     
-        st.markdown("<br>", unsafe_allow_html=True)
+        wl_items = []
         for _, item in wl.iterrows():
             sym = item["symbol"]
-            cur_price = price_map.get(sym,{}).get("price",0)
-            change    = price_map.get(sym,{}).get("change_pct",0)
-            target    = item.get("target_price") or 0
-            enabled   = bool(item.get("alert_enabled",1))
-            dist_str  = ""; dist_color = "#D8B4E2"
+            cur_price = price_map.get(sym, {}).get("price", 0)
+            change = price_map.get(sym, {}).get("change_pct", 0)
+            target = item.get("target_price") or 0
+            enabled = bool(item.get("alert_enabled", 1))
+            
+            # Distance calculations
+            dp = 999999.0
+            dist_str = ""
+            dist_color = "#D8B4E2"
             if target > 0 and cur_price > 0:
-                dp = (cur_price-target)/target*100
+                dp = (cur_price - target) / target * 100
                 dist_str = t("dist_to_target", pct=dp)
-                dist_color = "#FF2A85" if dp<=2 else "#9D4EDD" if dp<=10 else "#D8B4E2"
+                dist_color = "#FF2A85" if dp <= 2 else "#9D4EDD" if dp <= 10 else "#D8B4E2"
+                
+            # Yield calculations
             annual_dps = dps_map.get(sym, 0)
+            est_yield = 0.0
             ey_str = ""
             if annual_dps > 0 and cur_price > 0:
-                ey_str = f"　{t('est_yield_label', y=get_estimated_yield(sym, cur_price, annual_dps))}"
+                est_yield = (annual_dps / cur_price) * 100
+                ey_str = f"{t('est_yield_label', y=est_yield)}"
+                
             price_str = f"{cur_price:,.0f} {t('vnd')}" if cur_price > 0 else "─"
-            cc = "#FF2A85" if change>0 else "#FF007F" if change<0 else "#D8B4E2"
-            cs = "▲" if change>0 else "▼" if change<0 else "─"
+            cc = "#FF2A85" if change > 0 else "#FF007F" if change < 0 else "#D8B4E2"
+            cs = "▲" if change > 0 else "▼" if change < 0 else "─"
+            
             badges = []
-            if target > 0: badges.append(t("target_price_label", p=target))
-            if item.get("ma60_alert"): badges.append(t("ma60_alert"))
+            if target > 0:
+                badges.append(t("target_price_label", p=target))
+            if item.get("ma60_alert"):
+                badges.append(t("ma60_alert"))
             thresh = item.get("yield_threshold")
-            if thresh: badges.append(t("yield_threshold", pct=thresh*100))
+            if thresh:
+                badges.append(t("yield_threshold", pct=thresh * 100))
+                
             badge_str = "　".join(badges) if badges else t("no_alert")
+            
+            wl_items.append({
+                "item": item,
+                "symbol": sym,
+                "cur_price": cur_price,
+                "change": change,
+                "target": target,
+                "enabled": enabled,
+                "dist_pct": dp,
+                "dist_str": dist_str,
+                "dist_color": dist_color,
+                "est_yield": est_yield,
+                "ey_str": ey_str,
+                "price_str": price_str,
+                "cc": cc,
+                "cs": cs,
+                "badge_str": badge_str
+            })
+            
+        # Add sorting selectbox
+        lang = st.session_state.get("lang", "zh")
+        sort_by_label_yield = "預估殖利率 (由高到低)" if lang == "zh" else "Tỷ suất cổ tức (Cao -> Thấp)"
+        sort_by_label_dist = "距離目標價 (由近到遠)" if lang == "zh" else "Khoảng cách mục tiêu (Gần -> Xa)"
+        sort_by_label_alpha = "股票代號 (字母排序)" if lang == "zh" else "Mã CK (A -> Z)"
+        
+        sort_options = {
+            sort_by_label_yield: lambda x: -x["est_yield"],
+            sort_by_label_dist: lambda x: x["dist_pct"],
+            sort_by_label_alpha: lambda x: x["symbol"],
+        }
+        
+        # We replace the static subheader with a row containing count & sorting selectbox
+        # To make it clean, we will render it below the gauge charts
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_title, col_sort = st.columns([2, 1])
+        with col_title:
+            st.subheader(t("watching_count", n=len(wl)))
+        with col_sort:
+            selected_sort = st.selectbox(
+                "排序方式" if lang == "zh" else "Sắp xếp theo",
+                options=list(sort_options.keys()),
+                key="wl_sort_by"
+            )
+            
+        # Sort items
+        wl_items.sort(key=sort_options[selected_sort])
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        for w in wl_items:
+            # Highlight high yield (>= 5% in green)
+            yield_badge = ""
+            if w["est_yield"] > 0:
+                bg_color = "rgba(16, 185, 129, 0.15)" if w["est_yield"] >= 5.0 else "rgba(255, 255, 255, 0.05)"
+                border_color = "rgba(16, 185, 129, 0.4)" if w["est_yield"] >= 5.0 else "rgba(255, 255, 255, 0.1)"
+                text_color = "#34d399" if w["est_yield"] >= 5.0 else "#cbd5e1"
+                
+                # Create a small high yield tag
+                yield_badge = f"""
+                <span style="background: {bg_color}; border: 1px solid {border_color}; color: {text_color}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 10px; display: inline-block; vertical-align: middle;">
+                    💎 {w['ey_str']}
+                </span>
+                """
+                
             st.markdown(f"""
-            <div style='class="card" style="padding:14px 18px;margin:6px 0;">
+            <div class="cathay-card" style="padding:14px 18px;margin:6px 0; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
                 <div style='display:flex;justify-content:space-between;align-items:center;'>
                     <div>
-                        {"🟢" if enabled else "⚫"} <b style='color:var(--text-primary);font-size:1.05rem;'>{sym}</b>
-                        <span style='color:var(--text-secondary);margin-left:12px;'>{price_str}</span>
-                        <span style='color:{cc};margin-left:8px;'>{cs} {abs(change):.2f}%</span>
+                        {"🟢" if w['enabled'] else "⚫"} <b style='color:var(--text-primary);font-size:1.05rem;vertical-align:middle;'>{w['symbol']}</b>
+                        {yield_badge}
+                        <span style='color:var(--text-secondary);margin-left:12px;vertical-align:middle;'>{w['price_str']}</span>
+                        <span style='color:{w['cc']};margin-left:8px;vertical-align:middle;'>{w['cs']} {abs(w['change']):.2f}%</span>
                     </div>
-                    <div style='color:{dist_color};font-size:.9rem;'>{dist_str}</div>
+                    <div style='color:{w['dist_color']};font-size:.9rem;'>{w['dist_str']}</div>
                 </div>
-                <div style='color:#64748b;font-size:.82rem;margin-top:6px;'>{badge_str}{ey_str}</div>
+                <div style='color:#64748b;font-size:.82rem;margin-top:6px;'>{w['badge_str']}</div>
             </div>""", unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
