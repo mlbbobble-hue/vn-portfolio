@@ -406,6 +406,11 @@ def sb_load_imap_settings(user_id: str) -> dict:
     res = _table("notification_settings").select("key,value").eq("user_id", user_id).in_("key", ["imap_email", "imap_password", "broker_name"]).execute()
     return {r["key"]: r["value"] for r in (res.data or [])}
 
+def sb_get_all_imap_users() -> list:
+    """撈取所有有設定 imap_email 的 user_id"""
+    res = _table("notification_settings").select("user_id").eq("key", "imap_email").execute()
+    return list(set([r["user_id"] for r in (res.data or [])]))
+
 
 def sb_save_notification_settings(user_id: str, telegram_token: str,
                                    telegram_chat_id: str, line_token: str):
