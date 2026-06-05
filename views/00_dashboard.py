@@ -400,20 +400,8 @@ def show_earnings_calendar(lang="zh", is_empty=False):
     quarter_symbols = sorted(list(set(quarter_symbols)))
     
     if quarter_symbols:
-        col_sel, col_det = st.columns([1.5, 2.5])
-        
-        # Calculate select index if query param matches
-        default_sel_idx = 0
-        if selected_stock_param in quarter_symbols:
-            default_sel_idx = quarter_symbols.index(selected_stock_param)
-            
-        with col_sel:
-            selected_sym = st.selectbox(
-                "🔍 選擇標的查看財報詳情" if lang == "zh" else "🔍 Chọn mã xem chi tiết BCTC",
-                options=quarter_symbols,
-                index=default_sel_idx,
-                key=f"earnings_select_box_{q_key}_{'empty' if is_empty else 'full'}"
-            )
+        # Determine the selected symbol from query parameter, fallback to the first one in the list
+        selected_sym = selected_stock_param if selected_stock_param in quarter_symbols else quarter_symbols[0]
             
         # Check if custom detail or base detail
         if q_key == "Q1":
@@ -483,8 +471,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         if lang != "zh":
             date_label = "Ngày công bố" if q_key == "Q1" else "Dự kiến công bố"
             
-        with col_det:
-            st.markdown(f"""<div class="cathay-card" style="background: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
+        st.markdown(f"""<div class="cathay-card" style="background: var(--bg-card); padding: 14px 18px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
 {badge_html}
 <span style="font-size:11px; color:#cbd5e1; background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:10px;">{info['type']}</span>
@@ -497,7 +484,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
 🚀 {info['growth_key']}: {info['growth_val']}
 </span>
 </div>
-<div style="font-size:12px; color:#cbd5e1; line-height:1.4; margin-top:4px;">
+<div style="font-size:13px; color:#cbd5e1; line-height:1.5; margin-top:6px;">
 {info['desc']}
 </div>
 </div>""", unsafe_allow_html=True)
