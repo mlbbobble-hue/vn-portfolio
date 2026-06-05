@@ -16,15 +16,142 @@ from portfolio import compute_portfolio_with_prices, get_total_realized_pl, comp
 from db_router import get_price_cache
 from config import PRICE_REFRESH_SECONDS
 
-st.markdown("""
+domain_map = {
+    "FPT": "fpt.com.vn",
+    "SCS": "saigoncargo.com",
+    "VEA": "veam.com.vn",
+    "TCB": "techcombank.com",
+    "ACB": "acb.com.vn",
+    "HPG": "hoaphat.com.vn",
+    "MBB": "mbbank.com.vn",
+    "BMP": "binhminhplastic.com.vn",
+    "VHC": "vinhhoan.com",
+    "QNS": "qns.com.vn",
+    "VNM": "vinamilk.com.vn",
+    "MWG": "thegioididong.com",
+    "FRT": "fptretail.com.vn"
+}
+
+def get_favicon_url(symbol):
+    custom_domains = {
+        "VCB": "vietcombank.com.vn",
+        "OCB": "ocb.com.vn",
+        "VND": "vndirect.com.vn",
+        "SSI": "ssi.com.vn",
+        "VPB": "vpbank.com.vn",
+        "HDB": "hdbank.com.vn",
+        "VRE": "vincom.com.vn",
+        "VIC": "vingroup.net",
+        "VHM": "vinhomes.vn",
+        "GAS": "pvgas.com.vn",
+        "PLX": "petrolimex.com.vn",
+        "POW": "pvpower.vn",
+        "SAB": "sabeco.com.vn",
+        "VJC": "vietjetair.com",
+        "SHB": "shb.com.vn",
+        "STB": "sacombank.com.vn",
+        "TPB": "tpb.vn",
+        "VIB": "vib.com.vn",
+        "GVR": "vrg.com.vn",
+        "BCM": "becamex.com.vn"
+    }
+    domain = domain_map.get(symbol) or custom_domains.get(symbol) or f"{symbol.lower()}.com.vn"
+    return f"https://www.google.com/s2/favicons?sz=64&domain={domain}"
+
+def clean_html(html_str: str) -> str:
+    return "\n".join(line.strip() for line in html_str.split("\n") if line.strip())
+
+st.html(clean_html("""
 <style>
 /* 針對本頁面的微調 */
 .app-title-small { font-size: 14px; color: var(--text-secondary); margin-bottom: 4px; display:block; }
 .empty-state { text-align: center; padding: 40px 20px; background: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border-color); margin-top: 20px; }
 .empty-icon { font-size: 48px; margin-bottom: 16px; color: var(--text-secondary); }
 .empty-text { color: var(--text-secondary); font-size: 16px; margin-bottom: 24px; }
+
+/* Custom Segmented Radio Buttons */
+div[data-testid="stRadio"] div[role="radiogroup"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    background: rgba(30, 41, 59, 0.45) !important;
+    padding: 6px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+div[data-testid="stRadio"] div[role="radiogroup"] label {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    padding: 6px 14px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+    margin: 0 !important;
+}
+div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%) !important;
+    border: 1px solid rgba(139, 92, 246, 0.5) !important;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15) !important;
+}
+div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) * {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+div[data-testid="stRadio"] div[role="radiogroup"] [data-testid="stRadioCircle"] {
+    display: none !important;
+}
+div[data-testid="stRadio"] > label[data-testid="stWidgetLabel"] {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+}
+
+/* News Cards Styling */
+.news-card {
+    background: rgba(30, 41, 59, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 12px !important;
+    padding: 14px 16px !important;
+    margin-bottom: 12px !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+}
+.news-card:hover {
+    background: rgba(30, 41, 59, 0.6) !important;
+    border-color: rgba(139, 92, 246, 0.4) !important;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.15) !important;
+    transform: translateY(-2px) !important;
+}
+.news-badge {
+    background: rgba(139, 92, 246, 0.15) !important;
+    border: 1px solid rgba(139, 92, 246, 0.3) !important;
+    color: #c084fc !important;
+    padding: 4px 10px !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+}
+.news-badge.held {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    color: #34d399 !important;
+}
 </style>
-""", unsafe_allow_html=True)
+"""))
 
 
 if not check_auth():
@@ -51,6 +178,97 @@ is_loading_prices = not holdings.empty and total_value == 0 and total_cost > 0
 
 if is_loading_prices:
     st_autorefresh(interval=2000, limit=15, key="wait_for_prices")
+
+
+def render_portfolio_summary_banner(holdings, lang):
+    if holdings.empty:
+        return
+        
+    total_value = holdings["market_value"].sum()
+    total_cost = holdings["total_cost"].sum()
+    total_unrealized = holdings["unrealized_pl"].sum()
+    roi_pct = (total_unrealized / total_cost * 100) if total_cost > 0 else 0.0
+    
+    return_color = "#34d399" if total_unrealized >= 0 else "#f87171"
+    
+    welcome_title = "👋 歡迎回來，您的投資總覽" if lang == "zh" else "👋 Chào mừng quay trở lại, Tổng quan đầu tư"
+    label_value = "即時總市值" if lang == "zh" else "Giá trị hiện tại"
+    label_cost = "總投入成本" if lang == "zh" else "Tổng vốn đầu tư"
+    label_unreal = "未實現損益" if lang == "zh" else "Lợi nhuận tạm tính"
+    
+    summary_html = f"""
+    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%); 
+                border-radius: 16px; 
+                padding: 22px 24px; 
+                margin-bottom: 24px; 
+                border: 1px solid rgba(255, 255, 255, 0.08); 
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); 
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);">
+        <div style="font-size: 18px; font-weight: 800; color: #ffffff; margin-bottom: 16px; letter-spacing: 0.5px;">{welcome_title}</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 16px;">
+            <div>
+                <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{label_value}</div>
+                <div style="font-size: 22px; font-weight: 800; color: #ffffff; margin-top: 6px; font-family: 'Inter', sans-serif;">{total_value:,.0f} <span style="font-size: 12px; font-weight: 500; color: #94a3b8;">VND</span></div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{label_cost}</div>
+                <div style="font-size: 20px; font-weight: 700; color: #cbd5e1; margin-top: 8px; font-family: 'Inter', sans-serif;">{total_cost:,.0f} <span style="font-size: 11px; font-weight: 500; color: #94a3b8;">VND</span></div>
+            </div>
+            <div>
+                <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{label_unreal}</div>
+                <div style="font-size: 20px; font-weight: 700; color: {return_color}; margin-top: 8px; font-family: 'Inter', sans-serif;">
+                    {total_unrealized:+,.0f} <span style="font-size: 11px; font-weight: 500; color: #94a3b8;">VND</span> 
+                    <span style="font-size: 13px; font-weight: 800; margin-left: 6px;">({roi_pct:+.2f}%)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    """
+    st.html(clean_html(summary_html))
+
+def render_watchlist_manager(lang, held_symbols):
+    if "manual_added_symbols" not in st.session_state:
+        st.session_state["manual_added_symbols"] = []
+        
+    POPULAR_SYMBOLS = [
+        "ACB", "BCM", "BID", "BMP", "BVH", "CTG", "DGC", "DIG", "DXG", 
+        "FPT", "FRT", "GAS", "GVR", "HAX", "HDB", "HPG", "HSG", "KBC", 
+        "MBB", "MSN", "MWG", "NKG", "NLG", "NT2", "OCB", "PLX", "POW", 
+        "PVD", "PVS", "QNS", "SAB", "SCS", "SHB", "SSB", "SSI", "STB", 
+        "TCB", "TPB", "VCB", "VEA", "VHC", "VHM", "VIC", "VJC", "VND", 
+        "VNM", "VPB", "VRE"
+    ]
+    
+    expander_title = "🔍 手動新增其他追蹤股票 (Add other stocks)" if lang == "zh" else "🔍 Thêm cổ phiếu theo dõi khác"
+    with st.expander(expander_title, expanded=False):
+        ms_options = sorted(list(set(POPULAR_SYMBOLS + st.session_state["manual_added_symbols"]) - set(held_symbols)))
+        selected_additional = st.multiselect(
+            "選擇要顯示的股票 (Select stocks to display)" if lang == "zh" else "Chọn cổ phiếu muốn hiển thị",
+            options=ms_options,
+            default=[sym for sym in st.session_state["manual_added_symbols"] if sym in ms_options],
+            key="calendar_additional_stocks_ms"
+        )
+        st.session_state["manual_added_symbols"] = selected_additional
+        
+        col_add1, col_add2 = st.columns([7, 3])
+        with col_add1:
+            custom_sym = st.text_input(
+                "➕ 輸入自訂代號 (Add custom ticker)" if lang == "zh" else "➕ Nhập mã tự chọn",
+                key="custom_ticker_input",
+                placeholder="例如 / e.g., AAA"
+            ).strip().upper()
+        with col_add2:
+            st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
+            if st.button("新增 (Add)" if lang == "zh" else "Thêm", use_container_width=True, key="add_custom_ticker_btn"):
+                if custom_sym:
+                    if custom_sym in held_symbols:
+                        st.warning(f"{custom_sym} 已在您的持股中" if lang == "zh" else f"{custom_sym} đã có trong danh mục")
+                    elif custom_sym in st.session_state["manual_added_symbols"]:
+                        st.info(f"{custom_sym} 已在追蹤清單中" if lang == "zh" else f"{custom_sym} đã được theo dõi")
+                    else:
+                        st.session_state["manual_added_symbols"].append(custom_sym)
+                        st.rerun()
 
 
 def show_earnings_calendar(lang="zh", is_empty=False):
@@ -197,48 +415,6 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         except:
             pass
 
-    domain_map = {
-        "FPT": "fpt.com.vn",
-        "SCS": "saigoncargo.com",
-        "VEA": "veam.com.vn",
-        "TCB": "techcombank.com",
-        "ACB": "acb.com.vn",
-        "HPG": "hoaphat.com.vn",
-        "MBB": "mbbank.com.vn",
-        "BMP": "binhminhplastic.com.vn",
-        "VHC": "vinhhoan.com",
-        "QNS": "qns.com.vn",
-        "VNM": "vinamilk.com.vn",
-        "MWG": "thegioididong.com",
-        "FRT": "fptretail.com.vn"
-    }
-
-    def get_favicon_url(symbol):
-        custom_domains = {
-            "VCB": "vietcombank.com.vn",
-            "OCB": "ocb.com.vn",
-            "VND": "vndirect.com.vn",
-            "SSI": "ssi.com.vn",
-            "VPB": "vpbank.com.vn",
-            "HDB": "hdbank.com.vn",
-            "VRE": "vincom.com.vn",
-            "VIC": "vingroup.net",
-            "VHM": "vinhomes.vn",
-            "GAS": "pvgas.com.vn",
-            "PLX": "petrolimex.com.vn",
-            "POW": "pvpower.vn",
-            "SAB": "sabeco.com.vn",
-            "VJC": "vietjetair.com",
-            "SHB": "shb.com.vn",
-            "STB": "sacombank.com.vn",
-            "TPB": "tpb.vn",
-            "VIB": "vib.com.vn",
-            "GVR": "vrg.com.vn",
-            "BCM": "becamex.com.vn"
-        }
-        domain = domain_map.get(symbol) or custom_domains.get(symbol) or f"{symbol.lower()}.com.vn"
-        return f"https://www.google.com/s2/favicons?sz=64&domain={domain}"
-
     def get_symbol_day(symbol, q_key):
         peak_days = {
             "Q1": [15, 16, 17, 20, 21, 22, 23, 24, 27, 28, 29, 30],
@@ -347,45 +523,6 @@ def show_earnings_calendar(lang="zh", is_empty=False):
 
     if "manual_added_symbols" not in st.session_state:
         st.session_state["manual_added_symbols"] = []
-        
-    POPULAR_SYMBOLS = [
-        "ACB", "BCM", "BID", "BMP", "BVH", "CTG", "DGC", "DIG", "DXG", 
-        "FPT", "FRT", "GAS", "GVR", "HAX", "HDB", "HPG", "HSG", "KBC", 
-        "MBB", "MSN", "MWG", "NKG", "NLG", "NT2", "OCB", "PLX", "POW", 
-        "PVD", "PVS", "QNS", "SAB", "SCS", "SHB", "SSB", "SSI", "STB", 
-        "TCB", "TPB", "VCB", "VEA", "VHC", "VHM", "VIC", "VJC", "VND", 
-        "VNM", "VPB", "VRE"
-    ]
-    
-    expander_title = "🔍 手動新增其他追蹤股票 (Add other stocks)" if lang == "zh" else "🔍 Thêm cổ phiếu theo dõi khác"
-    with st.expander(expander_title, expanded=False):
-        ms_options = sorted(list(set(POPULAR_SYMBOLS + st.session_state["manual_added_symbols"]) - set(held_symbols)))
-        selected_additional = st.multiselect(
-            "選擇要顯示的股票 (Select stocks to display)" if lang == "zh" else "Chọn cổ phiếu muốn hiển thị",
-            options=ms_options,
-            default=[sym for sym in st.session_state["manual_added_symbols"] if sym in ms_options],
-            key="calendar_additional_stocks_ms"
-        )
-        st.session_state["manual_added_symbols"] = selected_additional
-        
-        col_add1, col_add2 = st.columns([7, 3])
-        with col_add1:
-            custom_sym = st.text_input(
-                "➕ 輸入自訂代號 (Add custom ticker)" if lang == "zh" else "➕ Nhập mã tự chọn",
-                key="custom_ticker_input",
-                placeholder="例如 / e.g., AAA"
-            ).strip().upper()
-        with col_add2:
-            st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
-            if st.button("新增 (Add)" if lang == "zh" else "Thêm", use_container_width=True, key="add_custom_ticker_btn"):
-                if custom_sym:
-                    if custom_sym in held_symbols:
-                        st.warning(f"{custom_sym} 已在您的持股中" if lang == "zh" else f"{custom_sym} đã có trong danh mục")
-                    elif custom_sym in st.session_state["manual_added_symbols"]:
-                        st.info(f"{custom_sym} 已在追蹤清單中" if lang == "zh" else f"{custom_sym} đã được theo dõi")
-                    else:
-                        st.session_state["manual_added_symbols"].append(custom_sym)
-                        st.rerun()
 
     # Render selected quarter content
     q_events = get_quarter_events(q_key, held_symbols, st.session_state["manual_added_symbols"])
@@ -584,7 +721,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             label_value = "持股總值" if lang == "zh" else "Giá trị tài sản"
             label_pl = "未實現損益" if lang == "zh" else "Lợi nhuận tạm tính"
             
-            holding_html = textwrap.dedent(f"""
+            holding_html = clean_html(f"""
             <div style="margin-top: 16px; margin-bottom: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px;">
                 <div style="font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 8px; letter-spacing: 0.5px;">{title_holding}</div>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
@@ -612,7 +749,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         cafef_url = f"https://s.cafef.vn/hose/{selected_sym}.chn"
         cafef_label = f"🔍 前往 CafeF 查看 {selected_sym} 官方財報新聞" if lang == "zh" else f"🔍 Xem tin tức BCTC {selected_sym} trên CafeF"
         
-        cafef_link_html = textwrap.dedent(f"""
+        cafef_link_html = clean_html(f"""
         <div style="margin-top: 14px; text-align: right;">
             <a href="{cafef_url}" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 11px; font-weight: bold; background: rgba(0, 240, 255, 0.08); padding: 5px 14px; border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.25); display: inline-block; transition: all 0.2s ease-in-out;" onmouseover="this.style.background='rgba(0, 240, 255, 0.16)'; this.style.borderColor='#00F0FF';" onmouseout="this.style.background='rgba(0, 240, 255, 0.08)'; this.style.borderColor='rgba(0, 240, 255, 0.25)';">
                 {cafef_label} ↗
@@ -674,7 +811,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         is_held = selected_sym in held_symbols
         held_badge_html = f'<span style="font-size: 10px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; padding: 2px 8px; border-radius: 20px; font-weight: bold; margin-left: 8px; vertical-align: middle;">{("持股中" if lang == "zh" else "Nắm giữ")}</span>' if is_held else ""
         
-        title_html = textwrap.dedent(f"""
+        title_html = clean_html(f"""
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
             <div style="display: flex; align-items: center;">
                 <img src="{favicon_url}" style="width: 28px; height: 28px; border-radius: 6px; margin-right: 10px; border: 1px solid rgba(255,255,255,0.1); vertical-align: middle;">
@@ -701,7 +838,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             growth_border = "rgba(239, 68, 68, 0.3)"
             growth_color = "#f87171"
             
-        card_html = textwrap.dedent(f"""
+        card_html = clean_html(f"""
         <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.65) 0%, rgba(15, 23, 42, 0.85) 100%); 
                     padding: 20px 24px; 
                     border-radius: 16px; 
@@ -724,16 +861,16 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             {cafef_link_html}
         </div>
         """)
-        st.markdown(card_html, unsafe_allow_html=True)
+        st.html(card_html)
     else:
-        st.markdown(textwrap.dedent(f"""
+        st.html(clean_html(f"""
         <div class="empty-state" style="padding: 24px; border: 1px dashed var(--border-color); text-align: center; border-radius: 12px; background: var(--bg-card); margin-top: 10px;">
             <div style="font-size: 32px; margin-bottom: 8px;">📅</div>
             <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
                 {"💡 目前該季度日曆為空。系統預設僅顯示您的持股。您可以在上方開啟「手動新增其他追蹤股票」來追蹤更多市場標的。" if lang == "zh" else "💡 Lịch quý này đang trống. Hệ thống mặc định chỉ hiển thị cổ phiếu của bạn. Bạn có thể mở rộng phần \"Thêm cổ phiếu theo dõi khác\" ở trên để thêm cổ phiếu theo dõi."}
             </div>
         </div>
-        """), unsafe_allow_html=True)
+        """))
 
 
 if holdings.empty:
@@ -752,59 +889,78 @@ if holdings.empty:
     show_earnings_calendar(lang, is_empty=True)
 
 if not holdings.empty and not is_loading_prices:
-    st.markdown("<br>", unsafe_allow_html=True)
     lang = st.session_state.get("lang", "zh")
     
-    # 1. 今日最新持股動態 (News Section)
-    news_title = "今日最新持股動態" if lang == "zh" else "Tin tức mới nhất về cổ phiếu"
-    st.markdown(f"<h4 style='margin-left: 8px; margin-bottom: 16px;'>{news_title}</h4>", unsafe_allow_html=True)
+    # 1. 投資組合總覽 Banner (Portfolio Summary Banner)
+    render_portfolio_summary_banner(holdings, lang)
     
-    from news_utils import fetch_all_news_parallel
+    # 2. 雙欄式版面配置 (2-Column Split Layout)
+    col_left, col_right = st.columns([7, 5], gap="large")
     
-    # Get all current holdings where total_shares > 0
-    all_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
-    
-    with st.spinner("Fetching latest news..." if lang == "zh" else "Đang tải tin tức..."):
-        all_news = fetch_all_news_parallel(all_symbols, lang=lang, limit=2)
-    
-    if not all_news:
-        search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"
-        st.markdown(f"""<div class="cathay-card" style="background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 20px; text-align: center;">
-<span style="font-size: 15px; color: #94a3b8; display: block; margin-bottom: 10px;">
-{"今日無相關新聞" if lang == "zh" else "Không có tin tức nào hôm nay"}
-</span>
-<a href="https://s.cafef.vn/tim-kiem.chn" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 15px; font-weight: bold; background: rgba(0, 240, 255, 0.1); padding: 8px 16px; border-radius: 20px;">
-🔍 {search_txt}
-</a>
-</div>""", unsafe_allow_html=True)
-    else:
-        # Sort news by parsing the RFC 2822 date string to ensure chronological order
-        import email.utils
-        from datetime import datetime, timezone
-        def _parse_pubdate(dstr):
-            try:
-                return email.utils.parsedate_to_datetime(dstr)
-            except:
-                return datetime.now(timezone.utc)
-        all_news.sort(key=lambda x: _parse_pubdate(x.get("pubDate", "")), reverse=True)
+    with col_left:
+        # 財報預告時間表 (Earnings Calendar Section)
+        show_earnings_calendar(lang, is_empty=False)
         
-        with st.container(height=380):
-            for item in all_news:
-                st.markdown(f"""<div class="cathay-card" style="background: var(--bg-card); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;">
-<div style="background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.5); color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; min-width: 55px; text-align: center; flex-shrink: 0; align-self: flex-start; margin-top: 3px;">
-{item['symbol']}
-</div>
-<div>
-<a href="{item['link']}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: 500; font-size: 15px; display: block; margin-bottom: 6px; line-height: 1.4; transition: color 0.2s;" onmouseover="this.style.color='#00F0FF'" onmouseout="this.style.color='#ffffff'">
-{item['title']}
-</a>
-<div style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
-<span>🕒 {item['pubDate'][:16]}</span>
-</div>
-</div>
-</div>""", unsafe_allow_html=True)
-                
-    st.markdown("<div id='earnings-section'></div><br><hr style='border-color: var(--border-color); opacity: 0.5;'><br>", unsafe_allow_html=True)
-    
-    # 2. 財報預告時間表 (Earnings Calendar Section)
-    show_earnings_calendar(lang, is_empty=False)
+    with col_right:
+        # 🔍 手動新增其他追蹤股票 (Watchlist Manager)
+        held_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
+        render_watchlist_manager(lang, held_symbols)
+        
+        st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+        
+        # 今日最新持股動態 (News Section)
+        news_title = "今日最新持股動態" if lang == "zh" else "Tin tức mới nhất về cổ phiếu"
+        st.markdown(f"<h4 style='margin-left: 8px; margin-bottom: 16px;'>📰 {news_title}</h4>", unsafe_allow_html=True)
+        
+        from news_utils import fetch_all_news_parallel
+        
+        with st.spinner("Fetching latest news..." if lang == "zh" else "Đang tải tin tức..."):
+            all_news = fetch_all_news_parallel(held_symbols, lang=lang, limit=2)
+            
+        if not all_news:
+            search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"
+            st.html(clean_html(f"""
+            <div class="empty-state" style="padding: 24px; border: 1px dashed var(--border-color); text-align: center; border-radius: 12px; background: var(--bg-card);">
+                <div style="font-size: 32px; margin-bottom: 8px;">📰</div>
+                <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5; margin-bottom: 16px;">
+                    {"今日無相關新聞" if lang == "zh" else "Không có tin tức nào hôm nay"}
+                </div>
+                <a href="https://s.cafef.vn/tim-kiem.chn" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 12px; font-weight: bold; background: rgba(0, 240, 255, 0.08); padding: 6px 16px; border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.25); display: inline-block;">
+                    🔍 {search_txt}
+                </a>
+            </div>
+            """))
+        else:
+            # Sort news by parsing the RFC 2822 date string to ensure chronological order
+            import email.utils
+            from datetime import datetime, timezone
+            def _parse_pubdate(dstr):
+                try:
+                    return email.utils.parsedate_to_datetime(dstr)
+                except:
+                    return datetime.now(timezone.utc)
+            all_news.sort(key=lambda x: _parse_pubdate(x.get("pubDate", "")), reverse=True)
+            
+            with st.container(height=480):
+                for item in all_news:
+                    is_held = item['symbol'] in held_symbols
+                    badge_class = "news-badge held" if is_held else "news-badge"
+                    favicon_url = get_favicon_url(item['symbol'])
+                    
+                    news_card_html = f"""
+                    <div class="news-card">
+                        <div class="{badge_class}">
+                            <img src="{favicon_url}" style="width: 12px; height: 12px; border-radius: 3px;">
+                            <span>{item['symbol']}</span>
+                        </div>
+                        <div style="flex-grow: 1;">
+                            <a href="{item['link']}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14.5px; display: block; margin-bottom: 6px; line-height: 1.4; transition: all 0.2s;" onmouseover="this.style.color='#00F0FF'" onmouseout="this.style.color='#ffffff'">
+                                {item['title']}
+                            </a>
+                            <div style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                                <span>🕒 {item['pubDate'][:16]}</span>
+                            </div>
+                        </div>
+                    </div>
+                    """
+                    st.html(clean_html(news_card_html))
