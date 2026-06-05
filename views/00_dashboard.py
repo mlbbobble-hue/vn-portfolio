@@ -741,92 +741,81 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                                     
     st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
     
-    # === MOBILE-ONLY: Pure HTML vertical timeline + bottom sheet ===
+    # === MOBILE-ONLY: Pure HTML vertical timeline with inline-expand detail ===
     day_labels_zh = {"Mon": "週一", "Tue": "週二", "Wed": "週三", "Thu": "週四", "Fri": "週五"}
-    day_names_en = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+    day_names_en  = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+    year_month    = {"Q1": "2026-04", "Q2": "2026-07", "Q3": "2026-10", "Q4": "2027-01"}.get(q_key, "2026-07")
 
-    # --- Pre-build detail panel HTML for every stock in q_events ---
-    detail_panels_html = ""
-    year_month = {"Q1": "2026-04", "Q2": "2026-07", "Q3": "2026-10", "Q4": "2027-01"}.get(q_key, "2026-07")
-
-    all_evs_flat = {}
-    for day, evs in q_events.items():
-        for ev in evs:
-            all_evs_flat[ev["symbol"]] = (day, ev)
-
-    for sym, (day, ev) in all_evs_flat.items():
+    def build_inline_detail(sym, day, ev):
+        """Build inline detail card HTML for one stock."""
         favicon_url = get_favicon_url(sym)
-        is_held = ev.get("is_holding", False)
-        color = ev["color"]
-
-        # Resolve info dict
+        is_held     = ev.get("is_holding", False)
+        color       = ev["color"]
         if q_key == "Q1":
             raw = details_q1.get(sym) or details_base.get(sym)
         else:
             raw = details_base.get(sym)
-
         if raw:
-            growth_key = ("淨利成長" if lang == "zh" else "Tăng trưởng LNST") if q_key == "Q1" else ("預期成長" if lang == "zh" else "Tăng trưởng dự kiến")
-            growth_val = raw.get("actual_growth") or raw.get("expected_growth", "—")
-            stock_type = raw.get("type", "")
-            desc = raw.get("desc", "")
+            gk  = ("淨利成長" if lang == "zh" else "Tăng trưởng LNST") if q_key == "Q1" else ("預期成長" if lang == "zh" else "Tăng trưởng dự kiến")
+            gv  = raw.get("actual_growth") or raw.get("expected_growth", "—")
+            stp = raw.get("type", "")
+            dsc = raw.get("desc", "")
         else:
-            growth_key = "財報" if lang == "zh" else "BCTC"
-            growth_val = "已發布" if q_key == "Q1" else "預計發布"
-            stock_type = "持股中" if is_held else "追蹤中"
-            desc = f"{'財報日期預計在此月。' if lang == 'zh' else 'Expected report date this month.'}"
-
-        growth_neg = "-" in growth_val or "giảm" in growth_val.lower()
-        g_color = "#f87171" if growth_neg else "#34d399"
-        g_bg = "rgba(239,68,68,0.1)" if growth_neg else "rgba(16,185,129,0.1)"
-        g_border = "rgba(239,68,68,0.3)" if growth_neg else "rgba(16,185,129,0.3)"
-        date_label = ("實際發布" if lang == "zh" else "Ngày công bố") if q_key == "Q1" else ("預計發布" if lang == "zh" else "Dự kiến")
-        held_badge = f'<span style="font-size:10px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#34d399;padding:2px 8px;border-radius:20px;font-weight:bold;margin-left:6px;">{"持股中" if lang=="zh" else "Nắm giữ"}</span>' if is_held else ""
-
-        # Holding stats block
+            gk  = "財報狀態" if lang == "zh" else "BCTC"
+            gv  = "已發布"   if q_key == "Q1" else "預計"
+            stp = "持股中"   if is_held else "追蹤中"
+            dsc = ""
+        gneg   = "-" in gv or "giảm" in gv.lower()
+        gc     = "#f87171" if gneg else "#34d399"
+        g_bg   = "rgba(239,68,68,0.1)"   if gneg else "rgba(16,185,129,0.1)"
+        g_bdr  = "rgba(239,68,68,0.3)"   if gneg else "rgba(16,185,129,0.3)"
+        dl     = ("實際發布" if lang == "zh" else "Ngày công bố") if q_key == "Q1" else ("預計發布" if lang == "zh" else "Dự kiến")
+        hbadge = f'<span style="font-size:10px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#34d399;padding:2px 8px;border-radius:20px;font-weight:bold;margin-left:6px;">{"持股中" if lang=="zh" else "Nắm giữ"}</span>' if is_held else ""
+        # Holdings grid
         h_html = ""
         if is_held and not holdings.empty:
             rows = holdings[holdings["symbol"] == sym]
             if not rows.empty:
                 r = rows.iloc[0]
                 sh = r["total_shares"]; co = r["total_cost"]; va = r["market_value"]; un = r["unrealized_pl"]
-                ac = co / sh if sh > 0 else 0; cp = va / sh if sh > 0 else 0
-                pp = (un / co * 100) if co > 0 else 0.0
-                cp_color = "#10B981" if un >= 0 else "#FF007F"
-                h_html = f"""<div style="margin-top:14px;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;">
-                <div style="font-size:11px;color:#94a3b8;margin-bottom:8px;font-weight:600;">{"📊 持倉明細" if lang=="zh" else "📊 Vị thế của bạn"}</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <div style="background:rgba(15,23,42,0.5);padding:10px;border-radius:8px;text-align:center;">
-                <div style="font-size:10px;color:#64748b;">{"持股數" if lang=="zh" else "SL"}</div>
-                <div style="font-size:15px;font-weight:700;color:#fff;">{sh:,.0f}</div></div>
-                <div style="background:rgba(15,23,42,0.5);padding:10px;border-radius:8px;text-align:center;">
-                <div style="font-size:10px;color:#64748b;">{"成本/市價" if lang=="zh" else "Vốn/HT"}</div>
-                <div style="font-size:13px;font-weight:700;color:#fff;">{ac:,.0f}</div>
-                <div style="font-size:11px;color:#a5b4fc;">{cp:,.0f}</div></div>
-                <div style="background:rgba(15,23,42,0.5);padding:10px;border-radius:8px;text-align:center;">
-                <div style="font-size:10px;color:#64748b;">{"市值" if lang=="zh" else "GT TT"}</div>
-                <div style="font-size:13px;font-weight:700;color:#fff;">{va:,.0f}</div></div>
-                <div style="background:rgba(15,23,42,0.5);padding:10px;border-radius:8px;text-align:center;">
-                <div style="font-size:10px;color:#64748b;">{"未實現損益" if lang=="zh" else "LNTT"}</div>
-                <div style="font-size:13px;font-weight:700;color:{cp_color};">{un:+,.0f}</div>
-                <div style="font-size:11px;color:{cp_color};">({pp:+.2f}%)</div></div>
+                ac = co/sh if sh > 0 else 0; cp = va/sh if sh > 0 else 0
+                pp = (un/co*100) if co > 0 else 0.0
+                cc = "#10B981" if un >= 0 else "#FF007F"
+                lbl_h = "持倉明細" if lang == "zh" else "Vị thế"
+                h_html = f"""<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;">
+                <div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:8px;">📊 {lbl_h}</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <div style="background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;text-align:center;">
+                  <div style="font-size:10px;color:#64748b;">{"持股數" if lang=="zh" else "SL"}</div>
+                  <div style="font-size:14px;font-weight:700;">{sh:,.0f}</div></div>
+                <div style="background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;text-align:center;">
+                  <div style="font-size:10px;color:#64748b;">{"市值" if lang=="zh" else "GT TT"}</div>
+                  <div style="font-size:13px;font-weight:700;">{va:,.0f}</div></div>
+                <div style="background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;text-align:center;">
+                  <div style="font-size:10px;color:#64748b;">{"成本/市價" if lang=="zh" else "Vốn/HT"}</div>
+                  <div style="font-size:12px;font-weight:700;">{ac:,.0f} / <span style="color:#a5b4fc;">{cp:,.0f}</span></div></div>
+                <div style="background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;text-align:center;">
+                  <div style="font-size:10px;color:#64748b;">{"損益" if lang=="zh" else "LNTT"}</div>
+                  <div style="font-size:13px;font-weight:700;color:{cc};">{un:+,.0f}</div>
+                  <div style="font-size:10px;color:{cc};">({pp:+.2f}%)</div></div>
                 </div></div>"""
-
-        detail_panels_html += f"""<div id="mbd-{sym}" style="display:none;">
-        <div style="display:flex;align-items:center;margin-bottom:16px;">
-            <img src="{favicon_url}" style="width:40px;height:40px;border-radius:10px;margin-right:14px;border:1px solid rgba(255,255,255,0.15);">
-            <div><div style="font-size:22px;font-weight:800;color:#fff;">{sym} {held_badge}</div>
-            <div style="font-size:12px;color:#94a3b8;margin-top:2px;">{stock_type}</div></div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-            <span style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#c084fc;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;">📅 {date_label}: {year_month}-{day:02d}</span>
-            <span style="background:{g_bg};border:1px solid {g_border};color:{g_color};padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;">🚀 {growth_key}: {growth_val}</span>
-        </div>
-        <div style="font-size:14px;color:#cbd5e1;line-height:1.7;border-left:3px solid rgba(139,92,246,0.5);padding-left:14px;">{desc}</div>
-        {h_html}
+        return f"""<div style="margin:8px 0 4px;background:rgba(10,18,40,0.85);
+                border:1px solid {color}44;border-radius:12px;padding:14px 16px;
+                animation:fadeIn .2s ease;">
+            <div style="display:flex;align-items:center;margin-bottom:12px;">
+              <img src="{favicon_url}" style="width:34px;height:34px;border-radius:8px;margin-right:12px;border:1px solid rgba(255,255,255,0.1);">
+              <div><div style="font-size:18px;font-weight:800;">{sym} {hbadge}</div>
+                   <div style="font-size:11px;color:#94a3b8;">{stp}</div></div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+              <span style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#c084fc;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">📅 {dl}: {year_month}-{day:02d}</span>
+              <span style="background:{g_bg};border:1px solid {g_bdr};color:{gc};padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">🚀 {gk}: {gv}</span>
+            </div>
+            {f'<div style="font-size:13px;color:#cbd5e1;line-height:1.65;border-left:3px solid rgba(139,92,246,0.5);padding-left:12px;margin-bottom:4px;">{dsc}</div>' if dsc else ""}
+            {h_html}
         </div>"""
 
-    # --- Build week rows ---
+    # --- Build week rows with inline detail cards ---
     mobile_weeks_html = ""
     for week_idx, week in enumerate(selected_grid):
         week_days_with_events = []
@@ -836,35 +825,39 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 week_days_with_events.append((day, day_names_en[col_idx], evs))
         if not week_days_with_events:
             continue
-        first_day = week_days_with_events[0][0]
-        last_day = week_days_with_events[-1][0]
+        first_day  = week_days_with_events[0][0]
+        last_day   = week_days_with_events[-1][0]
         week_label = f"第 {week_idx+1} 週 ({first_day:02d} – {last_day:02d} 日)" if lang == "zh" else f"Week {week_idx+1} ({first_day:02d} – {last_day:02d})"
-        days_html = ""
+        days_html  = ""
         for day, day_name, evs in week_days_with_events:
             day_label = f"{day_labels_zh.get(day_name, day_name)} {day:02d}日" if lang == "zh" else f"{day_name} {day:02d}"
             if evs:
-                tags_html = ""
+                tags_html   = ""
+                detail_html = ""
                 for ev in evs:
                     sym = ev["symbol"]; color = ev["color"]
                     favicon_url = get_favicon_url(sym)
                     star = " ⭐" if ev.get("is_holding") else ""
-                    tags_html += f"""<div onclick="openMobileSheet('{sym}')"
+                    det_id = f"det-{q_key}-{day}-{sym}"
+                    tags_html += f"""<div onclick="toggleDetail('{det_id}', this)"
                         style="display:inline-flex;align-items:center;gap:6px;
-                               background:{color}18;border:1px solid {color}66;
+                               background:{color}18;border:1px solid {color}55;
                                border-radius:10px;padding:8px 14px;margin:3px 6px 3px 0;
                                font-size:14px;font-weight:700;color:#fff;
-                               cursor:pointer;-webkit-tap-highlight-color:transparent;
-                               transition:transform 0.15s,box-shadow 0.15s;
-                               active:transform:scale(0.96);"
-                        ontouchstart="this.style.transform='scale(0.95)'"
-                        ontouchend="this.style.transform='scale(1)'">
+                               cursor:pointer;-webkit-tap-highlight-color:transparent;"
+                        ontouchstart="this.style.opacity='0.7'"
+                        ontouchend="this.style.opacity='1'">
                         <img src="{favicon_url}" style="width:18px;height:18px;border-radius:4px;">
                         <span>{sym}{star}</span>
-                        <span style="font-size:10px;color:{color};opacity:0.7;">›</span>
+                        <span class="arrow-{det_id}" style="font-size:11px;color:{color};transition:transform .2s;">▼</span>
                     </div>"""
-                days_html += f"""<div style="display:flex;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
-                    <div style="min-width:76px;font-size:13px;font-weight:700;color:#a5b4fc;padding-top:9px;">{day_label}</div>
-                    <div style="flex:1;display:flex;flex-wrap:wrap;">{tags_html}</div>
+                    detail_html += f'<div id="{det_id}" style="display:none;">{build_inline_detail(sym, day, ev)}</div>'
+                days_html += f"""<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+                    <div style="display:flex;align-items:flex-start;">
+                        <div style="min-width:76px;font-size:13px;font-weight:700;color:#a5b4fc;padding-top:9px;">{day_label}</div>
+                        <div style="flex:1;display:flex;flex-wrap:wrap;">{tags_html}</div>
+                    </div>
+                    {detail_html}
                 </div>"""
             else:
                 days_html += f"""<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
@@ -879,96 +872,40 @@ def show_earnings_calendar(lang="zh", is_empty=False):
     if not mobile_weeks_html:
         mobile_weeks_html = f'<div style="text-align:center;padding:24px;color:#475569;font-size:14px;">{"📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter"}</div>'
 
-    tap_hint = "點擊股票查看財報詳情 ›" if lang == "zh" else "Tap stock to view report details ›"
-    close_txt = "關閉" if lang == "zh" else "Đóng"
+    tap_hint = "點擊股票標籤展開財報詳情" if lang == "zh" else "Tap a stock tag to expand details"
 
     st.html(f"""
 <style>
-@media (min-width: 641px) {{ .calendar-mobile-view {{ display: none !important; }} }}
+@keyframes fadeIn {{ from {{ opacity:0; transform:translateY(-4px); }} to {{ opacity:1; transform:translateY(0); }} }}
+@media (min-width: 641px) {{ .cal-mobile {{ display:none !important; }} }}
+* {{ box-sizing:border-box; }}
 </style>
-<div class="calendar-mobile-view" style="display:block;font-family:sans-serif;color:#f1f5f9;">
-  <div style="font-size:11px;color:#64748b;text-align:center;margin-bottom:12px;letter-spacing:0.5px;">{tap_hint}</div>
+<div class="cal-mobile" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#f1f5f9;padding:2px;">
+  <div style="font-size:11px;color:#64748b;text-align:center;margin-bottom:12px;">⬇ {tap_hint}</div>
   {mobile_weeks_html}
 </div>
-
 <script>
-var _closeTitle = "{close_txt}";
-var _sheetTitle = "📊 財報詳情";
-
-function openMobileSheet(sym) {{
-  var panel = document.getElementById('mbd-' + sym);
-  if (!panel) return;
-  var content = panel.innerHTML;
-  var p = window.parent.document;
-
-  // Clean up any existing sheet
-  ['__mbd_overlay','__mbd_sheet'].forEach(function(id) {{
-    var el = p.getElementById(id);
-    if (el && el.parentNode) el.parentNode.removeChild(el);
+function toggleDetail(id, btn) {{
+  var el = document.getElementById(id);
+  if (!el) return;
+  var open = el.style.display !== 'none';
+  // Close all others first
+  document.querySelectorAll('[id^="det-"]').forEach(function(d) {{
+    d.style.display = 'none';
   }});
-
-  // Overlay
-  var overlay = p.createElement('div');
-  overlay.id = '__mbd_overlay';
-  overlay.style.cssText = [
-    'position:fixed','inset:0','z-index:99998',
-    'background:rgba(0,0,0,0.72)',
-    'backdrop-filter:blur(5px)','-webkit-backdrop-filter:blur(5px)'
-  ].join(';');
-  overlay.addEventListener('click', closeMobileSheet);
-  p.body.appendChild(overlay);
-
-  // Bottom sheet
-  var sheet = p.createElement('div');
-  sheet.id = '__mbd_sheet';
-  sheet.style.cssText = [
-    'position:fixed','left:0','right:0','bottom:0','z-index:99999',
-    'background:linear-gradient(180deg,#0f172a 0%,#080d1a 100%)',
-    'border-top:2px solid rgba(139,92,246,0.6)',
-    'border-radius:22px 22px 0 0',
-    'box-shadow:0 -12px 48px rgba(0,0,0,0.75)',
-    'color:#f1f5f9','font-family:-apple-system,BlinkMacSystemFont,sans-serif',
-    'transform:translateY(100%)',
-    'transition:transform 0.33s cubic-bezier(0.34,1.1,0.64,1)'
-  ].join(';');
-  sheet.innerHTML =
-    '<div style="display:flex;justify-content:center;padding:14px 0 6px;">' +
-      '<div style="width:44px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;"></div>' +
-    '</div>' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 18px 10px;">' +
-      '<span style="font-size:14px;color:#a78bfa;font-weight:700;letter-spacing:0.5px;">' + _sheetTitle + '</span>' +
-      '<button id="__mbd_close" style="background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.16);' +
-        'color:#94a3b8;border-radius:9px;padding:6px 18px;font-size:13px;cursor:pointer;">' +
-        '✕ ' + _closeTitle +
-      '</button>' +
-    '</div>' +
-    '<div style="padding:6px 20px 48px;overflow-y:auto;max-height:68vh;-webkit-overflow-scrolling:touch;">' +
-      content +
-    '</div>';
-  p.body.appendChild(sheet);
-  p.getElementById('__mbd_close').addEventListener('click', closeMobileSheet);
-
-  requestAnimationFrame(function() {{
-    requestAnimationFrame(function() {{
-      sheet.style.transform = 'translateY(0)';
-    }});
+  document.querySelectorAll('[class^="arrow-"]').forEach(function(a) {{
+    a.style.transform = '';
   }});
-}}
-
-function closeMobileSheet() {{
-  var p = window.parent.document;
-  var sheet = p.getElementById('__mbd_sheet');
-  var overlay = p.getElementById('__mbd_overlay');
-  if (sheet) sheet.style.transform = 'translateY(100%)';
-  setTimeout(function() {{
-    ['__mbd_overlay','__mbd_sheet'].forEach(function(id) {{
-      var el = p.getElementById(id);
-      if (el && el.parentNode) el.parentNode.removeChild(el);
-    }});
-  }}, 360);
+  if (!open) {{
+    el.style.display = 'block';
+    var arrow = document.querySelector('.arrow-' + id);
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
+  }}
 }}
 </script>
 """)
+
+
     
 
 
