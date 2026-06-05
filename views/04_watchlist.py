@@ -1,6 +1,7 @@
 """頁面4：觀察清單（雙語 + db_router）"""
 import streamlit as st
 import pandas as pd
+import textwrap
 from i18n import t, render_lang_switcher
 from auth_page import check_auth, render_user_info_sidebar
 from db_router import (get_watchlist, upsert_watchlist, delete_watchlist,
@@ -40,25 +41,25 @@ load_css()
 if not check_auth():
     st.stop()
 
-st.markdown(f"""
+st.markdown(textwrap.dedent(f"""
 <div class="page-header">
     <h2>{t('watchlist_title')}</h2>
     <p>{t('watchlist_desc')}</p>
-</div>""", unsafe_allow_html=True)
+</div>"""), unsafe_allow_html=True)
 
-tab_wl, tab_recommend, tab_add, tab_notify = st.tabs([
-    t("tab_watchlist"), t("tab_recommend"), t("tab_add_watch"), t("tab_notify")
+# We simplified the tabs structure down to two: Recommendations & Watchlist, and Notification Settings
+tab_main, tab_notify = st.tabs([
+    t("tab_recommend_watchlist"), t("tab_notify")
 ])
 
-# ── Tab 1: 觀察清單 ─────────────────────────────────────────
-with tab_wl:
+with tab_main:
     wl = get_watchlist()
     price_cache = get_price_cache()
     price_map = {}
     if not price_cache.empty:
         price_map = price_cache.set_index("symbol")[["price","change_pct"]].to_dict("index")
     try:
-        # We calculate dividends for both watchlist symbols and recommended symbols
+        # Calculate dividends for both watchlist symbols and recommended symbols
         wl_symbols = wl["symbol"].tolist() if not wl.empty else []
         rec_symbols = [x["symbol"] for x in RECOMMENDED_STOCKS]
         all_needed_symbols = list(set(wl_symbols + rec_symbols))
@@ -67,11 +68,12 @@ with tab_wl:
     except Exception:
         dps_map = {}
 
+    # ── Part A: 我的觀察清單 (My Watchlist) ─────────────────────────────────────────
+    st.markdown("### 📊 我的觀察清單" if st.session_state.get("lang","zh")=="zh" else "### 📊 Danh sách theo dõi của tôi")
+    
     if wl.empty:
         st.info(t("no_watchlist"))
     else:
-        st.subheader(t("watching_count", n=len(wl)))
-        
         # --- MUJI Style Gauge Charts ---
         import plotly.graph_objects as go
         
@@ -190,8 +192,6 @@ with tab_wl:
             sort_by_label_alpha: lambda x: x["symbol"],
         }
         
-        # We replace the static subheader with a row containing count & sorting selectbox
-        # To make it clean, we will render it below the gauge charts
         st.markdown("<br>", unsafe_allow_html=True)
         col_title, col_sort = st.columns([2, 1])
         with col_title:
@@ -222,7 +222,7 @@ with tab_wl:
                 </span>
                 """
                 
-            st.markdown(f"""
+            st.markdown(textwrap.dedent(f"""\
             <div class="cathay-card" style="padding:14px 18px;margin:6px 0; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
                 <div style='display:flex;justify-content:space-between;align-items:center;'>
                     <div>
@@ -234,7 +234,7 @@ with tab_wl:
                     <div style='color:{w['dist_color']};font-size:.9rem;'>{w['dist_str']}</div>
                 </div>
                 <div style='color:#64748b;font-size:.82rem;margin-top:6px;'>{w['badge_str']}</div>
-            </div>""", unsafe_allow_html=True)
+            </div>"""), unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
         c1, c2 = st.columns(2)
@@ -256,15 +256,49 @@ with tab_wl:
                 else:
                     st.success(t("no_alert_fired"))
 
-        st.markdown("---")
-        del_sym = st.selectbox(t("remove_watch"), [""]+wl["symbol"].tolist())
-        if del_sym and st.button(t("remove_btn", sym=del_sym), use_container_width=True):
-            delete_watchlist(del_sym)
-            st.rerun()
+    st.markdown("<br>", unsafe_allow_html=True)
+    # Collapsible setting options
+    c_add, c_del = st.columns(2)
+    with c_add:
+        with st.expander(t("add_watch_title"), expanded=False):
+            st.markdown('<div class="card" style="padding: 10px; border: none; background: transparent;">', unsafe_allow_html=True)
+            w_sym    = st.text_input(t("symbol"), key="w_sym").upper()
+            w_target = st.number_input(t("target_price_input"), min_value=0, step=1000, value=0, key="w_target")
+            w_ma60   = st.toggle(t("ma60_toggle"), key="w_ma60")
+            w_yield  = st.number_input(t("yield_input"), min_value=0.0, max_value=30.0, step=0.5, value=0.0, key="w_yield")
+            w_en     = st.toggle(t("enable_alert"), value=True, key="w_en")
+            w_note   = st.text_input(t("note"), key="w_note")
+            if st.button(t("add_watch_btn"), use_container_width=True):
+                if not w_sym:
+                    st.error(t("enter_symbol"))
+                else:
+                    upsert_watchlist(symbol=w_sym, target_price=w_target if w_target>0 else None,
+                                     ma60_alert=1 if w_ma60 else 0,
+                                     yield_threshold=w_yield/100 if w_yield>0 else None,
+                                     alert_enabled=1 if w_en else 0, note=w_note)
+                    st.success(t("add_watch_ok", sym=w_sym))
+                    st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            with st.expander(t("alert_conditions"), expanded=False):
+                st.markdown(f"""
+                | {t('warning')} | Trigger | Use case |
+                |---|---|---|
+                | 🎯 **{t('target_price')}** | Price ≤ target | Buy on dip |
+                | 📊 **MA60** | Price within ±2% of MA60 | Mean reversion |
+                | 💰 **{t('yield_threshold')}** | Est. yield ≥ threshold | High yield entry |
+                """)
+    with c_del:
+        with st.expander(t("remove_watch"), expanded=False):
+            st.markdown('<div class="card" style="padding: 10px; border: none; background: transparent;">', unsafe_allow_html=True)
+            del_sym = st.selectbox(t("remove_watch"), [""] + (wl["symbol"].tolist() if not wl.empty else []))
+            if del_sym and st.button(t("remove_btn", sym=del_sym), use_container_width=True):
+                delete_watchlist(del_sym)
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
-# ── Tab 2: 存股推薦 ─────────────────────────────────────────
-with tab_recommend:
-    lang = st.session_state.get("lang", "zh")
+    # ── Part B: 系統精選存股推薦 (System Recommendations) ─────────────────────────────────────────
+    st.divider()
     st.subheader("💎 存股族高殖利率首選推薦" if lang == "zh" else "💎 Gợi ý tích lũy cổ tức cao")
     st.markdown(
         "💡 系統精選越南股市中，**現金股息優渥、經營穩定且日常交易量充足（高流動性）**的 20 檔龍頭存股標的。您可以直接點擊「➕ 加入觀察」將其新增至您的追蹤清單。"
@@ -301,8 +335,8 @@ with tab_recommend:
         target_col = rec_col1 if idx % 2 == 0 else rec_col2
         
         with target_col:
-            # Render a beautiful premium card
-            st.markdown(f"""
+            # Render a beautiful premium card - wrapping in textwrap.dedent to avoid code blocks
+            card_html = textwrap.dedent(f"""\
             <div class="cathay-card" style="padding:16px; margin:8px 0; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); height: 200px; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -316,8 +350,8 @@ with tab_recommend:
                         <span style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.3); color:#f472b6; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">
                             📊 歷史股息率: {hist_yield}
                         </span>
-                        {"".join(f'<span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">{live_yield_str}</span>' if live_yield_str else "")}
-                        {"".join(f'<span style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#cbd5e1; padding:2px 6px; border-radius:4px; font-size:11px;">{live_price_str}</span>' if live_price_str else "")}
+                        {f'<span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">{live_yield_str}</span>' if live_yield_str else ""}
+                        {f'<span style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#cbd5e1; padding:2px 6px; border-radius:4px; font-size:11px;">{live_price_str}</span>' if live_price_str else ""}
                     </div>
                     
                     <div style="font-size:0.85rem; color:#cbd5e1; margin-top:12px; line-height:1.4;">
@@ -325,7 +359,8 @@ with tab_recommend:
                     </div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
+            st.markdown(card_html, unsafe_allow_html=True)
             
             # Action button
             is_added = sym in existing_watch_symbols
@@ -338,40 +373,6 @@ with tab_recommend:
                     st.success(f"✅已將 {sym} 加入您的觀察清單！" if lang == "zh" else f"✅Đã thêm {sym} vào danh sách theo dõi!")
                     st.rerun()
             st.markdown("<div style='margin-bottom:15px;'></div>", unsafe_allow_html=True)
-
-# ── Tab 2: 新增 ─────────────────────────────────────────────
-with tab_add:
-    st.subheader(t("add_watch_title"))
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    with c1:
-        w_sym    = st.text_input(t("symbol"), key="w_sym").upper()
-        w_target = st.number_input(t("target_price_input"), min_value=0, step=1000, value=0, key="w_target")
-        w_ma60   = st.toggle(t("ma60_toggle"), key="w_ma60")
-    with c2:
-        w_yield  = st.number_input(t("yield_input"), min_value=0.0, max_value=30.0, step=0.5, value=0.0, key="w_yield")
-        w_en     = st.toggle(t("enable_alert"), value=True, key="w_en")
-        w_note   = st.text_input(t("note"), key="w_note")
-    if st.button(t("add_watch_btn"), use_container_width=True):
-        if not w_sym:
-            st.error(t("enter_symbol"))
-        else:
-            upsert_watchlist(symbol=w_sym, target_price=w_target if w_target>0 else None,
-                             ma60_alert=1 if w_ma60 else 0,
-                             yield_threshold=w_yield/100 if w_yield>0 else None,
-                             alert_enabled=1 if w_en else 0, note=w_note)
-            st.success(t("add_watch_ok", sym=w_sym))
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    with st.expander(t("alert_conditions")):
-        st.markdown(f"""
-        | {t('warning')} | Trigger | Use case |
-        |---|---|---|
-        | 🎯 **{t('target_price')}** | Price ≤ target | Buy on dip |
-        | 📊 **MA60** | Price within ±2% of MA60 | Mean reversion |
-        | 💰 **{t('yield_threshold')}** | Est. yield ≥ threshold | High yield entry |
-        """)
 
 # ── Tab 3: 通知 ─────────────────────────────────────────────
 with tab_notify:
