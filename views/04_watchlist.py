@@ -41,6 +41,8 @@ load_css()
 if not check_auth():
     st.stop()
 
+lang = st.session_state.get("lang", "zh")
+
 st.markdown(textwrap.dedent(f"""
 <div class="page-header">
     <h2>{t('watchlist_title')}</h2>
@@ -181,7 +183,6 @@ with tab_main:
             })
             
         # Add sorting selectbox
-        lang = st.session_state.get("lang", "zh")
         sort_by_label_yield = "預估殖利率 (由高到低)" if lang == "zh" else "Tỷ suất cổ tức (Cao -> Thấp)"
         sort_by_label_dist = "距離目標價 (由近到遠)" if lang == "zh" else "Khoảng cách mục tiêu (Gần -> Xa)"
         sort_by_label_alpha = "股票代號 (字母排序)" if lang == "zh" else "Mã CK (A -> Z)"
