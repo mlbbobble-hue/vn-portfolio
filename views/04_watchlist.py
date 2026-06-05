@@ -373,31 +373,26 @@ with tab_main:
         target_col = rec_col1 if idx % 2 == 0 else rec_col2
         
         with target_col:
-            # Render a beautiful premium card - wrapping in textwrap.dedent to avoid code blocks
-            card_html = textwrap.dedent(f"""\
-            <div class="cathay-card" style="padding:16px; margin:8px 0; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); height: 200px; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:1.2rem; font-weight:bold; color:#00F0FF; vertical-align:middle;">{sym}</span>
-                        <span style="font-size:0.8rem; color:#94a3b8; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:12px; vertical-align:middle;">{industry}</span>
-                    </div>
-                    <div style="font-size:0.95rem; font-weight:600; color:#ffffff; margin-top:4px;">{name}</div>
-                    
-                    <!-- Yield badges -->
-                    <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
-                        <span style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.3); color:#f472b6; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">
-                            {metric_label}: {metric_val}
-                        </span>
-                        {f'<span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">{live_yield_str}</span>' if live_yield_str else ""}
-                        {f'<span style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#cbd5e1; padding:2px 6px; border-radius:4px; font-size:11px;">{live_price_str}</span>' if live_price_str else ""}
-                    </div>
-                    
-                    <div style="font-size:0.85rem; color:#cbd5e1; margin-top:12px; line-height:1.4;">
-                        {desc}
-                    </div>
-                </div>
-            </div>
-            """)
+            # Render a beautiful premium card - left-aligned to completely avoid markdown parsing issues
+            card_html = f"""<div class="cathay-card" style="padding:16px; margin:8px 0; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); height: 200px; display: flex; flex-direction: column; justify-content: space-between;">
+<div>
+<div style="display:flex; justify-content:space-between; align-items:center;">
+<span style="font-size:1.2rem; font-weight:bold; color:#00F0FF; vertical-align:middle;">{sym}</span>
+<span style="font-size:0.8rem; color:#94a3b8; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:12px; vertical-align:middle;">{industry}</span>
+</div>
+<div style="font-size:0.95rem; font-weight:600; color:#ffffff; margin-top:4px;">{name}</div>
+<div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+<span style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.3); color:#f472b6; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">
+{metric_label}: {metric_val}
+</span>
+{f'<span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">{live_yield_str}</span>' if live_yield_str else ""}
+{f'<span style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#cbd5e1; padding:2px 6px; border-radius:4px; font-size:11px;">{live_price_str}</span>' if live_price_str else ""}
+</div>
+<div style="font-size:0.85rem; color:#cbd5e1; margin-top:12px; line-height:1.4;">
+{desc}
+</div>
+</div>
+</div>"""
             st.markdown(card_html, unsafe_allow_html=True)
             
             # Action button
