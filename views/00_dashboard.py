@@ -627,7 +627,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             favicon_url = get_favicon_url(sym)
             
             rule = f"""
-            .st-key-btn_grid_{q_key}_{day}_{sym} button, .st-key-btn_list_{q_key}_{day}_{sym} button {{
+            .st-key-btn_grid_{q_key}_{day}_{sym} button {{
                 width: 100% !important;
                 background: {color_bg}18 !important;
                 border: 1px solid {color_bg}55 !important;
@@ -652,7 +652,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 transition: all 0.2s ease-in-out !important;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
             }}
-            .st-key-btn_grid_{q_key}_{day}_{sym} button:hover, .st-key-btn_list_{q_key}_{day}_{sym} button:hover {{
+            .st-key-btn_grid_{q_key}_{day}_{sym} button:hover {{
                 border-color: #00F0FF !important;
                 background: {color_bg}30 !important;
                 transform: translateY(-1px) !important;
@@ -668,7 +668,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
     view_mode = st.radio("顯示模式", v_mode_opts, horizontal=True, label_visibility="collapsed")
     is_list_view = "📱" in view_mode
 
-    def render_popover(ev, day, sym, prefix):
+    def render_details(ev, day, sym, mode="popover"):
         star = " ⭐" if ev.get("is_holding") else ""
         btn_label = f"{sym}{star}"
         
@@ -689,7 +689,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             stype = "持股中" if ev.get("is_holding") else "追蹤中"
             desc = ""
 
-        with st.popover(btn_label, use_container_width=True):
+        def render_content():
             yr_mo = {"Q1": "2026-04", "Q2": "2026-07", "Q3": "2026-10", "Q4": "2027-01"}.get(q_key, "2026-07")
             dl = "實際發布" if (q_key == "Q1" and lang == "zh") else ("Ngày công bố" if q_key == "Q1" else ("預計發布" if lang == "zh" else "Dự kiến"))
             gneg = "-" in gv or "giảm" in gv.lower()
@@ -715,6 +715,13 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                     c3.metric("成本" if lang == "zh" else "Vốn", f"{co/sh:,.0f}" if sh > 0 else "—")
                     c4.metric("未實現損益" if lang == "zh" else "LNTT", f"{un:+,.0f}", delta=f"{pp:+.2f}%")
 
+        if mode == "popover":
+            with st.popover(btn_label, use_container_width=True):
+                render_content()
+        else:
+            with st.expander(f"{btn_label} 財報詳情" if lang == "zh" else f"{btn_label} Details", expanded=False):
+                render_content()
+
 
     if not is_list_view:
         with st.container(key="calendar_grid_container"):
@@ -734,7 +741,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                                 for ev in q_events[day]:
                                     sym = ev["symbol"]
                                     with st.container(key=f"btn_grid_{q_key}_{day}_{sym}"):
-                                        render_popover(ev, day, sym, "grid")
+                                        render_details(ev, day, sym, mode="popover")
 
     else:
         with st.container(key="calendar_list_container"):
@@ -752,7 +759,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                         for ev in q_events[day]:
                             sym = ev["symbol"]
                             with st.container(key=f"btn_list_{q_key}_{day}_{sym}"):
-                                render_popover(ev, day, sym, "list")
+                                render_details(ev, day, sym, mode="expander")
             
             if not has_any:
                 st.info("📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter")
