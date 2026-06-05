@@ -661,28 +661,11 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             """
             css_rules.append(rule)
             
-    # Auto-switch to Flow Layout on mobile
+    # Auto-switch for Mobile Layout (Hide Grid on mobile, Hide List on desktop)
     css_rules.append("""
         @media (max-width: 640px) {
             .st-key-calendar_grid_container { display: none !important; }
             .st-key-calendar_list_container { display: block !important; }
-
-            /* Force Flow (inline) layout inside day rows */
-            [class*="st-key-mob_day_row_"] > div > div > div > div.element-container {
-                display: inline-block !important;
-                width: auto !important;
-                vertical-align: middle !important;
-                margin-right: 8px !important;
-                margin-bottom: 6px !important;
-            }
-            .mobile-day-label {
-                font-size: 15px;
-                font-weight: 800;
-                color: #a5b4fc;
-                margin-right: 6px;
-                display: inline-block;
-                padding-top: 8px;
-            }
         }
         @media (min-width: 641px) {
             .st-key-calendar_grid_container { display: block !important; }
@@ -750,7 +733,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         for col_idx, h in enumerate(headers):
             cols[col_idx].markdown(f"<div class='calendar-header-cell'>{h}</div>", unsafe_allow_html=True)
 
-        # Day rows — stock buttons trigger @st.dialog
+        # Day rows — stock buttons use st.popover() for inline detail card
         for week in selected_grid:
             cols = st.columns(5, gap="small")
             for col_idx, day in enumerate(week):
@@ -769,27 +752,25 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         
         has_any = False
         st.markdown("<div style='margin-bottom:8px;'></div>", unsafe_allow_html=True)
-        for week in selected_grid:
-            for col_idx, day in enumerate(week):
-                if day is not None and day in q_events:
-                    has_any = True
-                    day_name = day_names_en[col_idx]
-                    day_label = f"{day_labels_zh.get(day_name, day_name)} {day:02d}日" if lang == "zh" else f"{day_name} {day:02d}"
-                    
-                    with st.container(key=f"mob_day_row_{q_key}_{day}"):
-                        st.markdown(f"<div class='mobile-day-label'>{day_label}</div>", unsafe_allow_html=True)
+        with st.expander("📅 點此展開財報日曆" if lang == "zh" else "📅 Expand Earnings Calendar", expanded=False):
+            for week in selected_grid:
+                for col_idx, day in enumerate(week):
+                    if day is not None and day in q_events:
+                        has_any = True
+                        day_name = day_names_en[col_idx]
+                        day_label = f"{day_labels_zh.get(day_name, day_name)} {day:02d}日" if lang == "zh" else f"{day_name} {day:02d}"
+                        
+                        st.markdown(f"<div style='font-size:14px;font-weight:800;color:#a5b4fc;margin-top:12px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:4px;'>{day_label}</div>", unsafe_allow_html=True)
                         for ev in q_events[day]:
                             sym = ev["symbol"]
                             star = " ⭐" if ev.get("is_holding") else ""
                             btn_label = f"{sym}{star}"
                             with st.container(key=f"btn_list_{q_key}_{day}_{sym}"):
-                                if st.button(btn_label, key=f"btn_trigger_list_{q_key}_{day}_{sym}"):
+                                if st.button(btn_label, key=f"btn_trigger_list_{q_key}_{day}_{sym}", use_container_width=True):
                                     show_details_dialog(ev, day, sym)
-                    
-                    st.markdown("<div style='border-bottom:1px solid rgba(255,255,255,0.08); margin: 6px 0;'></div>", unsafe_allow_html=True)
-        
-        if not has_any:
-            st.info("📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter")
+            
+            if not has_any:
+                st.info("📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter")
 
     st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
 
