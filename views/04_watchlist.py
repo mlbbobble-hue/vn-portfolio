@@ -10,6 +10,29 @@ from market_data import get_stock_price, get_moving_average
 from alerts import test_notification, check_and_fire_alerts
 from portfolio import get_estimated_yield, get_dividend_income_summary
 
+RECOMMENDED_STOCKS = [
+    {"symbol": "VEA", "name_zh": "越南農業機械引擎", "name_vi": "Động cơ Việt Nam", "industry_zh": "汽車與機械製造", "industry_vi": "Sản xuất cơ khí", "hist_yield": "12% ~ 14%", "desc_zh": "越股存股首選！持有本田(Honda)、豐田(Toyota)、福特(Ford)在越合資公司大筆股權，躺著收息。", "desc_vi": "Nắm giữ cổ phần lớn tại các liên doanh Honda, Toyota, Ford tại Việt Nam, dòng tiền cổ tức cực kỳ lớn."},
+    {"symbol": "BMP", "name_zh": "平明塑膠", "name_vi": "Nhựa Bình Minh", "industry_zh": "工業建材", "industry_vi": "VLXD & Công nghiệp", "hist_yield": "8% ~ 10%", "desc_zh": "越南塑膠管龍頭，財務極為健全且近乎無負債，手頭現金滿滿，分紅極高。", "desc_vi": "Doanh nghiệp nhựa xây dựng đầu ngành, tài chính lành mạnh, không nợ vay, trả cổ tức tiền mặt lớn."},
+    {"symbol": "SCS", "name_zh": "西貢航空易貨服務", "name_vi": "Dịch vụ Hàng hóa Sài Gòn", "industry_zh": "航空物流", "industry_vi": "Logistics Hàng không", "hist_yield": "7% ~ 9%", "desc_zh": "壟斷新山一機場的貨運裝卸服務，高淨利率、零負債，出口貿易增長直接受益者。", "desc_vi": "Độc quyền dịch vụ nhà ga hàng hóa tại sân bay Tân Sơn Nhất, biên lợi nhuận cao, không nợ vay."},
+    {"symbol": "QNS", "name_zh": "廣義糖業", "name_vi": "Đường Quảng Ngãi", "industry_zh": "食品飲料", "industry_vi": "Thực phẩm & Đồ uống", "hist_yield": "6% ~ 8%", "desc_zh": "旗下「Fami豆奶」是越南市佔第一品牌，業績非常穩定，現金配息大方且穩定。", "desc_vi": "Sở hữu thương hiệu sữa đậu nành Fami dẫn đầu thị phần, dòng tiền mặt kinh doanh dồi dào."},
+    {"symbol": "DPM", "name_zh": "富美肥料", "name_vi": "Phân bón Hóa chất Dầu khí", "industry_zh": "農業化學", "industry_vi": "Hóa chất nông nghiệp", "hist_yield": "7% ~ 9%", "desc_zh": "國營尿素肥料龍頭，手頭現金充沛，歷史配息紀錄極佳，唯有行業週期波動。", "desc_vi": "Doanh nghiệp phân đạm đầu ngành, lượng tiền mặt lớn, lịch sử trả cổ tức tiền mặt bền bỉ."},
+    {"symbol": "DCM", "name_zh": "金甌肥料", "name_vi": "Phân bón Dầu khí Cà Mau", "industry_zh": "農業化學", "industry_vi": "Hóa chất nông nghiệp", "hist_yield": "6% ~ 8%", "desc_zh": "與 DPM 並列的肥料雙雄，廠房折舊完畢後自由現金流大幅提升，配息能力優異。", "desc_vi": "Nhà máy hết khấu hao giúp dòng tiền tự do tăng mạnh, nâng cao năng lực chi trả cổ tức."},
+    {"symbol": "DVP", "name_zh": "亭武港口", "name_vi": "Cảng Đình Vũ", "industry_zh": "港口物流", "industry_vi": "Cảng biển & Logistics", "hist_yield": "8% ~ 10%", "desc_zh": "海防港區的重要港口，經營穩定、負債極低，歷史上一直維持高比例現金分紅。", "desc_vi": "Cảng biển lớn tại Hải Phòng, hoạt động ổn định, nợ vay thấp, lịch sử chia cổ tức cao."},
+    {"symbol": "QTP", "name_zh": "廣寧熱電", "name_vi": "Nhiệt điện Quảng Ninh", "industry_zh": "電力公用事業", "industry_vi": "Điện & Năng lượng", "hist_yield": "8% ~ 10%", "desc_zh": "隨著設備折舊完畢、債務清償，可分配現金大幅增加，是電力股中的高息明珠。", "desc_vi": "Hết khấu hao tài sản và trả xong nợ giúp dòng tiền tăng vọt, cổ tức tiền mặt ổn định."},
+    {"symbol": "VNM", "name_zh": "越南牛奶 (Vinamilk)", "name_vi": "Vinamilk", "industry_zh": "食品飲料", "industry_vi": "Thực phẩm & Đồ uống", "hist_yield": "5.5% ~ 6.5%", "desc_zh": "越南民生消費權值股，護城河極深，防禦型存股，每年配息極具規律性。", "desc_vi": "Cổ phiếu tiêu dùng đầu ngành, phòng thủ tốt, dòng tiền mạnh và chia cổ tức đều đặn hàng năm."},
+    {"symbol": "SAB", "name_zh": "薩貝科啤酒", "name_vi": "Sabeco", "industry_zh": "食品飲料", "industry_vi": "Thực phẩm & Đồ uống", "hist_yield": "6.0% ~ 7.0%", "desc_zh": "西貢啤酒母公司，市佔率極高。由泰國集團控股後，推動了高比例現金股息政策。", "desc_vi": "Sở hữu thương hiệu Bia Sài Gòn, tập đoàn ThaiBev nắm quyền chi phối duy trì cổ tức cao."},
+    {"symbol": "MSH", "name_zh": "May紅河紡織", "name_vi": "May Sông Hồng", "industry_zh": "紡織出口", "industry_vi": "Dệt may & Xuất khẩu", "hist_yield": "6% ~ 8%", "desc_zh": "知名品牌（Nike、GAP）代工廠，訂單穩定，常年維持每股 3,000 ~ 5,000 VND 現金分紅。", "desc_vi": "Nhà sản xuất dệt may lớn, khách hàng ổn định, duy trì mức cổ tức mặt từ 30-50% mệnh giá."},
+    {"symbol": "TLG", "name_zh": "天龍文具", "name_vi": "Tập đoàn Thiên Long", "industry_zh": "文具製造", "industry_vi": "Sản xuất hàng tiêu dùng", "hist_yield": "5% ~ 6%", "desc_zh": "越南文具絕對龍頭（原子筆市佔率達60%以上），內需剛性需求強，配息穩定。", "desc_vi": "Thống lĩnh thị trường văn phòng phẩm Việt Nam, biên lợi nhuận tốt, cổ tức ổn định."},
+    {"symbol": "TDM", "name_zh": "土龍木水務", "name_vi": "Nước Thủ Dầu Một", "industry_zh": "水務公用事業", "industry_vi": "Tiện ích công cộng", "hist_yield": "5% ~ 6%", "desc_zh": "獨家供應平陽省工業區水源，特許防禦型行業，營收穩健，年年穩定派息。", "desc_vi": "Độc quyền cấp nước cho khu công nghiệp tỉnh Bình Dương, doanh thu tăng trưởng ổn định."},
+    {"symbol": "VCS", "name_zh": "Vicostone 石英石", "name_vi": "Vicostone", "industry_zh": "建材製造", "industry_vi": "Vật liệu xây dựng", "hist_yield": "6% ~ 8%", "desc_zh": "人造石英石出口全球前三名，主要銷往美歐。高毛利、品牌壁壘高，配息穩健。", "desc_vi": "Top 3 thế giới về đá thạch anh nhân tạo xuất khẩu Mỹ/Châu Âu, biên lợi nhuận gộp rất cao."},
+    {"symbol": "TCB", "name_zh": "科技商業銀行", "name_vi": "Techcombank", "industry_zh": "金融銀行", "industry_vi": "Ngân hàng", "hist_yield": "5% ~ 6%", "desc_zh": "優質私有銀行龍頭。近年開始每年固定發放現金股利，流動性與市值極大。", "desc_vi": "Ngân hàng TMCP hàng đầu, bắt đầu duy trì chính sách trả cổ tức tiền mặt đều đặn."},
+    {"symbol": "ACB", "name_zh": "亞洲商業銀行", "name_vi": "Ngân hàng ACB", "industry_zh": "金融銀行", "industry_vi": "Ngân hàng", "hist_yield": "5% ~ 6%", "desc_zh": "風控最嚴謹的民營銀行，近年採取「部分現金＋部分股票」的複合股利政策。", "desc_vi": "Ngân hàng kiểm soát rủi ro tốt nhất, kết hợp chi trả cổ tức bằng tiền và cổ phiếu hàng năm."},
+    {"symbol": "MBB", "name_zh": "軍隊銀行", "name_vi": "Ngân hàng Quân đội", "industry_zh": "金融銀行", "industry_vi": "Ngân hàng", "hist_yield": "5% ~ 6%", "desc_zh": "具軍方背景之大行，壞帳率低，年年賺錢，每年皆配發穩健的現金股利。", "desc_vi": "Ngân hàng có hậu thuẫn mạnh mẽ, tệp khách hàng số lớn, cổ tức tiền mặt bền vững."},
+    {"symbol": "VHC", "name_zh": "永環水產", "name_vi": "Vĩnh Hoàn", "industry_zh": "海鮮出口", "industry_vi": "Thủy hải sản", "hist_yield": "5% ~ 6%", "desc_zh": "越南「查魚」出口女王，主攻美國市場。風控與財務狀況極佳，配息大方。", "desc_vi": "Nữ hoàng xuất khẩu cá tra sang Mỹ, tài chính vững mạnh, duy trì cổ tức mặt đều đặn."},
+    {"symbol": "REE", "name_zh": "冷電機電股份", "name_vi": "Cơ Điện Lạnh REE", "industry_zh": "多元公用事業", "industry_vi": "Đa ngành & Năng lượng", "hist_yield": "5% ~ 6%", "desc_zh": "旗下擁有大量水電、風電、自來水廠股權，公用事業收益穩定，防禦力極強。", "desc_vi": "Sở hữu danh mục dự án điện, nước lớn, nguồn thu nhập ổn định giúp cổ tức bền bỉ."},
+    {"symbol": "FPT", "name_zh": "FPT 科技集團", "name_vi": "Tập đoàn FPT", "industry_zh": "資訊軟體服務", "industry_vi": "Công nghệ thông tin", "hist_yield": "3% ~ 4%", "desc_zh": "科技龍頭。雖現金殖利率較低，但年年高成長且配發股票股利，填權息能力強。", "desc_vi": "Ông lớn công nghệ thông tin xuất khẩu phần mềm, tăng trưởng cao, kết hợp cổ tức tiền và cổ phiếu."}
+]
+
 st.set_page_config(page_title=f"VN Portfolio | {t('watchlist_title')}", page_icon="🔔", layout="wide")
 from theme import load_css
 load_css()
@@ -23,7 +46,9 @@ st.markdown(f"""
     <p>{t('watchlist_desc')}</p>
 </div>""", unsafe_allow_html=True)
 
-tab_wl, tab_add, tab_notify = st.tabs([t("tab_watchlist"), t("tab_add_watch"), t("tab_notify")])
+tab_wl, tab_recommend, tab_add, tab_notify = st.tabs([
+    t("tab_watchlist"), t("tab_recommend"), t("tab_add_watch"), t("tab_notify")
+])
 
 # ── Tab 1: 觀察清單 ─────────────────────────────────────────
 with tab_wl:
@@ -33,7 +58,11 @@ with tab_wl:
     if not price_cache.empty:
         price_map = price_cache.set_index("symbol")[["price","change_pct"]].to_dict("index")
     try:
-        div_summary = get_dividend_income_summary(wl["symbol"].tolist() if not wl.empty else [])
+        # We calculate dividends for both watchlist symbols and recommended symbols
+        wl_symbols = wl["symbol"].tolist() if not wl.empty else []
+        rec_symbols = [x["symbol"] for x in RECOMMENDED_STOCKS]
+        all_needed_symbols = list(set(wl_symbols + rec_symbols))
+        div_summary = get_dividend_income_summary(all_needed_symbols)
         dps_map = {} if div_summary.empty else div_summary.set_index("symbol")["annual_dps"].to_dict()
     except Exception:
         dps_map = {}
@@ -212,11 +241,11 @@ with tab_wl:
         with c1:
             if st.button(t("update_wl_price"), use_container_width=True):
                 with st.spinner(t("updating")):
-                    for sym in wl["symbol"].tolist():
-                        p = get_stock_price(sym)
-                        if p["price"] > 0:
-                            upsert_price_cache(sym, p["price"], p["change_pct"], p.get("volume",0))
-                st.success(t("updated_count", n=len(wl)))
+                    from market_data import get_multiple_prices
+                    prices_df = get_multiple_prices(all_needed_symbols)
+                    for _, p in prices_df.iterrows():
+                        upsert_price_cache(p["symbol"], p["price"], p["change_pct"], p.get("volume", 0))
+                st.success(t("updated_count", n=len(prices_df)))
                 st.rerun()
         with c2:
             if st.button(t("check_alerts"), use_container_width=True):
@@ -232,6 +261,83 @@ with tab_wl:
         if del_sym and st.button(t("remove_btn", sym=del_sym), use_container_width=True):
             delete_watchlist(del_sym)
             st.rerun()
+
+# ── Tab 2: 存股推薦 ─────────────────────────────────────────
+with tab_recommend:
+    lang = st.session_state.get("lang", "zh")
+    st.subheader("💎 存股族高殖利率首選推薦" if lang == "zh" else "💎 Gợi ý tích lũy cổ tức cao")
+    st.markdown(
+        "💡 系統精選越南股市中，**現金股息優渥、經營穩定且日常交易量充足（高流動性）**的 20 檔龍頭存股標的。您可以直接點擊「➕ 加入觀察」將其新增至您的追蹤清單。"
+        if lang == "zh" else
+        "💡 Danh sách 20 cổ phiếu chi trả **cổ tức tiền mặt cao, hoạt động kinh doanh ổn định và thanh khoản tốt** được hệ sinh thái khuyên dùng. Bạn có thể nhấn nút để thêm nhanh vào danh sách theo dõi."
+    )
+    
+    # Check what symbols are currently in the user's watchlist
+    existing_watch_symbols = wl["symbol"].tolist() if not wl.empty else []
+    
+    # Render in a 2-column grid
+    st.markdown("<br>", unsafe_allow_html=True)
+    rec_col1, rec_col2 = st.columns(2)
+    
+    for idx, item in enumerate(RECOMMENDED_STOCKS):
+        sym = item["symbol"]
+        name = item["name_zh"] if lang == "zh" else item["name_vi"]
+        industry = item["industry_zh"] if lang == "zh" else item["industry_vi"]
+        desc = item["desc_zh"] if lang == "zh" else item["desc_vi"]
+        hist_yield = item["hist_yield"]
+        
+        # Get live status from cache if available
+        cur_price = price_map.get(sym, {}).get("price", 0)
+        annual_dps = dps_map.get(sym, 0)
+        
+        live_yield_str = ""
+        live_price_str = ""
+        if cur_price > 0:
+            live_price_str = f"💵 目前市價: {cur_price:,.0f} VND" if lang == "zh" else f"💵 Giá HT: {cur_price:,.0f} VNĐ"
+            if annual_dps > 0:
+                live_yield = (annual_dps / cur_price) * 100
+                live_yield_str = f"✨ 即時殖利率: {live_yield:.2f}%" if lang == "zh" else f"✨ Tỷ suất HT: {live_yield:.2f}%"
+                
+        target_col = rec_col1 if idx % 2 == 0 else rec_col2
+        
+        with target_col:
+            # Render a beautiful premium card
+            st.markdown(f"""
+            <div class="cathay-card" style="padding:16px; margin:8px 0; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); height: 200px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:1.2rem; font-weight:bold; color:#00F0FF; vertical-align:middle;">{sym}</span>
+                        <span style="font-size:0.8rem; color:#94a3b8; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:12px; vertical-align:middle;">{industry}</span>
+                    </div>
+                    <div style="font-size:0.95rem; font-weight:600; color:#ffffff; margin-top:4px;">{name}</div>
+                    
+                    <!-- Yield badges -->
+                    <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                        <span style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.3); color:#f472b6; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">
+                            📊 歷史股息率: {hist_yield}
+                        </span>
+                        {"".join(f'<span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">{live_yield_str}</span>' if live_yield_str else "")}
+                        {"".join(f'<span style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#cbd5e1; padding:2px 6px; border-radius:4px; font-size:11px;">{live_price_str}</span>' if live_price_str else "")}
+                    </div>
+                    
+                    <div style="font-size:0.85rem; color:#cbd5e1; margin-top:12px; line-height:1.4;">
+                        {desc}
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Action button
+            is_added = sym in existing_watch_symbols
+            if is_added:
+                st.button(t("already_added"), key=f"rec_add_btn_{sym}", disabled=True, use_container_width=True)
+            else:
+                if st.button(t("add_to_watchlist"), key=f"rec_add_btn_{sym}", type="primary", use_container_width=True):
+                    # Add with default values
+                    upsert_watchlist(symbol=sym, alert_enabled=1, note="存股推薦")
+                    st.success(f"✅已將 {sym} 加入您的觀察清單！" if lang == "zh" else f"✅Đã thêm {sym} vào danh sách theo dõi!")
+                    st.rerun()
+            st.markdown("<div style='margin-bottom:15px;'></div>", unsafe_allow_html=True)
 
 # ── Tab 2: 新增 ─────────────────────────────────────────────
 with tab_add:
