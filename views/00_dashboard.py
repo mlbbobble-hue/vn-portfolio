@@ -679,8 +679,8 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         cols = st.columns(5, gap="small")
         for col_idx, h in enumerate(headers):
             cols[col_idx].markdown(f"<div class='calendar-header-cell'>{h}</div>", unsafe_allow_html=True)
-            
-        # Day rows
+
+        # Day rows — stock buttons use st.popover() for inline detail card
         for week in selected_grid:
             cols = st.columns(5, gap="small")
             for col_idx, day in enumerate(week):
@@ -689,12 +689,55 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                         st.markdown(f"<div class='calendar-day-num'>{day:02d}</div>", unsafe_allow_html=True)
                         if day in q_events:
                             for ev in q_events[day]:
-                                btn_text = f"{ev['symbol']} ⭐" if ev.get("is_holding") else ev['symbol']
-                                btn_key = f"cal_btn_{q_key}_{day}_{ev['symbol']}"
-                                if st.button(btn_text, key=btn_key):
-                                    st.query_params["select_stock"] = ev["symbol"]
-                                    st.query_params["q_tab"] = q_key
-                                    st.rerun()
+                                sym = ev["symbol"]
+                                star = " ⭐" if ev.get("is_holding") else ""
+                                btn_label = f"{sym}{star}"
+                                btn_key = f"cal_btn_{q_key}_{day}_{sym}"
+
+                                # Resolve info for popover
+                                if q_key == "Q1":
+                                    raw = details_q1.get(sym) or details_base.get(sym)
+                                else:
+                                    raw = details_base.get(sym)
+
+                                if raw:
+                                    gk = ("淨利成長" if lang == "zh" else "Tăng trưởng LNST") if q_key == "Q1" else ("預期成長" if lang == "zh" else "Tăng trưởng dự kiến")
+                                    gv = raw.get("actual_growth") or raw.get("expected_growth", "—")
+                                    stype = raw.get("type", "")
+                                    desc = raw.get("desc", "")
+                                else:
+                                    gk = "財報狀態" if lang == "zh" else "BCTC"
+                                    gv = "已發布" if q_key == "Q1" else "預計"
+                                    stype = "持股中" if ev.get("is_holding") else "追蹤中"
+                                    desc = ""
+
+                                with st.popover(btn_label, use_container_width=True):
+                                    fav = get_favicon_url(sym)
+                                    yr_mo = {"Q1": "2026-04", "Q2": "2026-07", "Q3": "2026-10", "Q4": "2027-01"}.get(q_key, "2026-07")
+                                    dl = "實際發布" if (q_key == "Q1" and lang == "zh") else ("Ngày công bố" if q_key == "Q1" else ("預計發布" if lang == "zh" else "Dự kiến"))
+                                    gneg = "-" in gv or "giảm" in gv.lower()
+                                    gc = "#f87171" if gneg else "#34d399"
+                                    held_badge = "✅ 持股中" if ev.get("is_holding") else ""
+                                    st.markdown(f"**{sym}** {held_badge}  \n*{stype}*")
+                                    st.markdown(f"📅 **{dl}**: `{yr_mo}-{day:02d}`")
+                                    st.markdown(f"🚀 **{gk}**: :{('green' if not gneg else 'red')}[{gv}]")
+                                    if desc:
+                                        st.caption(desc)
+                                    # Holdings stats
+                                    if ev.get("is_holding") and not holdings.empty:
+                                        rows = holdings[holdings["symbol"] == sym]
+                                        if not rows.empty:
+                                            r = rows.iloc[0]
+                                            sh = r["total_shares"]; co = r["total_cost"]
+                                            va = r["market_value"]; un = r["unrealized_pl"]
+                                            pp = (un / co * 100) if co > 0 else 0.0
+                                            c1, c2 = st.columns(2)
+                                            c1.metric("持股數" if lang == "zh" else "SL", f"{sh:,.0f}")
+                                            c2.metric("市值" if lang == "zh" else "GT TT", f"{va:,.0f}")
+                                            c3, c4 = st.columns(2)
+                                            c3.metric("成本" if lang == "zh" else "Vốn", f"{co/sh:,.0f}" if sh > 0 else "—")
+                                            c4.metric("未實現損益" if lang == "zh" else "LNTT", f"{un:+,.0f}", delta=f"{pp:+.2f}%")
+
                                     
     st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
     
@@ -839,8 +882,11 @@ def show_earnings_calendar(lang="zh", is_empty=False):
     tap_hint = "點擊股票查看財報詳情 ›" if lang == "zh" else "Tap stock to view report details ›"
     close_txt = "關閉" if lang == "zh" else "Đóng"
 
-    st.markdown(f"""
-<div class="calendar-mobile-view" style="display:none;">
+    st.html(f"""
+<style>
+@media (min-width: 641px) {{ .calendar-mobile-view {{ display: none !important; }} }}
+</style>
+<div class="calendar-mobile-view" style="display:block;font-family:sans-serif;color:#f1f5f9;">
   <div style="font-size:11px;color:#64748b;text-align:center;margin-bottom:12px;letter-spacing:0.5px;">{tap_hint}</div>
   {mobile_weeks_html}
 </div>
@@ -850,30 +896,28 @@ def show_earnings_calendar(lang="zh", is_empty=False):
 
 <!-- Bottom sheet overlay -->
 <div id="mbd-overlay" onclick="closeMobileSheet()"
-     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);"></div>
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;
+            backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);"></div>
 
 <!-- Bottom sheet drawer -->
 <div id="mbd-sheet"
      style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:9999;
-            background:linear-gradient(180deg,rgba(15,23,42,0.98) 0%,rgba(10,15,35,1) 100%);
-            border-top:1px solid rgba(139,92,246,0.35);border-radius:20px 20px 0 0;
-            padding:0 0 env(safe-area-inset-bottom,16px);
-            box-shadow:0 -10px 40px rgba(0,0,0,0.6);
-            transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.34,1.1,0.64,1);">
-  <!-- Drag handle -->
+            background:linear-gradient(180deg,#0f1629 0%,#0a0f23 100%);
+            border-top:2px solid rgba(139,92,246,0.5);border-radius:20px 20px 0 0;
+            box-shadow:0 -10px 40px rgba(0,0,0,0.7);
+            transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.34,1.1,0.64,1);">
   <div style="display:flex;justify-content:center;padding:12px 0 4px;">
-    <div style="width:40px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;"></div>
+    <div style="width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;"></div>
   </div>
-  <!-- Close button -->
-  <div style="display:flex;justify-content:flex-end;padding:4px 16px 0;">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 16px 8px;">
+    <span style="font-size:13px;color:#8b5cf6;font-weight:700;letter-spacing:0.5px;">📊 財報詳情</span>
     <button onclick="closeMobileSheet()"
-            style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
-                   color:#94a3b8;border-radius:8px;padding:4px 14px;font-size:13px;cursor:pointer;">
+            style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+                   color:#94a3b8;border-radius:8px;padding:5px 16px;font-size:13px;cursor:pointer;">
       ✕ {close_txt}
     </button>
   </div>
-  <!-- Scrollable content -->
-  <div id="mbd-content" style="padding:16px 20px 24px;overflow-y:auto;max-height:72vh;"></div>
+  <div id="mbd-content" style="padding:8px 20px 40px;overflow-y:auto;max-height:70vh;"></div>
 </div>
 
 <script>
@@ -884,18 +928,17 @@ function openMobileSheet(sym) {{
   document.getElementById('mbd-overlay').style.display = 'block';
   var sheet = document.getElementById('mbd-sheet');
   sheet.style.display = 'block';
-  setTimeout(function() {{ sheet.style.transform = 'translateY(0)'; }}, 10);
-  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(function() {{
+    sheet.style.transform = 'translateY(0)';
+  }});
 }}
 function closeMobileSheet() {{
-  var sheet = document.getElementById('mbd-sheet');
-  sheet.style.transform = 'translateY(100%)';
+  document.getElementById('mbd-sheet').style.transform = 'translateY(100%)';
   document.getElementById('mbd-overlay').style.display = 'none';
-  document.body.style.overflow = '';
-  setTimeout(function() {{ sheet.style.display = 'none'; }}, 360);
+  setTimeout(function() {{ document.getElementById('mbd-sheet').style.display = 'none'; }}, 360);
 }}
 </script>
-""", unsafe_allow_html=True)
+""")
     
 
 
