@@ -891,51 +891,81 @@ def show_earnings_calendar(lang="zh", is_empty=False):
   {mobile_weeks_html}
 </div>
 
-<!-- Hidden detail data panels -->
-<div id="mbd-panels" style="display:none;">{detail_panels_html}</div>
-
-<!-- Bottom sheet overlay -->
-<div id="mbd-overlay" onclick="closeMobileSheet()"
-     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;
-            backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);"></div>
-
-<!-- Bottom sheet drawer -->
-<div id="mbd-sheet"
-     style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:9999;
-            background:linear-gradient(180deg,#0f1629 0%,#0a0f23 100%);
-            border-top:2px solid rgba(139,92,246,0.5);border-radius:20px 20px 0 0;
-            box-shadow:0 -10px 40px rgba(0,0,0,0.7);
-            transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.34,1.1,0.64,1);">
-  <div style="display:flex;justify-content:center;padding:12px 0 4px;">
-    <div style="width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;"></div>
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 16px 8px;">
-    <span style="font-size:13px;color:#8b5cf6;font-weight:700;letter-spacing:0.5px;">📊 財報詳情</span>
-    <button onclick="closeMobileSheet()"
-            style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
-                   color:#94a3b8;border-radius:8px;padding:5px 16px;font-size:13px;cursor:pointer;">
-      ✕ {close_txt}
-    </button>
-  </div>
-  <div id="mbd-content" style="padding:8px 20px 40px;overflow-y:auto;max-height:70vh;"></div>
-</div>
-
 <script>
+var _closeTitle = "{close_txt}";
+var _sheetTitle = "📊 財報詳情";
+
 function openMobileSheet(sym) {{
   var panel = document.getElementById('mbd-' + sym);
   if (!panel) return;
-  document.getElementById('mbd-content').innerHTML = panel.innerHTML;
-  document.getElementById('mbd-overlay').style.display = 'block';
-  var sheet = document.getElementById('mbd-sheet');
-  sheet.style.display = 'block';
+  var content = panel.innerHTML;
+  var p = window.parent.document;
+
+  // Clean up any existing sheet
+  ['__mbd_overlay','__mbd_sheet'].forEach(function(id) {{
+    var el = p.getElementById(id);
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  }});
+
+  // Overlay
+  var overlay = p.createElement('div');
+  overlay.id = '__mbd_overlay';
+  overlay.style.cssText = [
+    'position:fixed','inset:0','z-index:99998',
+    'background:rgba(0,0,0,0.72)',
+    'backdrop-filter:blur(5px)','-webkit-backdrop-filter:blur(5px)'
+  ].join(';');
+  overlay.addEventListener('click', closeMobileSheet);
+  p.body.appendChild(overlay);
+
+  // Bottom sheet
+  var sheet = p.createElement('div');
+  sheet.id = '__mbd_sheet';
+  sheet.style.cssText = [
+    'position:fixed','left:0','right:0','bottom:0','z-index:99999',
+    'background:linear-gradient(180deg,#0f172a 0%,#080d1a 100%)',
+    'border-top:2px solid rgba(139,92,246,0.6)',
+    'border-radius:22px 22px 0 0',
+    'box-shadow:0 -12px 48px rgba(0,0,0,0.75)',
+    'color:#f1f5f9','font-family:-apple-system,BlinkMacSystemFont,sans-serif',
+    'transform:translateY(100%)',
+    'transition:transform 0.33s cubic-bezier(0.34,1.1,0.64,1)'
+  ].join(';');
+  sheet.innerHTML =
+    '<div style="display:flex;justify-content:center;padding:14px 0 6px;">' +
+      '<div style="width:44px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;"></div>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 18px 10px;">' +
+      '<span style="font-size:14px;color:#a78bfa;font-weight:700;letter-spacing:0.5px;">' + _sheetTitle + '</span>' +
+      '<button id="__mbd_close" style="background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.16);' +
+        'color:#94a3b8;border-radius:9px;padding:6px 18px;font-size:13px;cursor:pointer;">' +
+        '✕ ' + _closeTitle +
+      '</button>' +
+    '</div>' +
+    '<div style="padding:6px 20px 48px;overflow-y:auto;max-height:68vh;-webkit-overflow-scrolling:touch;">' +
+      content +
+    '</div>';
+  p.body.appendChild(sheet);
+  p.getElementById('__mbd_close').addEventListener('click', closeMobileSheet);
+
   requestAnimationFrame(function() {{
-    sheet.style.transform = 'translateY(0)';
+    requestAnimationFrame(function() {{
+      sheet.style.transform = 'translateY(0)';
+    }});
   }});
 }}
+
 function closeMobileSheet() {{
-  document.getElementById('mbd-sheet').style.transform = 'translateY(100%)';
-  document.getElementById('mbd-overlay').style.display = 'none';
-  setTimeout(function() {{ document.getElementById('mbd-sheet').style.display = 'none'; }}, 360);
+  var p = window.parent.document;
+  var sheet = p.getElementById('__mbd_sheet');
+  var overlay = p.getElementById('__mbd_overlay');
+  if (sheet) sheet.style.transform = 'translateY(100%)';
+  setTimeout(function() {{
+    ['__mbd_overlay','__mbd_sheet'].forEach(function(id) {{
+      var el = p.getElementById(id);
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    }});
+  }}, 360);
 }}
 </script>
 """)
