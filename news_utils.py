@@ -15,7 +15,8 @@ def _fetch_and_translate_single(symbol, lang="zh", limit=2):
         site_query = " OR ".join([f"site:{site}" for site in trusted_sites])
         
         # Query Google News for the stock symbol in Vietnam, limited to the past 24 hours
-        query = urllib.parse.quote(f"{symbol} chứng khoán ({site_query}) when:1d")
+        # Require either the term "cổ phiếu" (stock) or "mã" (code/ticker) along with the exact symbol
+        query = urllib.parse.quote(f'("cổ phiếu" OR "mã") "{symbol}" ({site_query}) when:1d')
         url = f"https://news.google.com/rss/search?q={query}&hl=vi&gl=VN&ceid=VN:vi"
         
         res = requests.get(url, timeout=10)
