@@ -320,7 +320,10 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         "QNS": {"type": "食品飲料" if lang == "zh" else "Thực phẩm", "actual_growth": "YoY +68.0%", "desc": "Q1 營收 2,520 億 VND，淨利 532 億 VND。受惠於國際糖價維持高檔、自產原糖利潤改善以及豆奶剛需強勁，獲利大增。" if lang == "zh" else "LNST Q1 đạt 532 tỷ VND. Mảng đường ghi nhận biên lợi nhuận gộp bứt phá nhờ giá đường Neo ở mức cao."},
         "VNM": {"type": "食品飲料" if lang == "zh" else "Thực phẩm", "actual_growth": "YoY +16.0%", "desc": "Q1 營收 14,100 億 VND，淨利 2,207 億 VND。奶粉與液態奶內銷回溫，海外附屬公司銷量穩增，防禦型業績出色。" if lang == "zh" else "LNST Q1 đạt 2.207 tỷ VND. Doanh thu nội địa ổn định kết hợp tối ưu hóa chi phí nguyên liệu sữa bột nhập khẩu."},
         "MWG": {"type": "民生零售" if lang == "zh" else "Bán lẻ", "actual_growth": "YoY +4200%+", "desc": "Q1 營收 31,480 億 VND，淨利 902 億 VND。旗下「百家綠」生鮮超市損益平衡點改善，「行動世界」手機店毛利大幅回升。" if lang == "zh" else "LNST Q1 đạt 902 tỷ VND. Chuỗi Bách Hóa Xanh cải thiện mạnh doanh số trung bình cửa hàng, đưa lợi nhuận hồi sinh ngoạn mục."},
-        "FRT": {"type": "醫藥零售" if lang == "zh" else "Bán lẻ dược phẩm", "actual_growth": "YoY +300%+", "desc": "Q1 營收 9,040 億 VND，淨利 61 億 VND。龍洲藥局連鎖店數增至 1,600 家，單店坪效維持高檔，正式進入獲利貢獻期。" if lang == "zh" else "LNST Q1 đạt 61 tỷ VND. Chuỗi nhà thuốc Long Châu tiếp tục là động lực tăng trưởng cốt lõi với doanh thu bùng nổ."}
+        "FRT": {"type": "醫藥零售" if lang == "zh" else "Bán lẻ dược phẩm", "actual_growth": "YoY +300%+", "desc": "Q1 營收 9,040 億 VND，淨利 61 億 VND。龍洲藥局連鎖店數增至 1,600 家，單店坪效維持高檔，正式進入獲利貢獻期。" if lang == "zh" else "LNST Q1 đạt 61 tỷ VND. Chuỗi nhà thuốc Long Châu tiếp tục là động lực tăng trưởng cốt lõi với doanh thu bùng nổ."},
+        "HAX": {"type": "汽車銷售" if lang == "zh" else "Phân phối ô tô", "actual_growth": "YoY -8.0%", "desc": "Q1 營收 1,098 億 VND (YoY +14%)，淨利 153 億 VND (YoY -8%)。受豪華車市場價格戰與利息支出增加影響，本業利潤下滑，但因代理商返利與獎金挹注維持獲利。" if lang == "zh" else "Doanh thu Q1 đạt 1.098 tỷ VND (YoY +14%), LNST đạt 15.3 tỷ VND (YoY -8%). Áp lực cạnh tranh giá bán xe sang và chi phí tài chính bào mòn lợi nhuận cốt lõi."},
+        "OCB": {"type": "金融銀行" if lang == "zh" else "Ngân hàng", "actual_growth": "YoY +37.0%", "desc": "Q1 營收 2,722 億 VND (YoY +19.8%)，稅前淨利 1,224 億 VND (YoY +37%)。信貸投放量首度突破 200 兆 VND，且手續費與淨利差控制良好，推動獲利強勁增長。" if lang == "zh" else "Tổng thu thuần Q1 đạt 2.722 tỷ VND (YoY +19.8%), LNTT đạt 1.224 tỷ VND (YoY +37%). Dư nợ tín dụng lần đầu vượt mốc 200 nghìn tỷ VND."},
+        "NT2": {"type": "電力能源" if lang == "zh" else "Điện lực", "actual_growth": "YoY +387.0%", "desc": "Q1 營收 2,172 億 VND (YoY +52%)，淨利 180 億 VND (YoY +387%)。受惠於氣候乾旱使火力發電需求大增，且發電設備折舊完畢使折舊費用銳減，獲利呈爆發性成長。" if lang == "zh" else "Doanh thu Q1 đạt 2.172 tỷ VND (YoY +52%), LNST đạt 180 tỷ VND (YoY +387%). Sản lượng huy động tăng mạnh và chi phí khấu hao giảm sau khi hoàn tất khấu hao."}
     }
 
     details_base = {
@@ -336,7 +339,10 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         "QNS": {"type": "食品飲料" if lang == "zh" else "Thực phẩm", "expected_growth": "YoY +15%", "desc": "豆奶與糖業龍頭。夏季飲品剛性需求強，製糖業務受惠於國際糖價高檔。" if lang == "zh" else "Thương hiệu sữa đậu nành Fami dẫn đầu thị phần, mảng đường hoạt động tốt."},
         "VNM": {"type": "食品飲料" if lang == "zh" else "Thực phẩm", "expected_growth": "YoY +8%", "desc": "越南牛奶。內需民生消費防禦型標的，海外市場（中東）銷量成長。" if lang == "zh" else "Sữa Vinamilk phòng thủ tốt, dòng tiền mạnh chia cổ tức đều đặn."},
         "MWG": {"type": "民生零售" if lang == "zh" else "Bán lẻ", "expected_growth": "YoY +120%+", "desc": "零售巨頭。旗下「百家綠」生鮮超市正式轉盈，手機店利潤率改善，獲利大幅翻倍。" if lang == "zh" else "Bách Hóa Xanh bắt đầu hòa vốn và có lãi, kéo lợi nhuận tập đoàn tăng vọt."},
-        "FRT": {"type": "醫藥零售" if lang == "zh" else "Bán lẻ dược phẩm", "expected_growth": "YoY +90%+", "desc": "龍洲藥局快速擴張並進入收割期。連鎖藥局獲利成長顯著，帶動 FRT 營收大增。" if lang == "zh" else "Chuỗi nhà thuốc Long Châu tiếp tục bứt phá mạnh mẽ làm động lực tăng trưởng chính."}
+        "FRT": {"type": "醫藥零售" if lang == "zh" else "Bán lẻ dược phẩm", "expected_growth": "YoY +90%+", "desc": "龍洲藥局快速擴張並進入收割期。連鎖藥局獲利成長顯著，帶動 FRT 營收大增。" if lang == "zh" else "Chuỗi nhà thuốc Long Châu tiếp tục bứt phá mạnh mẽ làm động lực tăng trưởng chính."},
+        "HAX": {"type": "汽車銷售" if lang == "zh" else "Phân phối ô tô", "expected_growth": "YoY +15%", "desc": "越南 Mercedes-Benz 最大代理商。隨豪華車稅收優惠與代理品牌擴展，本業獲利預期迎來復甦。" if lang == "zh" else "Nhà phân phối Mercedes-Benz lớn nhất VN. Kỳ vọng doanh số xe sang phục hồi mạnh nhờ chính sách phí trước bạ."},
+        "OCB": {"type": "金融銀行" if lang == "zh" else "Ngân hàng", "expected_growth": "YoY +28%", "desc": "中型私營商業銀行。積極布局零售與數位金融，信貸成長強勁，資產規模持續擴張。" if lang == "zh" else "Ngân hàng TMCP Phương Đông. Tập trung mạnh vào chuyển đổi số và bán lẻ, tăng trưởng tín dụng cao."},
+        "NT2": {"type": "電力能源" if lang == "zh" else "Điện lực", "expected_growth": "YoY +12%", "desc": "仁澤二期天然氣發電廠。發電設備陸續折舊完畢，現金流極為充沛，可持續提供穩定且高額的現金股利。" if lang == "zh" else "Nhà máy Điện khí Nhơn Trạch 2. Dòng tiền cực kỳ dồi dào sau khi hết khấu hao thiết bị, duy trì cổ tức tiền mặt cao."}
     }
 
     # Render selected quarter content
@@ -530,20 +536,36 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         """
 
         if info is None:
-            if q_key == "Q1":
-                info = {
-                    "type": "您的持股" if lang == "zh" else "Cổ phiếu sở hữu",
-                    "growth_key": "財報狀態" if lang == "zh" else "BCTC",
-                    "growth_val": "已發布" if lang == "zh" else "Đã công bố",
-                    "desc": f"這是您的投資組合持股 {selected_sym}。Q1 財報已於該日附近公布。以下為您目前的持倉明細。您亦可點選下方外部連結，前往 CafeF 官方網站查看詳細的資產負債表與利潤表。" if lang == "zh" else f"Đây là cổ phiếu {selected_sym} của bạn. BCTC Q1 đã được công bố. Dưới đây là vị thế hiện tại của bạn. Bạn cũng có thể xem BCTC chi tiết trên CafeF."
-                }
+            if is_held:
+                if q_key == "Q1":
+                    info = {
+                        "type": "您的持股" if lang == "zh" else "Cổ phiếu sở hữu",
+                        "growth_key": "財報狀態" if lang == "zh" else "BCTC",
+                        "growth_val": "已發布" if lang == "zh" else "Đã công bố",
+                        "desc": f"這是您的投資組合持股 {selected_sym}。Q1 財報已於該日附近公布。以下為您目前的持倉明細。您亦可點選下方外部連結，前往 CafeF 官方網站查看詳細的資產負債表與利潤表。" if lang == "zh" else f"Đây là cổ phiếu {selected_sym} của bạn. BCTC Q1 đã được công bố. Dưới đây là vị thế hiện tại của bạn. Bạn cũng có thể xem BCTC chi tiết trên CafeF."
+                    }
+                else:
+                    info = {
+                        "type": "您的持股" if lang == "zh" else "Cổ phiếu sở hữu",
+                        "growth_key": "預期發布" if lang == "zh" else "Dự kiến",
+                        "growth_val": "密切追蹤" if lang == "zh" else "Theo dõi sát",
+                        "desc": f"這是您的投資組合持股 {selected_sym}。預計於該日附近公布財報。請密切注意公司官方公告與損益變化。" if lang == "zh" else f"Đây là cổ phiếu {selected_sym} của bạn. BCTC dự kiến công bố quanh ngày này, hãy theo dõi sát sao."
+                    }
             else:
-                info = {
-                    "type": "您的持股" if lang == "zh" else "Cổ phiếu sở hữu",
-                    "growth_key": "預期發布" if lang == "zh" else "Dự kiến",
-                    "growth_val": "密切追蹤" if lang == "zh" else "Theo dõi sát",
-                    "desc": f"這是您的投資組合持股 {selected_sym}。預計於該日附近公布財報。請密切注意公司官方公告與損益變化。" if lang == "zh" else f"Đây là cổ phiếu {selected_sym} của bạn. BCTC dự kiến công bố quanh ngày này, hãy theo dõi sát sao."
-                }
+                if q_key == "Q1":
+                    info = {
+                        "type": "市場追蹤" if lang == "zh" else "Theo dõi thị trường",
+                        "growth_key": "財報狀態" if lang == "zh" else "BCTC",
+                        "growth_val": "已發布" if lang == "zh" else "Đã công bố",
+                        "desc": f"該股票 {selected_sym} 的 Q1 財報已於該日附近公布。您目前未持有此股票。您可以點選下方外部連結，前往 CafeF 官方網站查看詳細的財報與利潤表。" if lang == "zh" else f"BCTC Q1 của {selected_sym} đã được công bố. Bạn hiện không nắm giữ cổ phiếu này. Bạn có thể xem chi tiết BCTC trên CafeF."
+                    }
+                else:
+                    info = {
+                        "type": "市場追蹤" if lang == "zh" else "Theo dõi thị trường",
+                        "growth_key": "預期發布" if lang == "zh" else "Dự kiến",
+                        "growth_val": "密切追蹤" if lang == "zh" else "Theo dõi sát",
+                        "desc": f"預計於該日附近公布 {selected_sym} 的最新財報。您目前未持有此股票。您可以點選下方外部連結，前往 CafeF 官方網站追蹤相關公告。" if lang == "zh" else f"Dự kiến BCTC của {selected_sym} sẽ được công bố quanh ngày này. Bạn hiện không nắm giữ cổ phiếu này. Bạn có thể theo dõi trên CafeF."
+                    }
         else:
             if q_key == "Q1":
                 info = {
