@@ -296,11 +296,20 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                     html.append('<div class="calendar-day-cell">')
                     html.append(f'<div class="calendar-day-num">{day:02d}</div>')
                     if day in events_map:
+                        html.append('<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px;">')
                         for ev in events_map[day]:
                             color_bg = ev["color"]
                             prefix = "⭐ " if ev.get("is_holding") else ""
-                            tag_style = f"background: {color_bg}22; border: 1px solid {color_bg}88; color: {color_bg};"
-                            html.append(f'<a href="?select_stock={ev["symbol"]}&q_tab={q_key}" target="_self" style="text-decoration: none;"><span class="calendar-stock-tag" style="{tag_style}"><img src="{get_favicon_url(ev["symbol"])}" style="width:11px; height:11px; border-radius:2px; vertical-align:middle; margin-right:1px;" onerror="this.style.display=\'none\'">{prefix}{ev["symbol"]}</span></a>')
+                            tooltip = f"{prefix}{ev['symbol']}"
+                            img_style = f"width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border-color); padding: 1px; background: rgba(255,255,255,0.08); transition: all 0.15s ease-in-out; vertical-align: middle; cursor: pointer;"
+                            span_id = f"fallback_{q_key}_{day}_{ev['symbol']}"
+                            span_style = f"display: none; font-size: 9px; font-weight: bold; color: {color_bg}; background: {color_bg}22; border: 1px solid {color_bg}88; padding: 1px 3px; border-radius: 4px;"
+                            
+                            html.append(f'<a href="?select_stock={ev["symbol"]}&q_tab={q_key}" target="_parent" style="text-decoration: none;" title="{tooltip}">')
+                            html.append(f'<img src="{get_favicon_url(ev["symbol"])}" style="{img_style}" onmouseover="this.style.transform=\'scale(1.15)\'; this.style.borderColor=\'#00F0FF\';" onmouseout="this.style.transform=\'scale(1)\'; this.style.borderColor=\'var(--border-color)\';" onerror="this.style.display=\'none\'; document.getElementById(\'{span_id}\').style.display=\'inline-block\';">')
+                            html.append(f'<span id="{span_id}" style="{span_style}">{prefix}{ev["symbol"]}</span>')
+                            html.append('</a>')
+                        html.append('</div>')
                     html.append('</div>')
                     
         html.append('</div></div>')
