@@ -374,7 +374,7 @@ with tab_main:
         
         with target_col:
             # Render a beautiful premium card - left-aligned to completely avoid markdown parsing issues
-            card_html = f"""<div class="cathay-card" style="padding:16px; margin:8px 0; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); height: 200px; display: flex; flex-direction: column; justify-content: space-between;">
+            card_html = f"""<div class="cathay-card" style="padding:16px; margin:8px 0; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); min-height: 230px; display: flex; flex-direction: column; justify-content: space-between;">
 <div>
 <div style="display:flex; justify-content:space-between; align-items:center;">
 <span style="font-size:1.2rem; font-weight:bold; color:#00F0FF; vertical-align:middle;">{sym}</span>
