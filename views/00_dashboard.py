@@ -698,18 +698,6 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             </div>
             """)
 
-        # Construct CafeF external link
-        cafef_url = f"https://s.cafef.vn/hose/{selected_sym}.chn"
-        cafef_label = f"🔍 前往 CafeF 查看 {selected_sym} 官方財報新聞" if lang == "zh" else f"🔍 Xem tin tức BCTC {selected_sym} trên CafeF"
-        
-        cafef_link_html = clean_html(f"""
-        <div style="margin-top: 14px; text-align: right;">
-            <a href="{cafef_url}" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 11px; font-weight: bold; background: rgba(0, 240, 255, 0.08); padding: 5px 14px; border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.25); display: inline-block; transition: all 0.2s ease-in-out;" onmouseover="this.style.background='rgba(0, 240, 255, 0.16)'; this.style.borderColor='#00F0FF';" onmouseout="this.style.background='rgba(0, 240, 255, 0.08)'; this.style.borderColor='rgba(0, 240, 255, 0.25)';">
-                {cafef_label} ↗
-            </a>
-        </div>
-        """)
-
         if info is None:
             if is_held:
                 if q_key == "Q1":
@@ -717,7 +705,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                         "type": "您的持股" if lang == "zh" else "Cổ phiếu sở hữu",
                         "growth_key": "財報狀態" if lang == "zh" else "BCTC",
                         "growth_val": "已發布" if lang == "zh" else "Đã công bố",
-                        "desc": f"這是您的投資組合持股 {selected_sym}。Q1 財報已於該日附近公布。以下為您目前的持倉明細。您亦可點選下方外部連結，前往 CafeF 官方網站查看詳細的資產負債表與利潤表。" if lang == "zh" else f"Đây là cổ phiếu {selected_sym} của bạn. BCTC Q1 đã được công bố. Dưới đây là vị thế hiện tại của bạn. Bạn cũng có thể xem BCTC chi tiết trên CafeF."
+                        "desc": f"這是您的投資組合持股 {selected_sym}。Q1 財報已於該日附近公布。以下為您目前的持倉明細。" if lang == "zh" else f"Đây là cổ phiếu {selected_sym} của bạn. BCTC Q1 đã được công bố. Dưới đây là vị thế hiện tại của bạn."
                     }
                 else:
                     info = {
@@ -732,14 +720,14 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                         "type": "市場追蹤" if lang == "zh" else "Theo dõi thị trường",
                         "growth_key": "財報狀態" if lang == "zh" else "BCTC",
                         "growth_val": "已發布" if lang == "zh" else "Đã công bố",
-                        "desc": f"該股票 {selected_sym} 的 Q1 財報已於該日附近公布。您目前未持有此股票。您可以點選下方外部連結，前往 CafeF 官方網站查看詳細的財報與利潤表。" if lang == "zh" else f"BCTC Q1 của {selected_sym} đã được công bố. Bạn hiện không nắm giữ cổ phiếu này. Bạn có thể xem chi tiết BCTC trên CafeF."
+                        "desc": f"該股票 {selected_sym} 的 Q1 財報已於該日附近公布。您目前未持有此股票。" if lang == "zh" else f"BCTC Q1 của {selected_sym} đã được công bố. Bạn hiện không nắm giữ cổ phiếu này."
                     }
                 else:
                     info = {
                         "type": "市場追蹤" if lang == "zh" else "Theo dõi thị trường",
                         "growth_key": "預期發布" if lang == "zh" else "Dự kiến",
                         "growth_val": "密切追蹤" if lang == "zh" else "Theo dõi sát",
-                        "desc": f"預計於該日附近公布 {selected_sym} 的最新財報。您目前未持有此股票。您可以點選下方外部連結，前往 CafeF 官方網站追蹤相關公告。" if lang == "zh" else f"Dự kiến BCTC của {selected_sym} sẽ được công bố quanh ngày này. Bạn hiện không nắm giữ cổ phiếu này. Bạn có thể theo dõi trên CafeF."
+                        "desc": f"預計於該日附近公布 {selected_sym} 的最新財報。您目前未持有此股票。" if lang == "zh" else f"Dự kiến BCTC của {selected_sym} sẽ được công bố quanh ngày này. Bạn hiện không nắm giữ cổ phiếu này."
                     }
         else:
             if q_key == "Q1":
@@ -811,7 +799,6 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 {info['desc']}
             </div>
             {holding_html}
-            {cafef_link_html}
         </div>
         """)
         st.html(card_html)
