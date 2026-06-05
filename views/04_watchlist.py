@@ -232,25 +232,21 @@ with tab_main:
                 text_color = "#34d399" if w["est_yield"] >= 5.0 else "#cbd5e1"
                 
                 # Create a small high yield tag
-                yield_badge = f"""
-                <span style="background: {bg_color}; border: 1px solid {border_color}; color: {text_color}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 10px; display: inline-block; vertical-align: middle;">
-                    💎 {w['ey_str']}
-                </span>
-                """
+                yield_badge = f'<span style="background: {bg_color}; border: 1px solid {border_color}; color: {text_color}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 10px; display: inline-block; vertical-align: middle;">💎 {w["ey_str"]}</span>'
                 
-            st.markdown(textwrap.dedent(f"""\
-            <div class="cathay-card" style="padding:14px 18px;margin:6px 0; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
-                <div style='display:flex;justify-content:space-between;align-items:center;'>
-                    <div>
-                        {"🟢" if w['enabled'] else "⚫"} <b style='color:var(--text-primary);font-size:1.05rem;vertical-align:middle;'>{w['symbol']}</b>
-                        {yield_badge}
-                        <span style='color:var(--text-secondary);margin-left:12px;vertical-align:middle;'>{w['price_str']}</span>
-                        <span style='color:{w['cc']};margin-left:8px;vertical-align:middle;'>{w['cs']} {abs(w['change']):.2f}%</span>
-                    </div>
-                    <div style='color:{w['dist_color']};font-size:.9rem;'>{w['dist_str']}</div>
-                </div>
-                <div style='color:#64748b;font-size:.82rem;margin-top:6px;'>{w['badge_str']}</div>
-            </div>"""), unsafe_allow_html=True)
+            card_html = f"""<div class="cathay-card" style="padding:14px 18px;margin:6px 0; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<div>
+{"🟢" if w['enabled'] else "⚫"} <b style="color:var(--text-primary);font-size:1.05rem;vertical-align:middle;">{w['symbol']}</b>
+{yield_badge}
+<span style="color:var(--text-secondary);margin-left:12px;vertical-align:middle;">{w['price_str']}</span>
+<span style="color:{w['cc']};margin-left:8px;vertical-align:middle;">{w['cs']} {abs(w['change']):.2f}%</span>
+</div>
+<div style="color:{w['dist_color']};font-size:.9rem;">{w['dist_str']}</div>
+</div>
+<div style="color:#64748b;font-size:.82rem;margin-top:6px;">{w['badge_str']}</div>
+</div>"""
+            st.markdown(card_html, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
         c1, c2 = st.columns(2)

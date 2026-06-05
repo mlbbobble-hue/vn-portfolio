@@ -477,25 +477,23 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             date_label = "Ngày công bố" if q_key == "Q1" else "Dự kiến công bố"
             
         with col_det:
-            st.markdown(f"""
-            <div class="cathay-card" style="background: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                    {badge_html}
-                    <span style="font-size:11px; color:#cbd5e1; background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:10px;">{info['type']}</span>
-                </div>
-                <div style="margin: 4px 0; display:flex; gap: 6px; flex-wrap: wrap;">
-                    <span style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.3); color:#f472b6; padding:1px 4px; border-radius:4px; font-size:10px; font-weight:bold;">
-                        📅 {date_label}: {date_str}
-                    </span>
-                    <span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:1px 4px; border-radius:4px; font-size:10px; font-weight:bold;">
-                        🚀 {info['growth_key']}: {info['growth_val']}
-                    </span>
-                </div>
-                <div style="font-size:12px; color:#cbd5e1; line-height:1.4; margin-top:4px;">
-                    {info['desc']}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"""<div class="cathay-card" style="background: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+{badge_html}
+<span style="font-size:11px; color:#cbd5e1; background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:10px;">{info['type']}</span>
+</div>
+<div style="margin: 4px 0; display:flex; gap: 6px; flex-wrap: wrap;">
+<span style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.3); color:#f472b6; padding:1px 4px; border-radius:4px; font-size:10px; font-weight:bold;">
+📅 {date_label}: {date_str}
+</span>
+<span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:1px 4px; border-radius:4px; font-size:10px; font-weight:bold;">
+🚀 {info['growth_key']}: {info['growth_val']}
+</span>
+</div>
+<div style="font-size:12px; color:#cbd5e1; line-height:1.4; margin-top:4px;">
+{info['desc']}
+</div>
+</div>""", unsafe_allow_html=True)
 
 
 if holdings.empty:
@@ -531,16 +529,14 @@ if not holdings.empty and not is_loading_prices:
     
     if not all_news:
         search_txt = "前往 CafeF 搜尋" if lang == "zh" else "Tìm trên CafeF"
-        st.markdown(f"""
-        <div class="cathay-card" style="background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 20px; text-align: center;">
-            <span style="font-size: 15px; color: #94a3b8; display: block; margin-bottom: 10px;">
-                {"今日無相關新聞" if lang == "zh" else "Không có tin tức nào hôm nay"}
-            </span>
-            <a href="https://s.cafef.vn/tim-kiem.chn" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 15px; font-weight: bold; background: rgba(0, 240, 255, 0.1); padding: 8px 16px; border-radius: 20px;">
-                🔍 {search_txt}
-            </a>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<div class="cathay-card" style="background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 20px; text-align: center;">
+<span style="font-size: 15px; color: #94a3b8; display: block; margin-bottom: 10px;">
+{"今日無相關新聞" if lang == "zh" else "Không có tin tức nào hôm nay"}
+</span>
+<a href="https://s.cafef.vn/tim-kiem.chn" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 15px; font-weight: bold; background: rgba(0, 240, 255, 0.1); padding: 8px 16px; border-radius: 20px;">
+🔍 {search_txt}
+</a>
+</div>""", unsafe_allow_html=True)
     else:
         # Sort news by parsing the RFC 2822 date string to ensure chronological order
         import email.utils
@@ -554,21 +550,19 @@ if not holdings.empty and not is_loading_prices:
         
         with st.container(height=380):
             for item in all_news:
-                st.markdown(f"""
-                <div class="cathay-card" style="background: var(--bg-card); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;">
-                    <div style="background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.5); color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; min-width: 55px; text-align: center; flex-shrink: 0; align-self: flex-start; margin-top: 3px;">
-                        {item['symbol']}
-                    </div>
-                    <div>
-                        <a href="{item['link']}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: 500; font-size: 15px; display: block; margin-bottom: 6px; line-height: 1.4; transition: color 0.2s;" onmouseover="this.style.color='#00F0FF'" onmouseout="this.style.color='#ffffff'">
-                            {item['title']}
-                        </a>
-                        <div style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
-                            <span>🕒 {item['pubDate'][:16]}</span>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"""<div class="cathay-card" style="background: var(--bg-card); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;">
+<div style="background: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.5); color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; min-width: 55px; text-align: center; flex-shrink: 0; align-self: flex-start; margin-top: 3px;">
+{item['symbol']}
+</div>
+<div>
+<a href="{item['link']}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: 500; font-size: 15px; display: block; margin-bottom: 6px; line-height: 1.4; transition: color 0.2s;" onmouseover="this.style.color='#00F0FF'" onmouseout="this.style.color='#ffffff'">
+{item['title']}
+</a>
+<div style="font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+<span>🕒 {item['pubDate'][:16]}</span>
+</div>
+</div>
+</div>""", unsafe_allow_html=True)
                 
     st.markdown("<br><hr style='border-color: var(--border-color); opacity: 0.5;'><br>", unsafe_allow_html=True)
     
