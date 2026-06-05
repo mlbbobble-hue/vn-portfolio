@@ -698,12 +698,92 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                                     
     st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
     
-    # === MOBILE-ONLY: Pure HTML vertical timeline view ===
-    # Built from q_events, shown only on mobile via CSS media query
+    # === MOBILE-ONLY: Pure HTML vertical timeline + bottom sheet ===
     day_labels_zh = {"Mon": "週一", "Tue": "週二", "Wed": "週三", "Thu": "週四", "Fri": "週五"}
     day_names_en = ["Mon", "Tue", "Wed", "Thu", "Fri"]
-    
-    # Build weeks list from selected_grid with event data
+
+    # --- Pre-build detail panel HTML for every stock in q_events ---
+    detail_panels_html = ""
+    year_month = {"Q1": "2026-04", "Q2": "2026-07", "Q3": "2026-10", "Q4": "2027-01"}.get(q_key, "2026-07")
+
+    all_evs_flat = {}
+    for day, evs in q_events.items():
+        for ev in evs:
+            all_evs_flat[ev["symbol"]] = (day, ev)
+
+    for sym, (day, ev) in all_evs_flat.items():
+        favicon_url = get_favicon_url(sym)
+        is_held = ev.get("is_holding", False)
+        color = ev["color"]
+
+        # Resolve info dict
+        if q_key == "Q1":
+            raw = details_q1.get(sym) or details_base.get(sym)
+        else:
+            raw = details_base.get(sym)
+
+        if raw:
+            growth_key = ("淨利成長" if lang == "zh" else "Tăng trưởng LNST") if q_key == "Q1" else ("預期成長" if lang == "zh" else "Tăng trưởng dự kiến")
+            growth_val = raw.get("actual_growth") or raw.get("expected_growth", "—")
+            stock_type = raw.get("type", "")
+            desc = raw.get("desc", "")
+        else:
+            growth_key = "財報" if lang == "zh" else "BCTC"
+            growth_val = "已發布" if q_key == "Q1" else "預計發布"
+            stock_type = "持股中" if is_held else "追蹤中"
+            desc = f"{'財報日期預計在此月。' if lang == 'zh' else 'Expected report date this month.'}"
+
+        growth_neg = "-" in growth_val or "giảm" in growth_val.lower()
+        g_color = "#f87171" if growth_neg else "#34d399"
+        g_bg = "rgba(239,68,68,0.1)" if growth_neg else "rgba(16,185,129,0.1)"
+        g_border = "rgba(239,68,68,0.3)" if growth_neg else "rgba(16,185,129,0.3)"
+        date_label = ("實際發布" if lang == "zh" else "Ngày công bố") if q_key == "Q1" else ("預計發布" if lang == "zh" else "Dự kiến")
+        held_badge = f'<span style="font-size:10px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#34d399;padding:2px 8px;border-radius:20px;font-weight:bold;margin-left:6px;">{"持股中" if lang=="zh" else "Nắm giữ"}</span>' if is_held else ""
+
+        # Holding stats block
+        h_html = ""
+        if is_held and not holdings.empty:
+            rows = holdings[holdings["symbol"] == sym]
+            if not rows.empty:
+                r = rows.iloc[0]
+                sh = r["total_shares"]; co = r["total_cost"]; va = r["market_value"]; un = r["unrealized_pl"]
+                ac = co / sh if sh > 0 else 0; cp = va / sh if sh > 0 else 0
+                pp = (un / co * 100) if co > 0 else 0.0
+                cp_color = "#10B981" if un >= 0 else "#FF007F"
+                h_html = f"""<div style="margin-top:14px;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;">
+                <div style="font-size:11px;color:#94a3b8;margin-bottom:8px;font-weight:600;">{"📊 持倉明細" if lang=="zh" else "📊 Vị thế của bạn"}</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div style="background:rgba(15,23,42,0.5);padding:10px;border-radius:8px;text-align:center;">
+                <div style="font-size:10px;color:#64748b;">{"持股數" if lang=="zh" else "SL"}</div>
+                <div style="font-size:15px;font-weight:700;color:#fff;">{sh:,.0f}</div></div>
+                <div style="background:rgba(15,23,42,0.5);padding:10px;border-radius:8px;text-align:center;">
+                <div style="font-size:10px;color:#64748b;">{"成本/市價" if lang=="zh" else "Vốn/HT"}</div>
+                <div style="font-size:13px;font-weight:700;color:#fff;">{ac:,.0f}</div>
+                <div style="font-size:11px;color:#a5b4fc;">{cp:,.0f}</div></div>
+                <div style="background:rgba(15,23,42,0.5);padding:10px;border-radius:8px;text-align:center;">
+                <div style="font-size:10px;color:#64748b;">{"市值" if lang=="zh" else "GT TT"}</div>
+                <div style="font-size:13px;font-weight:700;color:#fff;">{va:,.0f}</div></div>
+                <div style="background:rgba(15,23,42,0.5);padding:10px;border-radius:8px;text-align:center;">
+                <div style="font-size:10px;color:#64748b;">{"未實現損益" if lang=="zh" else "LNTT"}</div>
+                <div style="font-size:13px;font-weight:700;color:{cp_color};">{un:+,.0f}</div>
+                <div style="font-size:11px;color:{cp_color};">({pp:+.2f}%)</div></div>
+                </div></div>"""
+
+        detail_panels_html += f"""<div id="mbd-{sym}" style="display:none;">
+        <div style="display:flex;align-items:center;margin-bottom:16px;">
+            <img src="{favicon_url}" style="width:40px;height:40px;border-radius:10px;margin-right:14px;border:1px solid rgba(255,255,255,0.15);">
+            <div><div style="font-size:22px;font-weight:800;color:#fff;">{sym} {held_badge}</div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:2px;">{stock_type}</div></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+            <span style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#c084fc;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;">📅 {date_label}: {year_month}-{day:02d}</span>
+            <span style="background:{g_bg};border:1px solid {g_border};color:{g_color};padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;">🚀 {growth_key}: {growth_val}</span>
+        </div>
+        <div style="font-size:14px;color:#cbd5e1;line-height:1.7;border-left:3px solid rgba(139,92,246,0.5);padding-left:14px;">{desc}</div>
+        {h_html}
+        </div>"""
+
+    # --- Build week rows ---
     mobile_weeks_html = ""
     for week_idx, week in enumerate(selected_grid):
         week_days_with_events = []
@@ -711,78 +791,111 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             if day is not None:
                 evs = q_events.get(day, [])
                 week_days_with_events.append((day, day_names_en[col_idx], evs))
-        
         if not week_days_with_events:
             continue
-        
-        # Only show weeks that have at least one day
         first_day = week_days_with_events[0][0]
         last_day = week_days_with_events[-1][0]
         week_label = f"第 {week_idx+1} 週 ({first_day:02d} – {last_day:02d} 日)" if lang == "zh" else f"Week {week_idx+1} ({first_day:02d} – {last_day:02d})"
-        
         days_html = ""
         for day, day_name, evs in week_days_with_events:
-            if lang == "zh":
-                day_label = f"{day_labels_zh.get(day_name, day_name)} {day:02d}日"
-            else:
-                day_label = f"{day_name} {day:02d}"
-            
+            day_label = f"{day_labels_zh.get(day_name, day_name)} {day:02d}日" if lang == "zh" else f"{day_name} {day:02d}"
             if evs:
                 tags_html = ""
                 for ev in evs:
-                    sym = ev["symbol"]
-                    color = ev["color"]
+                    sym = ev["symbol"]; color = ev["color"]
                     favicon_url = get_favicon_url(sym)
                     star = " ⭐" if ev.get("is_holding") else ""
-                    tags_html += f"""
-                    <div style="display:inline-flex; align-items:center; gap:6px;
-                                background:{color}18; border:1px solid {color}55;
-                                border-radius:8px; padding:6px 12px; margin:3px 4px 3px 0;
-                                font-size:14px; font-weight:700; color:#fff;">
-                        <img src="{favicon_url}" style="width:16px;height:16px;border-radius:3px;">
+                    tags_html += f"""<div onclick="openMobileSheet('{sym}')"
+                        style="display:inline-flex;align-items:center;gap:6px;
+                               background:{color}18;border:1px solid {color}66;
+                               border-radius:10px;padding:8px 14px;margin:3px 6px 3px 0;
+                               font-size:14px;font-weight:700;color:#fff;
+                               cursor:pointer;-webkit-tap-highlight-color:transparent;
+                               transition:transform 0.15s,box-shadow 0.15s;
+                               active:transform:scale(0.96);"
+                        ontouchstart="this.style.transform='scale(0.95)'"
+                        ontouchend="this.style.transform='scale(1)'">
+                        <img src="{favicon_url}" style="width:18px;height:18px;border-radius:4px;">
                         <span>{sym}{star}</span>
+                        <span style="font-size:10px;color:{color};opacity:0.7;">›</span>
                     </div>"""
-                days_html += f"""
-                <div style="display:flex; align-items:flex-start; padding:10px 0;
-                            border-bottom:1px solid rgba(255,255,255,0.07);">
-                    <div style="min-width:76px; font-size:13px; font-weight:700;
-                                color:#a5b4fc; padding-top:6px;">{day_label}</div>
-                    <div style="flex:1; display:flex; flex-wrap:wrap;">{tags_html}</div>
+                days_html += f"""<div style="display:flex;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+                    <div style="min-width:76px;font-size:13px;font-weight:700;color:#a5b4fc;padding-top:9px;">{day_label}</div>
+                    <div style="flex:1;display:flex;flex-wrap:wrap;">{tags_html}</div>
                 </div>"""
             else:
-                days_html += f"""
-                <div style="display:flex; align-items:center; padding:10px 0;
-                            border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <div style="min-width:76px; font-size:13px; font-weight:700;
-                                color:#475569;">{day_label}</div>
-                    <div style="font-size:12px; color:#334155; font-style:italic;">—</div>
+                days_html += f"""<div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <div style="min-width:76px;font-size:13px;font-weight:700;color:#334155;">{day_label}</div>
+                    <div style="font-size:12px;color:#334155;">—</div>
                 </div>"""
-        
-        mobile_weeks_html += f"""
-        <div style="margin-bottom:12px; background:rgba(20,30,50,0.6);
-                    border:1px solid rgba(255,255,255,0.12); border-radius:12px;
-                    padding:14px 16px;">
-            <div style="font-size:12px; font-weight:700; color:#8b5cf6;
-                        letter-spacing:0.8px; margin-bottom:8px; text-transform:uppercase;">
-                {week_label}
-            </div>
+        mobile_weeks_html += f"""<div style="margin-bottom:12px;background:rgba(20,30,50,0.6);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px;">
+            <div style="font-size:11px;font-weight:700;color:#8b5cf6;letter-spacing:0.8px;margin-bottom:8px;text-transform:uppercase;">{week_label}</div>
             {days_html}
         </div>"""
-    
+
     if not mobile_weeks_html:
-        mobile_weeks_html = f"""
-        <div style="text-align:center; padding:24px; color:#475569; font-size:14px;">
-            {"📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter"}
-        </div>"""
-    
-    st.markdown(clean_html(f"""
-    <div class="calendar-mobile-view" style="display:none;">
-        <div style="font-size:11px; color:#64748b; text-align:right; margin-bottom:10px; letter-spacing:0.5px;">
-            {"⭐ = 持股中" if lang == "zh" else "⭐ = Holding"}
-        </div>
-        {mobile_weeks_html}
-    </div>
-    """), unsafe_allow_html=True)
+        mobile_weeks_html = f'<div style="text-align:center;padding:24px;color:#475569;font-size:14px;">{"📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter"}</div>'
+
+    tap_hint = "點擊股票查看財報詳情 ›" if lang == "zh" else "Tap stock to view report details ›"
+    close_txt = "關閉" if lang == "zh" else "Đóng"
+
+    st.markdown(f"""
+<div class="calendar-mobile-view" style="display:none;">
+  <div style="font-size:11px;color:#64748b;text-align:center;margin-bottom:12px;letter-spacing:0.5px;">{tap_hint}</div>
+  {mobile_weeks_html}
+</div>
+
+<!-- Hidden detail data panels -->
+<div id="mbd-panels" style="display:none;">{detail_panels_html}</div>
+
+<!-- Bottom sheet overlay -->
+<div id="mbd-overlay" onclick="closeMobileSheet()"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);"></div>
+
+<!-- Bottom sheet drawer -->
+<div id="mbd-sheet"
+     style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:9999;
+            background:linear-gradient(180deg,rgba(15,23,42,0.98) 0%,rgba(10,15,35,1) 100%);
+            border-top:1px solid rgba(139,92,246,0.35);border-radius:20px 20px 0 0;
+            padding:0 0 env(safe-area-inset-bottom,16px);
+            box-shadow:0 -10px 40px rgba(0,0,0,0.6);
+            transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.34,1.1,0.64,1);">
+  <!-- Drag handle -->
+  <div style="display:flex;justify-content:center;padding:12px 0 4px;">
+    <div style="width:40px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;"></div>
+  </div>
+  <!-- Close button -->
+  <div style="display:flex;justify-content:flex-end;padding:4px 16px 0;">
+    <button onclick="closeMobileSheet()"
+            style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
+                   color:#94a3b8;border-radius:8px;padding:4px 14px;font-size:13px;cursor:pointer;">
+      ✕ {close_txt}
+    </button>
+  </div>
+  <!-- Scrollable content -->
+  <div id="mbd-content" style="padding:16px 20px 24px;overflow-y:auto;max-height:72vh;"></div>
+</div>
+
+<script>
+function openMobileSheet(sym) {{
+  var panel = document.getElementById('mbd-' + sym);
+  if (!panel) return;
+  document.getElementById('mbd-content').innerHTML = panel.innerHTML;
+  document.getElementById('mbd-overlay').style.display = 'block';
+  var sheet = document.getElementById('mbd-sheet');
+  sheet.style.display = 'block';
+  setTimeout(function() {{ sheet.style.transform = 'translateY(0)'; }}, 10);
+  document.body.style.overflow = 'hidden';
+}}
+function closeMobileSheet() {{
+  var sheet = document.getElementById('mbd-sheet');
+  sheet.style.transform = 'translateY(100%)';
+  document.getElementById('mbd-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+  setTimeout(function() {{ sheet.style.display = 'none'; }}, 360);
+}}
+</script>
+""", unsafe_allow_html=True)
     
     # Build select list of symbols for this quarter
     quarter_symbols = []
