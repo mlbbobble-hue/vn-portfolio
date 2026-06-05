@@ -312,7 +312,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                             
                             img_style = f"width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.08); flex-shrink: 0;"
                             
-                            html.append(f'<a href="?select_stock={ev["symbol"]}&q_tab={q_key}" target="_self" class="calendar-stock-tag" style="{bg_style}" title="{tooltip}">')
+                            html.append(f'<a href="?page=00_dashboard&select_stock={ev["symbol"]}&q_tab={q_key}#earnings-section" target="_self" class="calendar-stock-tag" style="{bg_style}" title="{tooltip}">')
                             html.append(f'<img src="{get_favicon_url(ev["symbol"])}" style="{img_style}" onerror="this.style.display=\'none\';">')
                             html.append(f'<span class="calendar-tag-text">{prefix}{ev["symbol"]}</span>')
                             html.append('</a>')
@@ -514,7 +514,7 @@ if holdings.empty:
     if st.button(t("go_to_add_tx"), use_container_width=True):
         st.switch_page("views/02_transactions.py")
         
-    st.markdown("<br><hr style='border-color: var(--border-color);'><br>", unsafe_allow_html=True)
+    st.markdown("<div id='earnings-section'></div><br><hr style='border-color: var(--border-color);'><br>", unsafe_allow_html=True)
     lang = st.session_state.get("lang", "zh")
     show_earnings_calendar(lang, is_empty=True)
 
@@ -571,7 +571,7 @@ if not holdings.empty and not is_loading_prices:
 </div>
 </div>""", unsafe_allow_html=True)
                 
-    st.markdown("<br><hr style='border-color: var(--border-color); opacity: 0.5;'><br>", unsafe_allow_html=True)
+    st.markdown("<div id='earnings-section'></div><br><hr style='border-color: var(--border-color); opacity: 0.5;'><br>", unsafe_allow_html=True)
     
     # 2. 財報預告時間表 (Earnings Calendar Section)
     show_earnings_calendar(lang, is_empty=False)
