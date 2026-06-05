@@ -163,6 +163,17 @@ if not check_auth():
 
 holdings = compute_portfolio_with_prices()
 
+# 過濾掉債券 (Bonds don't need to be in the earnings calendar/corporate reports)
+if not holdings.empty:
+    try:
+        from db_router import get_all_transactions
+        txns = get_all_transactions()
+        if not txns.empty and "note" in txns.columns:
+            bond_symbols = set(txns[txns["note"].str.contains(r"\[BOND\]", case=False, na=False)]["symbol"].unique())
+            holdings = holdings[~holdings["symbol"].isin(bond_symbols)]
+    except Exception:
+        pass
+
 total_value = 0.0
 total_cost = 0.0
 total_unrealized = 0.0
