@@ -250,38 +250,38 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         idx = sum(ord(c) for c in symbol) % len(days_list)
         return days_list[idx]
 
-    def get_quarter_events(q_key, held_list):
+    def get_quarter_events(q_key, held_list, additional_list):
         events_map = {}
-        max_days = {"Q1": 30, "Q2": 31, "Q3": 30, "Q4": 29}
-        limit_day = max_days.get(q_key, 30)
+        all_symbols = list(dict.fromkeys(held_list + additional_list))
         
+        base_sym_info = {}
         for day, evs in base_events.items():
+            for ev in evs:
+                base_sym_info[ev["symbol"]] = {
+                    "day": day,
+                    "color": ev["color"]
+                }
+                
+        for sym in all_symbols:
+            is_held = sym in held_list
+            if sym in base_sym_info:
+                day = base_sym_info[sym]["day"]
+                color = "#10B981" if is_held else base_sym_info[sym]["color"]
+            else:
+                day = get_symbol_day(sym, q_key)
+                color = "#10B981" if is_held else "#00F0FF"
+                
+            max_days = {"Q1": 30, "Q2": 31, "Q3": 30, "Q4": 29}
+            limit_day = max_days.get(q_key, 30)
             target_day = day if day <= limit_day else limit_day
+            
             if target_day not in events_map:
                 events_map[target_day] = []
-            for ev in evs:
-                is_held = ev["symbol"] in held_list
-                events_map[target_day].append({
-                    "symbol": ev["symbol"],
-                    "color": "#10B981" if is_held else ev["color"],
-                    "is_holding": is_held
-                })
-                
-        for sym in held_list:
-            already_added = False
-            for d, evs in events_map.items():
-                if any(e["symbol"] == sym for e in evs):
-                    already_added = True
-                    break
-            if not already_added:
-                d = get_symbol_day(sym, q_key)
-                if d not in events_map:
-                    events_map[d] = []
-                events_map[d].append({
-                    "symbol": sym,
-                    "color": "#10B981",
-                    "is_holding": True
-                })
+            events_map[target_day].append({
+                "symbol": sym,
+                "color": color,
+                "is_holding": is_held
+            })
         return events_map
 
     # 2. Parse URL query parameters to maintain selection state
@@ -345,8 +345,50 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         "NT2": {"type": "電力能源" if lang == "zh" else "Điện lực", "expected_growth": "YoY +12%", "desc": "仁澤二期天然氣發電廠。發電設備陸續折舊完畢，現金流極為充沛，可持續提供穩定且高額的現金股利。" if lang == "zh" else "Nhà máy Điện khí Nhơn Trạch 2. Dòng tiền cực kỳ dồi dào sau khi hết khấu hao thiết bị, duy trì cổ tức tiền mặt cao."}
     }
 
+    if "manual_added_symbols" not in st.session_state:
+        st.session_state["manual_added_symbols"] = []
+        
+    POPULAR_SYMBOLS = [
+        "ACB", "BCM", "BID", "BMP", "BVH", "CTG", "DGC", "DIG", "DXG", 
+        "FPT", "FRT", "GAS", "GVR", "HAX", "HDB", "HPG", "HSG", "KBC", 
+        "MBB", "MSN", "MWG", "NKG", "NLG", "NT2", "OCB", "PLX", "POW", 
+        "PVD", "PVS", "QNS", "SAB", "SCS", "SHB", "SSB", "SSI", "STB", 
+        "TCB", "TPB", "VCB", "VEA", "VHC", "VHM", "VIC", "VJC", "VND", 
+        "VNM", "VPB", "VRE"
+    ]
+    
+    expander_title = "🔍 手動新增其他追蹤股票 (Add other stocks)" if lang == "zh" else "🔍 Thêm cổ phiếu theo dõi khác"
+    with st.expander(expander_title, expanded=False):
+        ms_options = sorted(list(set(POPULAR_SYMBOLS + st.session_state["manual_added_symbols"]) - set(held_symbols)))
+        selected_additional = st.multiselect(
+            "選擇要顯示的股票 (Select stocks to display)" if lang == "zh" else "Chọn cổ phiếu muốn hiển thị",
+            options=ms_options,
+            default=[sym for sym in st.session_state["manual_added_symbols"] if sym in ms_options],
+            key="calendar_additional_stocks_ms"
+        )
+        st.session_state["manual_added_symbols"] = selected_additional
+        
+        col_add1, col_add2 = st.columns([7, 3])
+        with col_add1:
+            custom_sym = st.text_input(
+                "➕ 輸入自訂代號 (Add custom ticker)" if lang == "zh" else "➕ Nhập mã tự chọn",
+                key="custom_ticker_input",
+                placeholder="例如 / e.g., AAA"
+            ).strip().upper()
+        with col_add2:
+            st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
+            if st.button("新增 (Add)" if lang == "zh" else "Thêm", use_container_width=True, key="add_custom_ticker_btn"):
+                if custom_sym:
+                    if custom_sym in held_symbols:
+                        st.warning(f"{custom_sym} 已在您的持股中" if lang == "zh" else f"{custom_sym} đã có trong danh mục")
+                    elif custom_sym in st.session_state["manual_added_symbols"]:
+                        st.info(f"{custom_sym} 已在追蹤清單中" if lang == "zh" else f"{custom_sym} đã được theo dõi")
+                    else:
+                        st.session_state["manual_added_symbols"].append(custom_sym)
+                        st.rerun()
+
     # Render selected quarter content
-    q_events = get_quarter_events(q_key, held_symbols)
+    q_events = get_quarter_events(q_key, held_symbols, st.session_state["manual_added_symbols"])
     
     grid_map = {
         "Q1": (grid_q1, "📅 2026年4月份 - 第一季 (Q1) 財報時間表" if lang == "zh" else "📅 Lịch công bố BCTC Q1 - Tháng 04/2026"),
@@ -499,7 +541,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             label_value = "持股總值" if lang == "zh" else "Giá trị tài sản"
             label_pl = "未實現損益" if lang == "zh" else "Lợi nhuận tạm tính"
             
-            holding_html = f"""
+            holding_html = textwrap.dedent(f"""
             <div style="margin-top: 12px; margin-bottom: 12px; border-top: 1px dashed var(--border-color); padding-top: 10px;">
                 <div style="font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 6px;">{title_holding}</div>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
@@ -521,19 +563,19 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                     </div>
                 </div>
             </div>
-            """
+            """)
 
         # Construct CafeF external link
         cafef_url = f"https://s.cafef.vn/hose/{selected_sym}.chn"
         cafef_label = f"🔍 前往 CafeF 查看 {selected_sym} 官方財報新聞" if lang == "zh" else f"🔍 Xem tin tức BCTC {selected_sym} trên CafeF"
         
-        cafef_link_html = f"""
+        cafef_link_html = textwrap.dedent(f"""
         <div style="margin-top: 10px; text-align: right;">
             <a href="{cafef_url}" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 11px; font-weight: bold; background: rgba(0, 240, 255, 0.1); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(0, 240, 255, 0.3); display: inline-block;">
                 {cafef_label} ↗
             </a>
         </div>
-        """
+        """)
 
         if info is None:
             if is_held:
@@ -609,6 +651,15 @@ def show_earnings_calendar(lang="zh", is_empty=False):
 {holding_html}
 {cafef_link_html}
 </div>""", unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <div class="empty-state" style="padding: 24px; border: 1px dashed var(--border-color); text-align: center; border-radius: 12px; background: var(--bg-card); margin-top: 10px;">
+            <div style="font-size: 32px; margin-bottom: 8px;">📅</div>
+            <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+                {"💡 目前該季度日曆為空。系統預設僅顯示您的持股。您可以在上方開啟「手動新增其他追蹤股票」來追蹤更多市場標的。" if lang == "zh" else "💡 Lịch quý này đang trống. Hệ thống mặc định chỉ hiển thị cổ phiếu của bạn. Bạn có thể mở rộng phần \"Thêm cổ phiếu theo dõi khác\" ở trên để thêm cổ phiếu theo dõi."}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 
 if holdings.empty:
