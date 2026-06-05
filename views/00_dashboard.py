@@ -712,32 +712,91 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                                     
     st.markdown("<div style='margin-bottom:12px;'></div>", unsafe_allow_html=True)
     
-    # JS: wrap calendar container in horizontal scroll div for mobile
-    st.markdown("""
-    <script>
-    (function() {
-        function wrapCalendar() {
-            var container = document.querySelector('[data-testid="stVerticalBlock"] .st-key-calendar_grid_container');
-            if (!container) {
-                var allKeys = document.querySelectorAll('[class*="st-key-calendar_grid_container"]');
-                if (allKeys.length > 0) container = allKeys[0];
-            }
-            if (container && !container.closest('.calendar-scroll-wrapper')) {
-                var wrapper = document.createElement('div');
-                wrapper.className = 'calendar-scroll-wrapper';
-                var inner = document.createElement('div');
-                inner.className = 'calendar-inner';
-                container.parentNode.insertBefore(wrapper, container);
-                wrapper.appendChild(inner);
-                inner.appendChild(container);
-            }
-        }
-        // Try immediately and also after a short delay for Streamlit hydration
-        setTimeout(wrapCalendar, 300);
-        setTimeout(wrapCalendar, 900);
-    })();
-    </script>
-    """, unsafe_allow_html=True)
+    # === MOBILE-ONLY: Pure HTML vertical timeline view ===
+    # Built from q_events, shown only on mobile via CSS media query
+    day_labels_zh = {"Mon": "週一", "Tue": "週二", "Wed": "週三", "Thu": "週四", "Fri": "週五"}
+    day_names_en = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+    
+    # Build weeks list from selected_grid with event data
+    mobile_weeks_html = ""
+    for week_idx, week in enumerate(selected_grid):
+        week_days_with_events = []
+        for col_idx, day in enumerate(week):
+            if day is not None:
+                evs = q_events.get(day, [])
+                week_days_with_events.append((day, day_names_en[col_idx], evs))
+        
+        if not week_days_with_events:
+            continue
+        
+        # Only show weeks that have at least one day
+        first_day = week_days_with_events[0][0]
+        last_day = week_days_with_events[-1][0]
+        week_label = f"第 {week_idx+1} 週 ({first_day:02d} – {last_day:02d} 日)" if lang == "zh" else f"Week {week_idx+1} ({first_day:02d} – {last_day:02d})"
+        
+        days_html = ""
+        for day, day_name, evs in week_days_with_events:
+            if lang == "zh":
+                day_label = f"{day_labels_zh.get(day_name, day_name)} {day:02d}日"
+            else:
+                day_label = f"{day_name} {day:02d}"
+            
+            if evs:
+                tags_html = ""
+                for ev in evs:
+                    sym = ev["symbol"]
+                    color = ev["color"]
+                    favicon_url = get_favicon_url(sym)
+                    star = " ⭐" if ev.get("is_holding") else ""
+                    tags_html += f"""
+                    <div style="display:inline-flex; align-items:center; gap:6px;
+                                background:{color}18; border:1px solid {color}55;
+                                border-radius:8px; padding:6px 12px; margin:3px 4px 3px 0;
+                                font-size:14px; font-weight:700; color:#fff;">
+                        <img src="{favicon_url}" style="width:16px;height:16px;border-radius:3px;">
+                        <span>{sym}{star}</span>
+                    </div>"""
+                days_html += f"""
+                <div style="display:flex; align-items:flex-start; padding:10px 0;
+                            border-bottom:1px solid rgba(255,255,255,0.07);">
+                    <div style="min-width:76px; font-size:13px; font-weight:700;
+                                color:#a5b4fc; padding-top:6px;">{day_label}</div>
+                    <div style="flex:1; display:flex; flex-wrap:wrap;">{tags_html}</div>
+                </div>"""
+            else:
+                days_html += f"""
+                <div style="display:flex; align-items:center; padding:10px 0;
+                            border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <div style="min-width:76px; font-size:13px; font-weight:700;
+                                color:#475569;">{day_label}</div>
+                    <div style="font-size:12px; color:#334155; font-style:italic;">—</div>
+                </div>"""
+        
+        mobile_weeks_html += f"""
+        <div style="margin-bottom:12px; background:rgba(20,30,50,0.6);
+                    border:1px solid rgba(255,255,255,0.12); border-radius:12px;
+                    padding:14px 16px;">
+            <div style="font-size:12px; font-weight:700; color:#8b5cf6;
+                        letter-spacing:0.8px; margin-bottom:8px; text-transform:uppercase;">
+                {week_label}
+            </div>
+            {days_html}
+        </div>"""
+    
+    if not mobile_weeks_html:
+        mobile_weeks_html = f"""
+        <div style="text-align:center; padding:24px; color:#475569; font-size:14px;">
+            {"📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter"}
+        </div>"""
+    
+    st.html(clean_html(f"""
+    <div class="calendar-mobile-view" style="display:none;">
+        <div style="font-size:11px; color:#64748b; text-align:right; margin-bottom:10px; letter-spacing:0.5px;">
+            {"⭐ = 持股中" if lang == "zh" else "⭐ = Holding"}
+        </div>
+        {mobile_weeks_html}
+    </div>
+    """))
     
     # Build select list of symbols for this quarter
     quarter_symbols = []
