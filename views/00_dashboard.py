@@ -663,46 +663,37 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 box-shadow: 0 4px 10px rgba(0, 240, 255, 0.2) !important;
             }}
 
-            /* MOBILE LIST BUTTON (Native iOS Style) */
+            /* MOBILE 2-COLUMN PILL BUTTON */
             .st-key-btn_list_{q_key}_{day}_{sym} button {{
                 width: 100% !important;
-                background: transparent !important;
-                border: none !important;
-                border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+                background: {color_bg}15 !important;
+                border: 1px solid {color_bg}40 !important;
                 color: #ffffff !important;
-                padding-left: 52px !important;
-                padding-right: 16px !important;
-                min-height: 56px !important;
-                height: 56px !important;
+                padding-left: 34px !important;
+                padding-right: 6px !important;
+                min-height: 42px !important;
+                height: 42px !important;
                 background-image: url("{favicon_url}") !important;
                 background-repeat: no-repeat !important;
-                background-position: 16px center !important;
-                background-size: 24px 24px !important;
-                border-radius: 0 !important;
+                background-position: 10px center !important;
+                background-size: 18px 18px !important;
+                border-radius: 8px !important;
                 position: relative !important;
+                transition: all 0.2s ease-in-out !important;
             }}
             .st-key-btn_list_{q_key}_{day}_{sym} button div[data-testid="stMarkdownContainer"] {{
                 width: 100% !important;
             }}
             .st-key-btn_list_{q_key}_{day}_{sym} button p {{
                 text-align: left !important;
-                font-size: 16px !important;
+                font-size: 14.5px !important;
                 font-weight: 600 !important;
                 margin: 0 !important;
-                letter-spacing: 0.5px !important;
-            }}
-            .st-key-btn_list_{q_key}_{day}_{sym} button::after {{
-                content: "›" !important;
-                position: absolute !important;
-                right: 16px !important;
-                top: 50% !important;
-                transform: translateY(-50%) !important;
-                font-size: 24px !important;
-                color: #64748b !important;
-                font-family: sans-serif !important;
             }}
             .st-key-btn_list_{q_key}_{day}_{sym} button:hover, .st-key-btn_list_{q_key}_{day}_{sym} button:active {{
-                background: rgba(255,255,255,0.04) !important;
+                border-color: #00F0FF !important;
+                background: {color_bg}30 !important;
+                transform: translateY(-1px) !important;
             }}
             """
             css_rules.append(rule)
@@ -713,21 +704,24 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             .st-key-calendar_grid_container { display: none !important; }
             .st-key-calendar_list_container { display: block !important; }
 
-            /* Style the native card grouping */
-            [class*="st-key-mob_day_group_"] {
-                background: rgba(255, 255, 255, 0.03);
-                border-radius: 12px;
-                margin-top: 8px;
-                margin-bottom: 20px;
-                overflow: hidden;
-                border: 1px solid rgba(255,255,255,0.05);
-            }
+            /* Force the day group to be a flex container with wrapping */
             [class*="st-key-mob_day_group_"] > div[data-testid="stVerticalBlock"] {
-                gap: 0 !important;
+                display: flex !important;
+                flex-wrap: wrap !important;
+                flex-direction: row !important;
+                gap: 8px !important;
+                padding-bottom: 16px !important;
             }
-            /* Remove bottom border from last item in group */
-            [class*="st-key-mob_day_group_"] > div > div:last-child button {
-                border-bottom: none !important;
+            
+            /* Each button container takes 50% minus half the gap */
+            [class*="st-key-mob_day_group_"] > div[data-testid="stVerticalBlock"] > div.element-container {
+                width: calc(50% - 4px) !important;
+                flex: 0 0 calc(50% - 4px) !important;
+            }
+
+            /* Ensure internal Streamlit div stretches full width of the 50% container */
+            [class*="st-key-btn_list_"] {
+                width: 100% !important;
             }
         }
         @media (min-width: 641px) {
