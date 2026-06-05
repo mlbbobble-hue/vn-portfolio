@@ -180,53 +180,6 @@ if is_loading_prices:
     st_autorefresh(interval=2000, limit=15, key="wait_for_prices")
 
 
-def render_portfolio_summary_banner(holdings, lang):
-    if holdings.empty:
-        return
-        
-    total_value = holdings["market_value"].sum()
-    total_cost = holdings["total_cost"].sum()
-    total_unrealized = holdings["unrealized_pl"].sum()
-    roi_pct = (total_unrealized / total_cost * 100) if total_cost > 0 else 0.0
-    
-    return_color = "#34d399" if total_unrealized >= 0 else "#f87171"
-    
-    welcome_title = "👋 歡迎回來，您的投資總覽" if lang == "zh" else "👋 Chào mừng quay trở lại, Tổng quan đầu tư"
-    label_value = "即時總市值" if lang == "zh" else "Giá trị hiện tại"
-    label_cost = "總投入成本" if lang == "zh" else "Tổng vốn đầu tư"
-    label_unreal = "未實現損益" if lang == "zh" else "Lợi nhuận tạm tính"
-    
-    summary_html = f"""
-    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%); 
-                border-radius: 16px; 
-                padding: 22px 24px; 
-                margin-bottom: 24px; 
-                border: 1px solid rgba(255, 255, 255, 0.08); 
-                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); 
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);">
-        <div style="font-size: 18px; font-weight: 800; color: #ffffff; margin-bottom: 16px; letter-spacing: 0.5px;">{welcome_title}</div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 16px;">
-            <div>
-                <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{label_value}</div>
-                <div style="font-size: 22px; font-weight: 800; color: #ffffff; margin-top: 6px; font-family: 'Inter', sans-serif;">{total_value:,.0f} <span style="font-size: 12px; font-weight: 500; color: #94a3b8;">VND</span></div>
-            </div>
-            <div>
-                <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{label_cost}</div>
-                <div style="font-size: 20px; font-weight: 700; color: #cbd5e1; margin-top: 8px; font-family: 'Inter', sans-serif;">{total_cost:,.0f} <span style="font-size: 11px; font-weight: 500; color: #94a3b8;">VND</span></div>
-            </div>
-            <div>
-                <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">{label_unreal}</div>
-                <div style="font-size: 20px; font-weight: 700; color: {return_color}; margin-top: 8px; font-family: 'Inter', sans-serif;">
-                    {total_unrealized:+,.0f} <span style="font-size: 11px; font-weight: 500; color: #94a3b8;">VND</span> 
-                    <span style="font-size: 13px; font-weight: 800; margin-left: 6px;">({roi_pct:+.2f}%)</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    """
-    st.html(clean_html(summary_html))
-
 def render_watchlist_manager(lang, held_symbols):
     if "manual_added_symbols" not in st.session_state:
         st.session_state["manual_added_symbols"] = []
@@ -891,8 +844,7 @@ if holdings.empty:
 if not holdings.empty and not is_loading_prices:
     lang = st.session_state.get("lang", "zh")
     
-    # 1. 投資組合總覽 Banner (Portfolio Summary Banner)
-    render_portfolio_summary_banner(holdings, lang)
+
     
     # 2. 雙欄式版面配置 (2-Column Split Layout)
     col_left, col_right = st.columns([7, 5], gap="large")
