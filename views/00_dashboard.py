@@ -312,7 +312,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                             
                             img_style = f"width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.08); flex-shrink: 0;"
                             
-                            html.append(f'<a href="?page=00_dashboard&select_stock={ev["symbol"]}&q_tab={q_key}#earnings-section" target="_self" class="calendar-stock-tag" style="{bg_style}" title="{tooltip}">')
+                            html.append(f'<a href="/dashboard?select_stock={ev["symbol"]}&q_tab={q_key}#earnings-section" target="_self" class="calendar-stock-tag" style="{bg_style}" title="{tooltip}">')
                             html.append(f'<img src="{get_favicon_url(ev["symbol"])}" style="{img_style}" onerror="this.style.display=\'none\';">')
                             html.append(f'<span class="calendar-tag-text">{prefix}{ev["symbol"]}</span>')
                             html.append('</a>')

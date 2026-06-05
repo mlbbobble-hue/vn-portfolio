@@ -194,7 +194,7 @@ with st.sidebar:
 
 
 # ── 主頁面 (Navigation) ──────────────────────────────────────────
-dashboard_page = st.Page("views/00_dashboard.py", title=t("nav_dashboard"), icon=":material/park:")
+dashboard_page = st.Page("views/00_dashboard.py", title=t("nav_dashboard"), icon=":material/park:", url_path="dashboard")
 portfolio_page = st.Page("views/01_portfolio.py", title=t("nav_portfolio"), icon=":material/business_center:")
 transactions_page = st.Page("views/02_transactions.py", title=t("nav_transactions"), icon=":material/receipt_long:")
 dividends_page = st.Page("views/03_dividends.py", title=t("nav_dividends"), icon=":material/paid:")
