@@ -406,24 +406,63 @@ def show_earnings_calendar(lang="zh", is_empty=False):
     css_rules = [
         """
         .st-key-calendar_grid_container div[data-testid="column"]:has(.calendar-day-num) {
-            background: rgba(255, 255, 255, 0.01) !important;
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
-            border-radius: 6px !important;
-            min-height: 85px !important;
-            padding: 6px !important;
-            transition: all 0.2s !important;
+            background: rgba(30, 41, 59, 0.45) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 10px !important;
+            min-height: 105px !important;
+            padding: 8px !important;
+            transition: all 0.25s ease-in-out !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: flex-start !important;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 4px 6px -1px rgba(0, 0, 0, 0.2) !important;
         }
         .st-key-calendar_grid_container div[data-testid="column"]:has(.calendar-day-num):hover {
-            background: rgba(255, 255, 255, 0.03) !important;
-            border-color: #9D4EDD !important;
+            background: rgba(30, 41, 59, 0.65) !important;
+            border-color: #8B5CF6 !important;
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.25) !important;
         }
         .st-key-calendar_grid_container .stButton {
-            display: inline-block !important;
-            margin-right: 4px !important;
-            margin-top: 2px !important;
+            display: block !important;
+            width: 100% !important;
+            margin-top: 3px !important;
+            margin-bottom: 3px !important;
+        }
+        .calendar-header-cell {
+            text-align: center;
+            font-weight: 700;
+            color: #f1f5f9;
+            font-size: 11px;
+            padding: 8px 0;
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .calendar-day-num {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 800;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 3px;
+        }
+        div[data-testid="stExpander"] {
+            background: rgba(30, 41, 59, 0.35) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
+            margin-bottom: 15px !important;
+        }
+        div[data-testid="stExpander"] details {
+            border: none !important;
+        }
+        div[data-testid="stExpander"] summary {
+            font-weight: 600 !important;
+            color: #e2e8f0 !important;
+            padding: 8px 12px !important;
         }
         """
     ]
@@ -438,31 +477,35 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             
             rule = f"""
             .st-key-{btn_key} button {{
-                background: {color_bg}12 !important;
-                border: 1px solid {color_bg}44 !important;
+                width: 100% !important;
+                background: {color_bg}18 !important;
+                border: 1px solid {color_bg}55 !important;
                 color: #ffffff !important;
                 padding-left: 28px !important;
                 padding-right: 8px !important;
-                padding-top: 4px !important;
-                padding-bottom: 4px !important;
-                min-height: 28px !important;
-                height: 28px !important;
+                padding-top: 5px !important;
+                padding-bottom: 5px !important;
+                min-height: 30px !important;
+                height: 30px !important;
                 font-size: 11px !important;
                 font-weight: bold !important;
                 background-image: url("{favicon_url}") !important;
                 background-repeat: no-repeat !important;
-                background-position: 6px center !important;
-                background-size: 16px 16px !important;
-                border-radius: 6px !important;
-                display: inline-flex !important;
+                background-position: 8px center !important;
+                background-size: 14px 14px !important;
+                border-radius: 8px !important;
+                display: flex !important;
                 align-items: center !important;
                 justify-content: flex-start !important;
+                text-align: left !important;
                 transition: all 0.2s ease-in-out !important;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
             }}
             .st-key-{btn_key} button:hover {{
                 border-color: #00F0FF !important;
+                background: {color_bg}30 !important;
                 transform: translateY(-1px) !important;
-                box-shadow: 0 0 8px rgba(0, 240, 255, 0.3) !important;
+                box-shadow: 0 4px 10px rgba(0, 240, 255, 0.2) !important;
             }}
             """
             css_rules.append(rule)
@@ -484,9 +527,9 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                         st.markdown(f"<div class='calendar-day-num'>{day:02d}</div>", unsafe_allow_html=True)
                         if day in q_events:
                             for ev in q_events[day]:
-                                prefix = "⭐ " if ev.get("is_holding") else ""
+                                btn_text = f"{ev['symbol']} ⭐" if ev.get("is_holding") else ev['symbol']
                                 btn_key = f"cal_btn_{q_key}_{day}_{ev['symbol']}"
-                                if st.button(f"{prefix}{ev['symbol']}", key=btn_key):
+                                if st.button(btn_text, key=btn_key):
                                     st.query_params["select_stock"] = ev["symbol"]
                                     st.query_params["q_tab"] = q_key
                                     st.rerun()
@@ -542,24 +585,24 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             label_pl = "未實現損益" if lang == "zh" else "Lợi nhuận tạm tính"
             
             holding_html = textwrap.dedent(f"""
-            <div style="margin-top: 12px; margin-bottom: 12px; border-top: 1px dashed var(--border-color); padding-top: 10px;">
-                <div style="font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 6px;">{title_holding}</div>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-                    <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
-                        <div style="font-size: 9px; color: #888;">{label_shares}</div>
-                        <div style="font-size: 12px; font-weight: bold; color: #ffffff; margin-top: 2px;">{shares:,.0f}</div>
+            <div style="margin-top: 16px; margin-bottom: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px;">
+                <div style="font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 8px; letter-spacing: 0.5px;">{title_holding}</div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                    <div style="background: rgba(15, 23, 42, 0.4); padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
+                        <div style="font-size: 9px; color: #94a3b8; font-weight: 500;">{label_shares}</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #ffffff; margin-top: 3px;">{shares:,.0f}</div>
                     </div>
-                    <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
-                        <div style="font-size: 9px; color: #888;">{label_cost}</div>
-                        <div style="font-size: 11px; font-weight: bold; color: #ffffff; margin-top: 2px;">{avg_cost:,.0f}/{cur_price:,.0f}</div>
+                    <div style="background: rgba(15, 23, 42, 0.4); padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
+                        <div style="font-size: 9px; color: #94a3b8; font-weight: 500;">{label_cost}</div>
+                        <div style="font-size: 12px; font-weight: bold; color: #ffffff; margin-top: 3px;">{avg_cost:,.0f}/{cur_price:,.0f}</div>
                     </div>
-                    <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
-                        <div style="font-size: 9px; color: #888;">{label_value}</div>
-                        <div style="font-size: 11px; font-weight: bold; color: #ffffff; margin-top: 2px;">{value:,.0f}</div>
+                    <div style="background: rgba(15, 23, 42, 0.4); padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
+                        <div style="font-size: 9px; color: #94a3b8; font-weight: 500;">{label_value}</div>
+                        <div style="font-size: 12px; font-weight: bold; color: #ffffff; margin-top: 3px;">{value:,.0f}</div>
                     </div>
-                    <div style="background: rgba(255,255,255,0.02); padding: 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
-                        <div style="font-size: 9px; color: #888;">{label_pl}</div>
-                        <div style="font-size: 11px; font-weight: bold; color: {color_pl}; margin-top: 2px;">{unrealized:+,.0f}<br><span style="font-size:9px;">({pl_pct:+.2f}%)</span></div>
+                    <div style="background: rgba(15, 23, 42, 0.4); padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); text-align: center; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
+                        <div style="font-size: 9px; color: #94a3b8; font-weight: 500;">{label_pl}</div>
+                        <div style="font-size: 12px; font-weight: bold; color: {color_pl}; margin-top: 3px;">{unrealized:+,.0f}<br><span style="font-size:9.5px; font-weight: 600;">({pl_pct:+.2f}%)</span></div>
                     </div>
                 </div>
             </div>
@@ -570,8 +613,8 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         cafef_label = f"🔍 前往 CafeF 查看 {selected_sym} 官方財報新聞" if lang == "zh" else f"🔍 Xem tin tức BCTC {selected_sym} trên CafeF"
         
         cafef_link_html = textwrap.dedent(f"""
-        <div style="margin-top: 10px; text-align: right;">
-            <a href="{cafef_url}" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 11px; font-weight: bold; background: rgba(0, 240, 255, 0.1); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(0, 240, 255, 0.3); display: inline-block;">
+        <div style="margin-top: 14px; text-align: right;">
+            <a href="{cafef_url}" target="_blank" style="color: #00F0FF; text-decoration: none; font-size: 11px; font-weight: bold; background: rgba(0, 240, 255, 0.08); padding: 5px 14px; border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.25); display: inline-block; transition: all 0.2s ease-in-out;" onmouseover="this.style.background='rgba(0, 240, 255, 0.16)'; this.style.borderColor='#00F0FF';" onmouseout="this.style.background='rgba(0, 240, 255, 0.08)'; this.style.borderColor='rgba(0, 240, 255, 0.25)';">
                 {cafef_label} ↗
             </a>
         </div>
@@ -624,33 +667,64 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                     "desc": info["desc"]
                 }
             
-        st_color = "#10B981" if selected_sym in held_symbols else "#00F0FF"
-        badge_html = f'<span style="font-size:16px; font-weight:bold; color:{st_color};">{"⭐ " if selected_sym in held_symbols else ""}{selected_sym}</span>'
+        # Get favicon URL
+        favicon_url = get_favicon_url(selected_sym)
         
-        # Render the card with dynamic labels
+        # Build Title with favicon
+        is_held = selected_sym in held_symbols
+        held_badge_html = f'<span style="font-size: 10px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; padding: 2px 8px; border-radius: 20px; font-weight: bold; margin-left: 8px; vertical-align: middle;">{("持股中" if lang == "zh" else "Nắm giữ")}</span>' if is_held else ""
+        
+        title_html = f"""
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center;">
+                <img src="{favicon_url}" style="width: 28px; height: 28px; border-radius: 6px; margin-right: 10px; border: 1px solid rgba(255,255,255,0.1); vertical-align: middle;">
+                <span style="font-size: 20px; font-weight: 800; color: #ffffff; vertical-align: middle; letter-spacing: 0.5px;">{selected_sym}</span>
+                {held_badge_html}
+            </div>
+            <span style="font-size: 11px; color: #cbd5e1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); padding: 3px 10px; border-radius: 20px; font-weight: 500;">
+                {info['type']}
+            </span>
+        </div>
+        """
+        
+        # Dynamic label styling
         date_label = "實際發布" if q_key == "Q1" else "預計發布"
         if lang != "zh":
             date_label = "Ngày công bố" if q_key == "Q1" else "Dự kiến công bố"
             
-        st.markdown(f"""<div class="cathay-card" style="background: var(--bg-card); padding: 14px 18px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);">
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-{badge_html}
-<span style="font-size:11px; color:#cbd5e1; background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:10px;">{info['type']}</span>
-</div>
-<div style="margin: 4px 0; display:flex; gap: 6px; flex-wrap: wrap;">
-<span style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.3); color:#f472b6; padding:1px 4px; border-radius:4px; font-size:10px; font-weight:bold;">
-📅 {date_label}: {date_str}
-</span>
-<span style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34d399; padding:1px 4px; border-radius:4px; font-size:10px; font-weight:bold;">
-🚀 {info['growth_key']}: {info['growth_val']}
-</span>
-</div>
-<div style="font-size:13px; color:#cbd5e1; line-height:1.5; margin-top:6px;">
-{info['desc']}
-</div>
-{holding_html}
-{cafef_link_html}
-</div>""", unsafe_allow_html=True)
+        # Style growth colors based on YoY or expected
+        growth_bg = "rgba(16, 185, 129, 0.1)"
+        growth_border = "rgba(16, 185, 129, 0.3)"
+        growth_color = "#34d399"
+        if "-" in info['growth_val'] or "giảm" in info['growth_val'].lower():
+            growth_bg = "rgba(239, 68, 68, 0.1)"
+            growth_border = "rgba(239, 68, 68, 0.3)"
+            growth_color = "#f87171"
+            
+        card_html = f"""
+        <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.65) 0%, rgba(15, 23, 42, 0.85) 100%); 
+                    padding: 20px 24px; 
+                    border-radius: 16px; 
+                    border: 1px solid rgba(255, 255, 255, 0.08); 
+                    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255,255,255,0.05);
+                    backdrop-filter: blur(20px);">
+            {title_html}
+            <div style="margin: 8px 0 14px; display: flex; gap: 8px; flex-wrap: wrap;">
+                <span style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.25); color: #c084fc; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; letter-spacing: 0.5px;">
+                    📅 {date_label}: {date_str}
+                </span>
+                <span style="background: {growth_bg}; border: 1px solid {growth_border}; color: {growth_color}; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; letter-spacing: 0.5px;">
+                    🚀 {info['growth_key']}: {info['growth_val']}
+                </span>
+            </div>
+            <div style="font-size: 13.5px; color: #cbd5e1; line-height: 1.6; border-left: 3px solid rgba(139, 92, 246, 0.5); padding-left: 12px; margin: 12px 0 16px; font-family: 'Inter', sans-serif;">
+                {info['desc']}
+            </div>
+            {holding_html}
+            {cafef_link_html}
+        </div>
+        """
+        st.markdown(card_html, unsafe_allow_html=True)
     else:
         st.markdown(f"""
         <div class="empty-state" style="padding: 24px; border: 1px dashed var(--border-color); text-align: center; border-radius: 12px; background: var(--bg-card); margin-top: 10px;">
