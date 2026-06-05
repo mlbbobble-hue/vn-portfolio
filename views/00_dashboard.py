@@ -556,24 +556,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
     # CSS injection for columns and buttons
     css_rules = [
         """
-        /* === FORCE CALENDAR HORIZONTAL ON MOBILE (override Streamlit stacking) === */
-        .st-key-calendar_grid_container {
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-        }
-        .st-key-calendar_grid_container [data-testid="stHorizontalBlock"] {
-            flex-wrap: nowrap !important;
-            flex-direction: row !important;
-            min-width: 560px !important;
-            gap: 6px !important;
-        }
-        .st-key-calendar_grid_container [data-testid="column"] {
-            min-width: 100px !important;
-            flex: 1 0 100px !important;
-            width: 100px !important;
-        }
-        /* ======================================================================= */
-        
+        /* Desktop grid cell styles */
         .st-key-calendar_grid_container div[data-testid="column"]:has(.calendar-day-num) {
             background: rgba(20, 30, 50, 0.65) !important;
             border: 1px solid rgba(255, 255, 255, 0.18) !important;
@@ -633,6 +616,14 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             color: #e2e8f0 !important;
             padding: 8px 12px !important;
         }
+        /* === RESPONSIVE: hide grid on mobile, show timeline list === */
+        @media (max-width: 640px) {
+            .st-key-calendar_grid_container { display: none !important; }
+            .calendar-mobile-view { display: block !important; }
+        }
+        @media (min-width: 641px) {
+            .calendar-mobile-view { display: none !important; }
+        }
         """
     ]
     
@@ -681,13 +672,8 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             
     st.markdown(f"<style>{''.join(css_rules)}</style>", unsafe_allow_html=True)
     
-    # Scroll hint for mobile
-    st.markdown("""
-    <div class="calendar-scroll-hint" style="text-align:center; color:#94a3b8; font-size:12px; margin-bottom:6px; display:none;">
-        ← 左右滑動查看完整月曆 →
-    </div>
-    """, unsafe_allow_html=True)
     
+
     with st.container(key="calendar_grid_container"):
         # Header row
         cols = st.columns(5, gap="small")
@@ -789,14 +775,14 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             {"📅 目前季度日曆為空" if lang == "zh" else "📅 No events this quarter"}
         </div>"""
     
-    st.html(clean_html(f"""
+    st.markdown(clean_html(f"""
     <div class="calendar-mobile-view" style="display:none;">
         <div style="font-size:11px; color:#64748b; text-align:right; margin-bottom:10px; letter-spacing:0.5px;">
             {"⭐ = 持股中" if lang == "zh" else "⭐ = Holding"}
         </div>
         {mobile_weeks_html}
     </div>
-    """))
+    """), unsafe_allow_html=True)
     
     # Build select list of symbols for this quarter
     quarter_symbols = []
