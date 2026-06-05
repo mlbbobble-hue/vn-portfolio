@@ -674,7 +674,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
         is_held = selected_sym in held_symbols
         held_badge_html = f'<span style="font-size: 10px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; padding: 2px 8px; border-radius: 20px; font-weight: bold; margin-left: 8px; vertical-align: middle;">{("持股中" if lang == "zh" else "Nắm giữ")}</span>' if is_held else ""
         
-        title_html = f"""
+        title_html = textwrap.dedent(f"""
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
             <div style="display: flex; align-items: center;">
                 <img src="{favicon_url}" style="width: 28px; height: 28px; border-radius: 6px; margin-right: 10px; border: 1px solid rgba(255,255,255,0.1); vertical-align: middle;">
@@ -685,7 +685,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
                 {info['type']}
             </span>
         </div>
-        """
+        """)
         
         # Dynamic label styling
         date_label = "實際發布" if q_key == "Q1" else "預計發布"
@@ -701,7 +701,7 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             growth_border = "rgba(239, 68, 68, 0.3)"
             growth_color = "#f87171"
             
-        card_html = f"""
+        card_html = textwrap.dedent(f"""
         <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.65) 0%, rgba(15, 23, 42, 0.85) 100%); 
                     padding: 20px 24px; 
                     border-radius: 16px; 
@@ -723,17 +723,17 @@ def show_earnings_calendar(lang="zh", is_empty=False):
             {holding_html}
             {cafef_link_html}
         </div>
-        """
+        """)
         st.markdown(card_html, unsafe_allow_html=True)
     else:
-        st.markdown(f"""
+        st.markdown(textwrap.dedent(f"""
         <div class="empty-state" style="padding: 24px; border: 1px dashed var(--border-color); text-align: center; border-radius: 12px; background: var(--bg-card); margin-top: 10px;">
             <div style="font-size: 32px; margin-bottom: 8px;">📅</div>
             <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
                 {"💡 目前該季度日曆為空。系統預設僅顯示您的持股。您可以在上方開啟「手動新增其他追蹤股票」來追蹤更多市場標的。" if lang == "zh" else "💡 Lịch quý này đang trống. Hệ thống mặc định chỉ hiển thị cổ phiếu của bạn. Bạn có thể mở rộng phần \"Thêm cổ phiếu theo dõi khác\" ở trên để thêm cổ phiếu theo dõi."}
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """), unsafe_allow_html=True)
 
 
 if holdings.empty:
