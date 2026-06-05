@@ -355,14 +355,6 @@ p, span, label {
     text-align: left; /* 第一欄 (代號) 靠左對齊 */
 }
 
-    background-color: #78350f;
-    color: #fbbf24;
-    padding: 4px 10px;
-    border-radius: 50px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
 /* 配息時間軸 (Dividends Timeline) */
 .timeline-container {
     background-color: var(--bg-card);
