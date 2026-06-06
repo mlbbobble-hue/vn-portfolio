@@ -74,6 +74,10 @@ def parse_broker_email(text, date_str, broker_name):
         if not line_clean:
             continue
             
+        # 忽略常見的無效行 (如法規註腳、地址、聯絡方式)
+        if any(kw in line_clean for kw in ["NGHỊ ĐỊNH", "CỔ TỨC", "HOTLINE", "TẦNG", "FAX", "DCAPITALE"]):
+            continue
+            
         # 判斷買賣，放寬 boundary 以支援 MUA(BUY) 連在一起的情況
         is_buy = bool(re.search(r'\b(MUA|BUY)\b|MUA\(BUY\)', line_clean))
         is_sell = bool(re.search(r'\b(BÁN|BAN|SELL)\b|BÁN\(SELL\)|BAN\(SELL\)', line_clean))
@@ -84,7 +88,7 @@ def parse_broker_email(text, date_str, broker_name):
             # 擷取連續3個大寫英文字母，前後不能有大寫英文字母 (解決 SCS05/06/2026 黏在一起的問題)
             symbols = re.findall(r'(?<![A-Z])[A-Z]{3}(?![A-Z])', line_clean)
             # 過濾掉常見的非股票代號3字母
-            ignore_list = {"VND", "USD", "THU", "BAN", "HAI", "HON", "DAO", "VAN", "WAR", "HCM", "HNX", "OTC", "UPC", "MUA", "BUY", "GIA", "PHI", "TNH", "CPN", "JSC", "THE", "STT"}
+            ignore_list = {"VND", "USD", "THU", "BAN", "HAI", "HON", "DAO", "VAN", "WAR", "HCM", "HNX", "OTC", "UPC", "MUA", "BUY", "GIA", "PHI", "TNH", "CPN", "JSC", "THE", "STT", "NGH", "DUY"}
             symbols = [s for s in symbols if s not in ignore_list]
             
             if not symbols:
