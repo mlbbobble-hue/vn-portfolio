@@ -74,19 +74,17 @@ def parse_broker_email(text, date_str, broker_name):
         if not line_clean:
             continue
             
-        # 必須是獨立的單字，不能是 THU BAN WARD 這種包含關係
-        is_buy = bool(re.search(r'\b(MUA|BUY)\b', line_clean))
-        is_sell = bool(re.search(r'\b(BÁN|BAN|SELL)\b', line_clean))
+        # 判斷買賣，放寬 boundary 以支援 MUA(BUY) 連在一起的情況
+        is_buy = bool(re.search(r'\b(MUA|BUY)\b|MUA\(BUY\)', line_clean))
+        is_sell = bool(re.search(r'\b(BÁN|BAN|SELL)\b|BÁN\(SELL\)|BAN\(SELL\)', line_clean))
         
-        # 必須包含成交或價格相關的關鍵字才當作是交易明細行 (避免讀到地址)
-        has_txn_keywords = bool(re.search(r'(GIÁ|PRICE|KHỚP|MATCH|LỆNH|ORDER|VND|ĐỒNG)', line_clean))
-        
-        if (is_buy or is_sell) and has_txn_keywords:
+        if is_buy or is_sell:
             action = "BUY" if is_buy else "SELL"
             
-            symbols = re.findall(r'\b[A-Z]{3}\b', line_clean)
+            # 擷取連續3個大寫英文字母，前後不能有大寫英文字母 (解決 SCS05/06/2026 黏在一起的問題)
+            symbols = re.findall(r'(?<![A-Z])[A-Z]{3}(?![A-Z])', line_clean)
             # 過濾掉常見的非股票代號3字母
-            ignore_list = {"VND", "USD", "THU", "BAN", "HAI", "HON", "DAO", "VAN", "WAR", "HCM", "HNX", "OTC", "UPC", "MUA", "BUY", "GIA", "PHI", "TNH", "CPN", "JSC"}
+            ignore_list = {"VND", "USD", "THU", "BAN", "HAI", "HON", "DAO", "VAN", "WAR", "HCM", "HNX", "OTC", "UPC", "MUA", "BUY", "GIA", "PHI", "TNH", "CPN", "JSC", "THE", "STT"}
             symbols = [s for s in symbols if s not in ignore_list]
             
             if not symbols:
@@ -96,19 +94,13 @@ def parse_broker_email(text, date_str, broker_name):
             
             # 尋找數字 (包含逗號的數字，例如 10,000)
             # 移除非數字與逗號/點號以外的字元來萃取
-            # 例如 "10,000", "100.5", "100"
             nums_str = re.findall(r'\b\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?\b|\b\d+\b', line_clean)
             
-            # 轉換為 float
+            # 轉換為 float (保留原始出現順序)
             parsed_nums = []
             for n_str in nums_str:
                 try:
-                    # 判斷是千分位逗號還是小數點。越南文通常 . 是千分位, , 是小數點。
-                    # 但在信件裡可能會混用。這裡粗略處理：如果有多個逗號，或是逗號後面是3個數字，當作千分位。
-                    clean_n = n_str.replace(',', '').replace('.', '') # 先粗暴拔掉，但如果是有小數點的會出錯。
-                    # 更精準的：如果包含逗號，且長度符合 10,000，則移除了逗號。
                     if '.' in n_str and ',' not in n_str:
-                        # 可能是 10.5 或 10.000
                         parts = n_str.split('.')
                         if len(parts[-1]) == 3:
                             n_val = float(n_str.replace('.', '')) # 10.000 -> 10000
@@ -129,30 +121,48 @@ def parse_broker_email(text, date_str, broker_name):
                     pass
                     
             if len(parsed_nums) >= 2:
-                # 假設比較小的數字是股數 (通常 100 的倍數)，比較大的是價格 (幾萬 VND)
-                # 這是一個 heuristic
-                parsed_nums.sort()
+                shares = 0
+                price = 0
                 
-                # 如果有找到 >= 100 的數字，我們猜測是股數。
-                # 不過，越南股市的股數也是 100 的倍數。價格如果是 10,000 (10k)。
-                # 這裡就先大膽假設 [0] 是數量, [1] 是價格 (除非價格非常低)
-                shares = parsed_nums[0]
-                price = parsed_nums[-1] # 取最大的當價格
-                
-                # 防呆: 如果價格小於 1000，可能是錯的 (越南股市價格通常 > 1000)
-                # 除非是 Penny stock。如果股數也是幾百，那就真的很難分。
-                # 若發現有矛盾，我們仍然記錄下來，使用者可以後續在 UI 修改。
+                # 策略 1: 尋找 a * b = c 的數學關係
+                # 在越南股市，通常 a 是股數 (>=10)，b 是價格 (>=1000)，c 是總價
+                for i in range(len(parsed_nums)):
+                    for j in range(i+1, len(parsed_nums)):
+                        a = parsed_nums[i]
+                        b = parsed_nums[j]
+                        min_val = min(a, b)
+                        max_val = max(a, b)
+                        if min_val >= 10 and max_val >= 1000:
+                            product = a * b
+                            # 檢查 product 是否在提取出的數字中
+                            if any(abs(product - c) < 2 for c in parsed_nums):
+                                shares = min_val
+                                price = max_val
+                                break
+                    if shares > 0:
+                        break
+                        
+                # 策略 2: 如果找不到相乘關係，利用出現順序的啟發式法則
+                if shares == 0 or price == 0:
+                    # 過濾掉極小的數字 (如 1, 2, 5 是日期或序號)，以及常見的年份 (如 2026)
+                    large_nums = [n for n in parsed_nums if n >= 10 and n != 2024 and n != 2025 and n != 2026]
+                    if len(large_nums) >= 2:
+                        shares = min(large_nums[0], large_nums[1])
+                        price = max(large_nums[0], large_nums[1])
+                        
+                # 防呆: 如果還是抓錯，例如價格小於 1000，可能是錯的
                 if price < 1000 and shares >= 1000:
                     shares, price = price, shares
                     
-                transactions.append({
-                    "date": date_str,
-                    "symbol": symbol,
-                    "action": action,
-                    "shares": shares,
-                    "price": price,
-                    "fee": 0 # 未來可以再優化手續費解析
-                })
+                if shares > 0 and price > 0:
+                    transactions.append({
+                        "date": date_str,
+                        "symbol": symbol,
+                        "action": action,
+                        "shares": shares,
+                        "price": price,
+                        "fee": 0 
+                    })
                 
     # 去除完全重複的解析紀錄
     unique_txns = []
