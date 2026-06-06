@@ -3,7 +3,7 @@ name: Daily Email Sync
 on:
   schedule:
     # 12:00 UTC = 19:00 UTC+7 (越南時間晚上七點)
-    - cron: '0 12 * * *'
+    - cron: '0 16 * * *'
   workflow_dispatch:
     # 允許手動觸發
 
