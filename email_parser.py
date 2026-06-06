@@ -155,20 +155,35 @@ def parse_broker_email(text, date_str, broker_name):
                     shares, price = price, shares
                     
                 if shares > 0 and price > 0:
+                    fee = 0
+                    value = shares * price
+                    
+                    # 嘗試從剩餘的數字中找出「手續費」(Fee)
+                    # 手續費通常介於總價值的 0.01% 到 0.5% 之間 (越南券商通常是 0.03% ~ 0.15%)
+                    temp_nums = list(parsed_nums)
+                    if shares in temp_nums: temp_nums.remove(shares)
+                    if price in temp_nums: temp_nums.remove(price)
+                    if value in temp_nums: temp_nums.remove(value)
+                    
+                    for n in temp_nums:
+                        if 0.0001 * value <= n <= 0.005 * value:
+                            fee = n
+                            break
+                            
                     transactions.append({
                         "date": date_str,
                         "symbol": symbol,
                         "action": action,
                         "shares": shares,
                         "price": price,
-                        "fee": 0 
+                        "fee": fee
                     })
                 
     # 去除完全重複的解析紀錄
     unique_txns = []
     seen = set()
     for t in transactions:
-        key = f"{t['symbol']}_{t['action']}_{t['shares']}_{t['price']}"
+        key = f"{t['symbol']}_{t['action']}_{t['shares']}_{t['price']}_{t['fee']}"
         if key not in seen:
             seen.add(key)
             unique_txns.append(t)
