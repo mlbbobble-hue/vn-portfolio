@@ -180,116 +180,127 @@ def run_email_sync(user_id, start_date=None):
     except Exception as e:
         raise ValueError(f"登入失敗，請檢查應用程式密碼是否正確。({e})")
         
-    mail.select("inbox")
-    
-    domains_to_search = []
-    if broker == "TCBS":
-        domains_to_search = ["@tcbs.com.vn"]
-    elif broker == "SSI":
-        domains_to_search = ["@ssi.com.vn"]
-    elif broker == "VNDIRECT":
-        domains_to_search = ["@vndirect.com.vn"]
-    elif broker == "PHS":
-        domains_to_search = ["@phs.vn"]
-    elif broker == "ALL (搜尋全部券商)":
-        domains_to_search = ["@tcbs.com.vn", "@ssi.com.vn", "@vndirect.com.vn", "@phs.vn"]
-    
-    from datetime import datetime
-    if start_date is None:
-        start_date = datetime.now()
-    since_imap = start_date.strftime("%d-%b-%Y")
-    
-    all_mail_ids = set()
-    for domain in domains_to_search:
-        # 改為搜尋「選定日期」的所有信件，不管是否已讀
-        status, messages = mail.search(None, f'(SINCE "{since_imap}" FROM "{domain}")')
-        if status == "OK":
-            ids = messages[0].split()
-            all_mail_ids.update(ids)
-            
-    mail_ids = list(all_mail_ids)
-    found = len(mail_ids)
-    inserted = 0
-    debug_text = "" 
-    
-    for mid in mail_ids:
-        res, msg_data = mail.fetch(mid, "(RFC822)")
-        for response_part in msg_data:
-            if isinstance(response_part, tuple):
-                msg = email.message_from_bytes(response_part[1])
+    try:
+        mail.select("inbox")
+        
+        domains_to_search = []
+        if broker == "TCBS":
+            domains_to_search = ["@tcbs.com.vn"]
+        elif broker == "SSI":
+            domains_to_search = ["@ssi.com.vn"]
+        elif broker == "VNDIRECT":
+            domains_to_search = ["@vndirect.com.vn"]
+        elif broker == "PHS":
+            domains_to_search = ["@phs.vn"]
+        elif broker == "ALL (搜尋全部券商)":
+            domains_to_search = ["@tcbs.com.vn", "@ssi.com.vn", "@vndirect.com.vn", "@phs.vn"]
+        
+        from datetime import datetime
+        if start_date is None:
+            start_date = datetime.now()
+        since_imap = start_date.strftime("%d-%b-%Y")
+        
+        all_mail_ids = set()
+        for domain in domains_to_search:
+            # 改為搜尋「選定日期」的所有信件，不管是否已讀
+            status, messages = mail.search(None, f'(SINCE "{since_imap}" FROM "{domain}")')
+            if status == "OK":
+                ids = messages[0].split()
+                all_mail_ids.update(ids)
                 
-                # 解碼並檢查標題，如果包含投資日報等行銷關鍵字，直接略過以加速讀取
-                from email.header import decode_header
-                subject = msg.get("Subject", "")
-                decoded_subject = ""
-                for part, encoding in decode_header(subject):
-                    if isinstance(part, bytes):
-                        decoded_subject += part.decode(encoding or "utf-8", errors="ignore")
+        mail_ids = list(all_mail_ids)
+        found = len(mail_ids)
+        inserted = 0
+        debug_text = "" 
+        
+        for mid in mail_ids:
+            res, msg_data = mail.fetch(mid, "(RFC822)")
+            for response_part in msg_data:
+                if isinstance(response_part, tuple):
+                    msg = email.message_from_bytes(response_part[1])
+                    
+                    # 解碼並檢查標題，如果包含投資日報等行銷關鍵字，直接略過以加速讀取
+                    from email.header import decode_header
+                    subject = msg.get("Subject", "")
+                    decoded_subject = ""
+                    for part, encoding in decode_header(subject):
+                        if isinstance(part, bytes):
+                            decoded_subject += part.decode(encoding or "utf-8", errors="ignore")
+                        else:
+                            decoded_subject += str(part)
+                    
+                    if any(kw in decoded_subject.upper() for kw in ["投資日報", "BẢN TIN", "NEWSLETTER"]):
+                        continue
+    
+                    date_tuple = email.utils.parsedate_tz(msg['Date'])
+                    if date_tuple:
+                        local_date = datetime.fromtimestamp(email.utils.mktime_tz(date_tuple))
+                        date_str = local_date.strftime("%Y-%m-%d")
                     else:
-                        decoded_subject += str(part)
-                
-                if any(kw in decoded_subject.upper() for kw in ["投資日報", "BẢN TIN", "NEWSLETTER"]):
-                    continue
-
-                date_tuple = email.utils.parsedate_tz(msg['Date'])
-                if date_tuple:
-                    local_date = datetime.fromtimestamp(email.utils.mktime_tz(date_tuple))
-                    date_str = local_date.strftime("%Y-%m-%d")
-                else:
-                    date_str = datetime.now().strftime("%Y-%m-%d")
-                
-                text = extract_text_from_email(msg)
-                if not text.strip():
-                    continue
-                debug_text = text # 記錄最後一封信的文字內容
-                txns = parse_broker_email(text, date_str, broker)
-                
-                # 為了避免重複匯入，先取得今日已有的交易紀錄
-                from supabase_db import sb_get_all_transactions
-                try:
-                    existing_txns = sb_get_all_transactions(user_id)
-                    # 只過濾出今天的
-                    if not existing_txns.empty:
-                        existing_txns = existing_txns[existing_txns["date"].str.startswith(date_str)]
-                except:
-                    import pandas as pd
-                    existing_txns = pd.DataFrame()
-                
-                for t in txns:
+                        date_str = datetime.now().strftime("%Y-%m-%d")
+                    
+                    text = extract_text_from_email(msg)
+                    if not text.strip():
+                        continue
+                    debug_text = text # 記錄最後一封信的文字內容
+                    txns = parse_broker_email(text, date_str, broker)
+                    
+                    # 為了避免重複匯入，先取得今日已有的交易紀錄
+                    from supabase_db import sb_get_all_transactions
                     try:
-                        # 檢查是否已經存在完全相同的交易紀錄
-                        is_duplicate = False
+                        existing_txns = sb_get_all_transactions(user_id)
+                        # 只過濾出今天的
                         if not existing_txns.empty:
-                            mask = (
-                                (existing_txns["symbol"] == t["symbol"]) &
-                                (existing_txns["action"] == t["action"]) &
-                                (existing_txns["shares"] == t["shares"]) &
-                                (existing_txns["price"] == t["price"])
-                            )
-                            if mask.any():
-                                is_duplicate = True
-                                
-                        if not is_duplicate:
-                            sb_add_transaction(
-                                user_id=user_id,
-                                date=t["date"],
-                                broker=broker,
-                                symbol=t["symbol"],
-                                action=t["action"],
-                                shares=t["shares"],
-                                price=t["price"],
-                                fee=t.get("fee", 0),
-                                note="Auto-synced from Email"
-                            )
-                            inserted += 1
-                    except Exception as e:
-                        print(f"Error inserting {t}: {e}")
-                        
-        # 標記為已讀 (SEEN)
-        # 測試階段可以先不標記，方便重複測試。但上線需要。
-        mail.store(mid, '+FLAGS', '\\Seen')
-                        
-    mail.logout()
+                            existing_txns = existing_txns[existing_txns["date"].str.startswith(date_str)]
+                    except:
+                        import pandas as pd
+                        existing_txns = pd.DataFrame()
+                    
+                    for t in txns:
+                        try:
+                            # 檢查是否已經存在完全相同的交易紀錄
+                            is_duplicate = False
+                            if not existing_txns.empty:
+                                mask = (
+                                    (existing_txns["symbol"] == t["symbol"]) &
+                                    (existing_txns["action"] == t["action"]) &
+                                    (existing_txns["shares"] == t["shares"]) &
+                                    (existing_txns["price"] == t["price"])
+                                )
+                                if mask.any():
+                                    is_duplicate = True
+                                    
+                            if not is_duplicate:
+                                sb_add_transaction(
+                                    user_id=user_id,
+                                    date=t["date"],
+                                    broker=broker,
+                                    symbol=t["symbol"],
+                                    action=t["action"],
+                                    shares=t["shares"],
+                                    price=t["price"],
+                                    fee=t.get("fee", 0),
+                                    note="Auto-synced from Email"
+                                )
+                                inserted += 1
+                        except Exception as e:
+                            print(f"Error inserting {t}: {e}")
+                            
+            # 標記為已讀 (SEEN)
+            # 測試階段可以先不標記，方便重複測試。但上線需要。
+            mail.store(mid, '+FLAGS', '\\Seen')
+                            
+    finally:
+        try:
+            if mail.state == 'SELECTED':
+                mail.close()
+        except:
+            pass
+        try:
+            mail.logout()
+        except:
+            pass
+            
     return {"found": found, "inserted": inserted, "debug_text": debug_text}
 
 if __name__ == "__main__":
