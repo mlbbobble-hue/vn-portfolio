@@ -10,7 +10,7 @@ def send_admin_notification(new_user_email: str):
         # 嘗試從 secrets 讀取設定
         sender_email = st.secrets.get("SMTP_EMAIL") or os.getenv("SMTP_EMAIL")
         sender_pwd   = st.secrets.get("SMTP_PASSWORD") or os.getenv("SMTP_PASSWORD")
-        admin_email  = st.secrets.get("ADMIN_EMAIL") or os.getenv("ADMIN_EMAIL", sender_email)
+        admin_email  = st.secrets.get("ADMIN_EMAIL") or os.getenv("ADMIN_EMAIL", "mlbbobble@gmail.com")
         
         if not sender_email or not sender_pwd or not admin_email:
             print("未設定 SMTP，跳過寄信通知")
