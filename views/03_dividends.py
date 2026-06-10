@@ -599,8 +599,7 @@ with tab_apply:
                     if st.button(t("apply_btn", sym=row["symbol"]), key=f"apply_{row['id']}"):
                         new_cnt = preview["new_shares"] - preview["old_shares"]
                         add_transaction(str(row.get("pay_date",row.get("ex_date",""))),
-                                        "股利發放","BUY" if True else "BUY",
-                                        row["symbol"],"BUY",new_cnt,0,0,"股票股利自動套用")
+                                        "股利發放", row["symbol"], "BUY", new_cnt, 0, 0, "股票股利自動套用")
                         mark_dividend_applied(int(row["id"]))
                         st.success(t("apply_ok", sym=row["symbol"], n=new_cnt))
                         st.rerun()
