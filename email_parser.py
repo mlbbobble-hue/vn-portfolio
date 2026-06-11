@@ -85,8 +85,8 @@ def parse_broker_email(text, date_str, broker_name):
         if is_buy or is_sell:
             action = "BUY" if is_buy else "SELL"
             
-            # 擷取連續3個大寫英文字母，前後不能有大寫英文字母 (解決 SCS05/06/2026 黏在一起的問題)
-            symbols = re.findall(r'(?<![A-Z])[A-Z]{3}(?![A-Z])', line_clean)
+            # 擷取連續3個大寫英文字母或數字，解決 NT211/06/2026 或 SCS05/06/2026 黏在日期的問題
+            symbols = re.findall(r'(?<![A-Z0-9])([A-Z][A-Z0-9]{2})(?=\s|\d{2}/\d{2}/\d{4}|$)', line_clean)
             # 過濾掉常見的非股票代號3字母
             ignore_list = {"VND", "USD", "THU", "BAN", "HAI", "HON", "DAO", "VAN", "WAR", "HCM", "HNX", "OTC", "UPC", "MUA", "BUY", "GIA", "PHI", "TNH", "CPN", "JSC", "THE", "STT", "NGH", "DUY"}
             symbols = [s for s in symbols if s not in ignore_list]
