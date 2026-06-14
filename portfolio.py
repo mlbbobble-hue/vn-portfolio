@@ -308,6 +308,7 @@ def compute_received_dividends() -> tuple[float, dict, list]:
 import pandas as pd
 from datetime import date, timedelta
 from market_data import get_historical_prices
+import streamlit as st
 
 @st.cache_data(ttl=3600)
 def compute_historical_equity(days=180):
