@@ -12,7 +12,7 @@ from streamlit_autorefresh import st_autorefresh
 
 from i18n import t
 from auth_page import check_auth, render_user_info_sidebar
-from portfolio import compute_portfolio_with_prices, get_total_realized_pl, compute_received_dividends, compute_historical_equity
+from portfolio import compute_portfolio_with_prices, get_total_realized_pl, compute_received_dividends
 from db_router import get_price_cache
 from config import PRICE_REFRESH_SECONDS
 
@@ -861,79 +861,7 @@ if not holdings.empty and not is_loading_prices:
     
     held_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
     
-    # === 0. 績效走勢 (Performance Curve) — 按需載入 ===
-    perf_title = "📈 績效走勢 (Performance)" if lang == "zh" else "📈 Hiệu suất (Performance)"
-    with st.expander(perf_title, expanded="perf_data" in st.session_state):
-        if "perf_data" not in st.session_state:
-            btn_label = "📊 載入績效走勢圖（vs 大盤）" if lang == "zh" else "📊 Tải biểu đồ hiệu suất (vs VN-Index)"
-            if st.button(btn_label, use_container_width=True, key="load_perf_btn"):
-                with st.spinner("計算歷史績效中..." if lang == "zh" else "Đang tính toán hiệu suất..."):
-                    st.session_state["perf_data"] = compute_historical_equity(days=180)
-                st.rerun()
-        else:
-            hist_df = st.session_state["perf_data"]
-            if hist_df is not None and not hist_df.empty:
-                import plotly.graph_objects as go
-                fig = go.Figure()
-                
-                fig.add_trace(go.Scatter(
-                    x=hist_df['Date'], 
-                    y=hist_df['Portfolio_Base100'],
-                    mode='lines',
-                    name='投資組合 (My Portfolio)' if lang == "zh" else 'Danh mục (My Portfolio)',
-                    line=dict(color='#00F0FF', width=3),
-                    fill='tozeroy',
-                    fillcolor='rgba(0, 240, 255, 0.1)',
-                    hovertemplate='%{y:.2f}'
-                ))
-                
-                fig.add_trace(go.Scatter(
-                    x=hist_df['Date'], 
-                    y=hist_df['VNINDEX_Base100'],
-                    mode='lines',
-                    name='越南大盤 (VN-Index)',
-                    line=dict(color='#FF2A85', width=2, dash='dot'),
-                    hovertemplate='%{y:.2f}'
-                ))
-                
-                fig.update_layout(
-                    height=350,
-                    margin=dict(l=10, r=10, t=10, b=10),
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    legend=dict(
-                        orientation="h",
-                        yanchor="bottom",
-                        y=1.02,
-                        xanchor="right",
-                        x=1,
-                        font=dict(color='white')
-                    ),
-                    xaxis=dict(
-                        showgrid=False, 
-                        color='#cbd5e1',
-                        tickformat='%m-%d'
-                    ),
-                    yaxis=dict(
-                        showgrid=True, 
-                        gridcolor='rgba(255,255,255,0.05)', 
-                        color='#cbd5e1',
-                        title='Base 100'
-                    ),
-                    hovermode="x unified"
-                )
-                
-                st.markdown("<div style='background: var(--bg-card); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);'>", unsafe_allow_html=True)
-                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-                if st.button("🔄 重新載入" if lang == "zh" else "🔄 Tải lại", key="reload_perf_btn"):
-                    del st.session_state["perf_data"]
-                    st.rerun()
-            else:
-                st.info("尚無足夠的歷史資料來繪製走勢圖。" if lang == "zh" else "Chưa đủ dữ liệu lịch sử để vẽ biểu đồ.")
-            
-    st.markdown("<div style='margin-bottom: 35px;'></div>", unsafe_allow_html=True)
+
     
     # 1. 財報預告時間表 (Earnings Calendar Section)
     show_earnings_calendar(lang, is_empty=False)
