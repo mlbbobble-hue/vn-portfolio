@@ -344,8 +344,22 @@ def compute_historical_equity(days=180):
             shares_df.at[d, sym] = max(0.0, running_shares)
             
     prices_df = pd.DataFrame(index=date_range, columns=symbols).fillna(0.0)
+    
+    # 並行抓取所有股票歷史價格（加速 3~5 倍）
+    from concurrent.futures import ThreadPoolExecutor
+    all_fetch_symbols = list(symbols) + ["VNINDEX"]
+    
+    def _fetch_one(sym):
+        try:
+            return sym, get_historical_prices(sym, days=days)
+        except Exception:
+            return sym, None
+    
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        results = dict(pool.map(lambda s: _fetch_one(s), all_fetch_symbols))
+    
     for sym in symbols:
-        df = get_historical_prices(sym, days=days)
+        df = results.get(sym)
         if df is not None and not df.empty:
             df['time'] = pd.to_datetime(df['time']).dt.date
             df = df.set_index('time')
@@ -354,7 +368,7 @@ def compute_historical_equity(days=180):
             
     daily_equity = (shares_df * prices_df).sum(axis=1)
     
-    vn_df = get_historical_prices("VNINDEX", days=days)
+    vn_df = results.get("VNINDEX")
     if vn_df is not None and not vn_df.empty:
         vn_df['time'] = pd.to_datetime(vn_df['time']).dt.date
         vn_df = vn_df.set_index('time')
