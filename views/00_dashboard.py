@@ -12,7 +12,7 @@ from streamlit_autorefresh import st_autorefresh
 
 from i18n import t
 from auth_page import check_auth, render_user_info_sidebar
-from portfolio import compute_portfolio_with_prices, get_total_realized_pl, compute_received_dividends
+from portfolio import compute_portfolio_with_prices, get_total_realized_pl, compute_received_dividends, compute_historical_equity
 from db_router import get_price_cache
 from config import PRICE_REFRESH_SECONDS
 
@@ -860,6 +860,71 @@ if not holdings.empty and not is_loading_prices:
 
     
     held_symbols = holdings[holdings["total_shares"] > 0]["symbol"].tolist()
+    
+    # === 0. 績效走勢 (Performance Curve) ===
+    st.markdown("<h3 style='margin-left: 8px; margin-bottom: 20px; font-size: 22px; font-weight: bold; color: #ffffff;'>📈 績效走勢 (Performance)</h3>", unsafe_allow_html=True)
+    with st.spinner("計算歷史績效中..." if lang == "zh" else "Đang tính toán hiệu suất..."):
+        hist_df = compute_historical_equity(days=180)
+        if hist_df is not None and not hist_df.empty:
+            import plotly.graph_objects as go
+            fig = go.Figure()
+            
+            # 你的投資組合
+            fig.add_trace(go.Scatter(
+                x=hist_df['Date'], 
+                y=hist_df['Portfolio_Base100'],
+                mode='lines',
+                name='投資組合 (My Portfolio)',
+                line=dict(color='#00F0FF', width=3),
+                fill='tozeroy',
+                fillcolor='rgba(0, 240, 255, 0.1)',
+                hovertemplate='%{y:.2f}'
+            ))
+            
+            # 大盤指標
+            fig.add_trace(go.Scatter(
+                x=hist_df['Date'], 
+                y=hist_df['VNINDEX_Base100'],
+                mode='lines',
+                name='越南大盤 (VN-Index)',
+                line=dict(color='#FF2A85', width=2, dash='dot'),
+                hovertemplate='%{y:.2f}'
+            ))
+            
+            fig.update_layout(
+                height=350,
+                margin=dict(l=10, r=10, t=10, b=10),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1,
+                    font=dict(color='white')
+                ),
+                xaxis=dict(
+                    showgrid=False, 
+                    color='#cbd5e1',
+                    tickformat='%m-%d'
+                ),
+                yaxis=dict(
+                    showgrid=True, 
+                    gridcolor='rgba(255,255,255,0.05)', 
+                    color='#cbd5e1',
+                    title='Base 100'
+                ),
+                hovermode="x unified"
+            )
+            
+            st.markdown("<div style='background: var(--bg-card); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft);'>", unsafe_allow_html=True)
+            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.info("尚無足夠的歷史資料來繪製走勢圖。" if lang == "zh" else "Chưa đủ dữ liệu lịch sử để vẽ biểu đồ.")
+            
+    st.markdown("<div style='margin-bottom: 35px;'></div>", unsafe_allow_html=True)
     
     # 1. 財報預告時間表 (Earnings Calendar Section)
     show_earnings_calendar(lang, is_empty=False)
