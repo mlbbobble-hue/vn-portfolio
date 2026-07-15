@@ -88,6 +88,9 @@ TRANSLATIONS = {
     "logged_in_as":         {"vi": "Đăng nhập với tư cách: {email}", "zh": "已登入：{email}"},
     "check_email_confirm":  {"vi": "Vui lòng kiểm tra email để xác nhận tài khoản trước khi đăng nhập.",
                              "zh": "請先到 Email 確認帳號，再登入。"},
+        "enter_email_first": {"vi": "Vui lòng nhập Email trước khi bấm Quên mật khẩu.", "zh": "請先輸入電子郵件，再點擊「忘記密碼」。"},
+        "reset_pwd_sent": {"vi": "Đã gửi email đặt lại mật khẩu, vui lòng kiểm tra hộp thư của bạn.", "zh": "已寄出密碼重設信，請至信箱查收。"},
+        "reset_pwd_fail": {"vi": "Gửi email đặt lại mật khẩu thất bại, vui lòng thử lại sau.", "zh": "密碼重設信寄送失敗，請稍後再試。"},
 
     # ── 首頁 Dashboard ───────────────────────────────────────
     "dashboard_title":      {"vi": "Tổng quan Danh mục", "zh": "投資組合總覽 Dashboard"},
