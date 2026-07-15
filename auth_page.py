@@ -263,15 +263,15 @@ def render_auth_page():
                 else:
                     st.error(t("login_fail"))
 
-                       if forgot_btn:
+        if forgot_btn:
             if not login_email:
                 st.error(t("enter_email_first"))
             else:
                 from supabase_db import reset_password
                 if reset_password(login_email.strip()):
-                                        st.info(t("reset_pwd_sent"))
+                    st.info(t("reset_pwd_sent"))
                 else:
-                                        st.error(t("reset_pwd_fail"))
+                    st.error(t("reset_pwd_fail"))
                     # ── 註冊 Tab ──────────────────────────────────────────────
     with tab_register:
         st.subheader(t("register_title"))
