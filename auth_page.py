@@ -263,7 +263,7 @@ def render_auth_page():
                 else:
                     st.error(t("login_fail"))
 
-        if forgot_btn and login_email:
+       if forgot_btn and login_email:
             from supabase_db import reset_password
             if reset_password(login_email.strip()):
                 st.info(t("reset_pwd_sent"))
