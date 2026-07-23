@@ -1,6 +1,5 @@
 """
-app.py — 主程式（首頁 Dashboard）
-雙語 🇻🇳🇹🇼 + Supabase Auth + 響應式深色介面
+auth_page.py — 登入/註冊頁面（Supabase Auth）
 """
 import streamlit as st
 
@@ -19,195 +18,435 @@ try:
 except:
     logo_base64 = ""
 
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from datetime import datetime
-import time
-
-try:
-    from streamlit_autorefresh import st_autorefresh
-except ImportError:
-    st_autorefresh = None
-
-from datetime import datetime, timedelta
-from i18n import t, render_lang_switcher
-from auth_page import check_auth, render_user_info_sidebar
-from db_router import (seed_test_data, get_portfolio_symbols,
-                        upsert_price_cache, get_watchlist)
-from portfolio import compute_portfolio_with_prices
-from db_router import get_price_cache
-from market_data import get_multiple_prices
-from alerts import check_and_fire_alerts
-from config import PRICE_REFRESH_SECONDS
-
-# ── 頁面設定 ───────────────────────────────────────────────────
-st.set_page_config(
-    page_title="VN Portfolio | 越南股市投資組合",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
-from theme import load_css
-load_css()
+from i18n import t, render_lang_switcher, get_lang
 
 
-# ── 全域樣式 ───────────────────────────────────────────────────
+# ── 全域樣式（登入頁專用）─────────────────────────────────────
+AUTH_STYLE = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+.stApp {
+    background: var(--bg-main, #0f172a);
+    min-height: 100vh;
+}
+.auth-container {
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+.auth-logo {
+    text-align: center;
+    margin-bottom: 32px;
+}
+.auth-logo .icon { 
+    display: flex; justify-content: center; margin-bottom: 12px;
+}
+.auth-logo .icon svg {
+    width: 64px; height: 64px; fill: var(--financial-up, #10b981);
+}
+.auth-logo .title {
+    font-size: 1.5rem; font-weight: 700;
+    color: var(--financial-up, #10b981);
+    margin: 8px 0 4px;
+}
+.auth-logo .sub { font-size: 0.85rem; color: var(--text-secondary, #94a3b8); }
+.auth-card {
+    background: var(--bg-card, #1e293b); 
+    border: 1px solid var(--border-color, #334155);
+    border-radius: 12px;
+    padding: 32px 36px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.auth-title {
+    font-size: 1.3rem; font-weight: 600; color: var(--text-primary, #f8fafc);
+    margin-bottom: 24px; text-align: center;
+}
+.stTextInput > div > div > input {
+    background: var(--bg-main, #0f172a) !important;
+    border: 1px solid var(--border-color, #334155) !important;
+    border-radius: 10px !important;
+    color: var(--text-primary, #f8fafc) !important;
+    padding: 10px 14px !important;
+}
+.stTextInput > div > div > input:focus {
+    border-color: var(--financial-up, #10b981) !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+}
+.stButton > button {
+    background: var(--financial-up, #10b981) !important;
+    color: white !important; border: none !important;
+    border-radius: 10px !important; font-weight: 600 !important;
+    font-size: 1rem !important; padding: 12px !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+}
+.stButton > button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5) !important;
+}
+.stButton > button[kind="secondary"] {
+    background: transparent !important;
+    border: 1px solid rgba(16, 185, 129, 0.4) !important;
+    color: var(--financial-up, #10b981) !important;
+    box-shadow: none !important;
+}
+.stButton > button[kind="secondary"]:hover {
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+.stCheckbox > label {
+    color: var(--text-secondary, #94a3b8) !important;
+}
+.divider {
+    text-align: center; color: var(--text-secondary, #94a3b8); font-size: 0.85rem;
+    position: relative; margin: 24px 0;
+}
+.divider::before, .divider::after {
+    content: ""; position: absolute; top: 50%; width: 42%;
+    border-top: 1px solid var(--border-color, #334155);
+}
+.divider::before { left: 0; }
+.divider::after { right: 0; }
+.auth-switch {
+    text-align: center; margin-top: 16px; font-size: 0.9rem;
+    color: var(--text-secondary, #94a3b8);
+}
+.auth-switch a {
+    color: var(--financial-up, #10b981); font-weight: 600; text-decoration: none; cursor: pointer;
+}
+.footer-note {
+    text-align: center; color: var(--text-secondary, #94a3b8); font-size: 0.75rem; margin-top: 20px;
+}
+
+[data-testid="collapsedControl"] { display: none !important; }
+[data-testid="stSidebar"] { display: none !important; }
+
+/* 將 Tabs 容器變成卡片風格 */
+[data-testid="stTabs"] {
+    background: var(--bg-card, #1e293b);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border: 1px solid var(--border-color, #334155);
+}
+[data-testid="stTabs"] button {
+    color: var(--text-secondary, #94a3b8) !important;
+}
+[data-testid="stTabs"] button[aria-selected="true"] {
+    color: var(--financial-up, #10b981) !important;
+}
+
+</style>
+
+"""
 
 
-# ── 驗證登入 ───────────────────────────────────────────────────
-if not check_auth():
-    st.stop()
 
-
-def fmt_vnd(v): 
-    if abs(v) >= 1_000_000_000: return f"{v/1_000_000_000:.2f} tỷ"
-    if abs(v) >= 1_000_000:     return f"{v/1_000_000:.1f}M"
-    return f"{v:,.0f}"
-
-def fmt_pct(v):
-    return f"{'▲' if v>0 else '▼' if v<0 else '─'} {abs(v):.2f}%"
-
-
-# ── 自動更新股價邏輯 ──────────────────────────────────────────
-if st_autorefresh:
-    # 每 10 分鐘自動重啟頁面一次 (600,000 ms)
-    # 真正的「更新股價」邏輯會在下面判斷
-    count = st_autorefresh(interval=10 * 60 * 1000, key="price_autorefresh")
-
-def auto_update_if_needed():
+def render_auth_page():
+    # 初始化 CookieController
     try:
-        now_utc = datetime.utcnow()
-        now_vn = now_utc + timedelta(hours=7)
-        
-        from db_router import get_price_cache
-        cache = get_price_cache()
-        
-        force_update = False
-        
-        from db_router import get_portfolio_symbols, get_watchlist
-        symbols = get_portfolio_symbols()
-        try:
-            wl_df = get_watchlist()
-            wl_syms = wl_df["symbol"].tolist() if not wl_df.empty else []
-        except Exception:
-            wl_syms = []
-        all_syms = list(set(symbols + wl_syms))
+        from streamlit_cookies_controller import CookieController
+        cookie_ctrl = CookieController()
+    except Exception:
+        cookie_ctrl = None
 
-        # 如果快取是空的，或者有新的股票代碼不在快取中，無條件觸發更新
-        if cache.empty:
-            force_update = True
-        elif set(all_syms) - set(cache["symbol"].tolist()):
-            force_update = True
+    # 等待前端傳回 Cookie，避免第一次加載時瞬間顯示登入畫面
+    if cookie_ctrl is not None and not st.session_state.get("authenticated"):
+        cookies = cookie_ctrl.getAll()
+        if cookies is None:
+            st.spinner(t("loading"))
+            st.stop() # 停止渲染，等待組件觸發 re-run
+
+    # Google OAuth 回呼：網址帶 ?code=... 時交換成 session（方案 B）
+    qp = st.query_params
+    if "code" in qp and not st.session_state.get("authenticated"):
+        from supabase_db import exchange_code
+        result = exchange_code(qp["code"])
+        st.query_params.clear()
+        if result["success"]:
+            user = result["user"]
+            full_name = (user.user_metadata or {}).get("full_name", user.email)
+            st.session_state["authenticated"] = True
+            st.session_state["user_id"]       = user.id
+            st.session_state["user_email"]    = user.email
+            st.session_state["user_name"]     = full_name
+            st.session_state["access_token"]  = result["session"].access_token
+            if cookie_ctrl is not None:
+                try:
+                    cookie_ctrl.set("sb_refresh_token", result["session"].refresh_token, max_age=86400*30)
+                except Exception:
+                    pass
+            st.rerun()
         else:
-            # 判斷是否為越南開盤時間：週一至週五，早上 9 點到下午 3 點
-            is_market_open = (now_vn.weekday() < 5) and (9 <= now_vn.hour < 15)
-            if is_market_open:
-                last_update = pd.to_datetime(cache["updated_at"]).max()
-                if last_update.tzinfo is not None:
-                    last_update = last_update.tz_localize(None)
-                if (now_utc - last_update).total_seconds() >= 3600:
-                    force_update = True
+            st.error(t("login_fail"))
 
-        if force_update:
-            symbols = get_portfolio_symbols()
-            from db_router import get_watchlist
-            try:
-                wl_df = get_watchlist()
-                wl_syms = wl_df["symbol"].tolist() if not wl_df.empty else []
-            except Exception:
-                wl_syms = []
-            all_syms = list(set(symbols + wl_syms))
-            if all_syms:
-                from market_data import get_multiple_prices
-                from i18n import t
-                prices_df = get_multiple_prices(all_syms)
-                for _, p in prices_df.iterrows():
-                    upsert_price_cache(p["symbol"], p["price"], p["change_pct"], p.get("volume", 0))
-    except Exception as e:
-        pass
+    # 自動登入邏輯
+    if not st.session_state.get("authenticated") and cookie_ctrl is not None:
+        saved_token = cookies.get("sb_refresh_token") if cookies else None
+        if saved_token and "auto_login_attempted" not in st.session_state:
+            st.session_state["auto_login_attempted"] = True
+            from supabase_db import refresh_login
+            res = refresh_login(saved_token)
+            if res["success"]:
+                user = res["user"]
+                full_name = (user.user_metadata or {}).get("full_name", user.email)
+                st.session_state["authenticated"] = True
+                st.session_state["user_id"]       = user.id
+                st.session_state["user_email"]    = user.email
+                st.session_state["user_name"]     = full_name
+                st.session_state["access_token"]  = res["session"].access_token
+                # 更新 token
+                cookie_ctrl.set("sb_refresh_token", res["session"].refresh_token, max_age=86400*30)
+                st.rerun()
 
-# 依賴 st_autorefresh 每 10 分鐘重整時，同步觸發檢查與更新
-try:
-    auto_update_if_needed()
-except Exception:
-    pass
 
-# ── 側邊欄 ─────────────────────────────────────────────────────
-with st.sidebar:
-    render_lang_switcher()
-    st.markdown("<br>", unsafe_allow_html=True)
+    """
+    渲染完整登入/註冊頁面。
+    若登入成功，將 session_state 設定好後 rerun。
+    回傳 False 表示用戶未登入（App 應停止渲染後續頁面）。
+    """
+    st.markdown(AUTH_STYLE, unsafe_allow_html=True)
+
+
+
+    # 頂部語言切換
+    current = get_lang()
+    options = ["🇹🇼 繁體中文", "🇻🇳 Tiếng Việt"]
+    current_index = 0 if current == "zh" else 1
     
+    col1, col2 = st.columns([7, 3])
+    with col2:
+        selected = st.selectbox("Language", options, index=current_index, label_visibility="collapsed")
+        new_lang = "zh" if "繁體中文" in selected else "vi"
+        if new_lang != current:
+            from i18n import set_lang
+            set_lang(new_lang)
+            st.rerun()
+
+    # Logo 區
     st.markdown(f"""
-    <div style='text-align:center; padding:12px 0;'>
-        <img src="data:image/png;base64,{logo_base64}"   style="width: 140px; height: 140px; border-radius: 12px; margin-bottom: 8px;">
+    <div class="auth-container">
+    <div class="auth-logo">
+        <div class="icon"><img src="data:image/png;base64,{logo_base64}"   style="width: 250px; height: 250px; border-radius: 12px;"></div>
+        
+        
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button(t("update_price"), icon=":material/refresh:", use_container_width=True):
-        symbols = get_portfolio_symbols()
-        wl_syms = []
-        try:
-            wl_df = get_watchlist()
-            if not wl_df.empty:
-                wl_syms = wl_df["symbol"].tolist()
-        except Exception:
-            pass
-        all_syms = list(set(symbols + wl_syms))
-        if all_syms:
-            progress_bar = st.progress(0, text=f"🔄 正在更新 0/{len(all_syms)} 檔股票...")
-            
-            def update_progress(done, total):
-                pct = done / total
-                progress_bar.progress(pct, text=f"🔄 已完成 {done}/{total} 檔股票...")
-            
-            prices_df = get_multiple_prices(all_syms, _progress_callback=update_progress)
-            for _, p in prices_df.iterrows():
-                upsert_price_cache(p["symbol"], p["price"], p["change_pct"], p.get("volume", 0))
-            progress_bar.progress(1.0, text=f"✅ 已完成更新 {len(prices_df)} 檔股票！")
-            import time as _t
-            _t.sleep(1)
-            st.rerun()
-                
-    st.divider()
-    render_user_info_sidebar()
-    st.divider()
+    # Google 一鍵登入（方案 B）— 免密碼、免人工審核信箱
+    if st.button(
+        "🔵 " + ("使用 Google 帳號登入" if get_lang() == "zh" else "Đăng nhập bằng Google"),
+        use_container_width=True, key="google_login_btn", type="primary",
+    ):
+        from supabase_db import sign_in_with_google
+        res = sign_in_with_google()
+        if res["success"]:
+            st.markdown(f'<meta http-equiv="refresh" content="0; url={res["url"]}">', unsafe_allow_html=True)
+            st.stop()
+        else:
+            st.error(res.get("error", "Google 登入失敗"))
 
-    # 提醒狀態
-    try:
-        fired = check_and_fire_alerts()
-        if fired:
-            st.markdown(f"""
-            <div class="alert-banner">
-                ⚠️ <b>{len(fired)} {t('warning')}</b>
-                {"".join(f"<br>• {a['symbol']} @ {a['price']:,.0f}" for a in fired)}
-            </div>""", unsafe_allow_html=True)
-    except Exception:
-        pass
+    st.markdown(
+        f'<div class="divider">{"或使用信箱" if get_lang() == "zh" else "hoặc dùng email"}</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Tab：登入 / 註冊
+    tab_login, tab_register = st.tabs([f"🔐 {t('login')}", f"✨ {t('register')}"])
+
+    # ── 登入 Tab ──────────────────────────────────────────────
+    with tab_login:
+        st.subheader(t("login_title"))
+        
+
+        login_email = st.text_input(t("email"), placeholder="you@example.com", key="login_email")
+        login_pw    = st.text_input(t("password"), type="password", key="login_pw")
+
+        remember_me = st.checkbox("保持登入狀態 (Keep me logged in)", value=True)
+        col1, col2 = st.columns([3, 2])
+        with col1:
+            login_btn = st.button(t("login_btn"), use_container_width=True, key="do_login", type="primary")
+        with col2:
+            forgot_btn = st.button("🔑 Forgot?" if get_lang()=="vi" else "🔑 忘記密碼?",
+                                    use_container_width=True, key="forgot_btn",
+                                    type="secondary")
+
+        if login_btn:
+            if not login_email or not login_pw:
+                st.error(t("fill_all_fields"))
+            else:
+                with st.spinner(t("loading")):
+                    from supabase_db import sign_in
+                    result = sign_in(login_email.strip(), login_pw)
+
+                if result["success"]:
+                    user = result["user"]
+                    full_name = (user.user_metadata or {}).get("full_name", user.email)
+                    st.session_state["authenticated"] = True
+                    st.session_state["user_id"]       = user.id
+                    st.session_state["user_email"]    = user.email
+                    st.session_state["user_name"]     = full_name
+                    st.session_state["access_token"]  = result["session"].access_token
+                    if remember_me and cookie_ctrl is not None:
+                        try:
+                            cookie_ctrl.set("sb_refresh_token", result["session"].refresh_token, max_age=86400*30)
+                        except:
+                            pass
+                        st.success(t("login_success", name=full_name) + " (Redirecting...)")
+                        import streamlit.components.v1 as components
+                        components.html("<script>setTimeout(function(){ window.parent.location.reload(); }, 800);</script>")
+                    else:
+                        st.success(t("login_success", name=full_name))
+                        st.rerun()
+                elif result["error"] == "EMAIL_NOT_CONFIRMED":
+                    st.warning(t("check_email_confirm"))
+                else:
+                    st.error(t("login_fail"))
+
+        if forgot_btn:
+            if not login_email:
+                st.error(t("enter_email_first"))
+            else:
+                from supabase_db import reset_password
+                if reset_password(login_email.strip()):
+                    st.info(t("reset_pwd_sent"))
+                else:
+                    st.error(t("reset_pwd_fail"))
+                    # ── 註冊 Tab ──────────────────────────────────────────────
+    with tab_register:
+        st.subheader(t("register_title"))
+        
+
+        reg_name  = st.text_input(t("full_name"), placeholder="Nguyễn Văn A / 王小明", key="reg_name")
+        reg_email = st.text_input(t("email"), placeholder="you@example.com", key="reg_email")
+        reg_pw    = st.text_input(t("password"), type="password",
+                                   placeholder="至少 6 個字元" if get_lang()=="zh" else "Tối thiểu 6 ký tự",
+                                   key="reg_pw")
+        reg_pw2   = st.text_input(t("confirm_password"), type="password", key="reg_pw2")
+
+        reg_btn = st.button(t("register_btn"), use_container_width=True, key="do_register", type="primary")
+
+        if reg_btn:
+            if not all([reg_name, reg_email, reg_pw, reg_pw2]):
+                st.error(t("fill_all_fields"))
+            elif reg_pw != reg_pw2:
+                st.error(t("password_mismatch"))
+            elif len(reg_pw) < 6:
+                st.error(t("pwd_min_len"))
+            else:
+                with st.spinner(t("loading")):
+                    from supabase_db import sign_up
+                    result = sign_up(reg_email.strip(), reg_pw, reg_name.strip())
+
+                if result["success"]:
+                    st.success(t("register_success"))
+                    st.balloons()
+                else:
+                    st.error(t("register_fail", msg=result["error"]))
+
+        
+
+      # auth-container
+    st.markdown(f'<div class="footer-note">{t("disclaimer")}</div>', unsafe_allow_html=True)
+
+    return False  # 未登入
+
+
+def check_auth() -> bool:
+    """
+    檢查當前 session 是否已驗證與審核。
+    若未驗證，渲染登入頁並回傳 False。
+    若已驗證但未審核，顯示等待開通頁面並回傳 False。
+    若已驗證且已審核，回傳 True（App 繼續渲染）。
+    """
+    from supabase_db import is_supabase_available, exchange_code, sb_check_approval
+
+
+
+    # 本機開發模式（無 Supabase 設定）：自動以訪客身份登入
+    if not is_supabase_available():
+        if not st.session_state.get("authenticated"):
+            st.session_state["authenticated"] = True
+            st.session_state["user_id"]    = "local_dev_user"
+            st.session_state["user_email"] = "dev@localhost"
+            st.session_state["user_name"]  = "本機開發者"
+            st.session_state["is_admin"]   = True
+        return True
+
+    # 尚未登入
+    if not st.session_state.get("authenticated") or not st.session_state.get("user_id"):
+        render_auth_page()
+        return False
+
+    # 已經登入，檢查審核狀態
+    user_id = st.session_state["user_id"]
+    email = st.session_state["user_email"]
+    
+    # 避免每次重新整理都去資料庫查，使用 session 暫存
+    # 👑 硬編碼最高管理員免審核通道
+    if email == "mlbbobble@gmail.com":
+        st.session_state["is_approved"] = True
+        st.session_state["is_admin"] = True
+        return True
+
+    if "is_approved" not in st.session_state:
+        appr = sb_check_approval(user_id, email)
+        if appr.get("is_new"):
+            # 發送通知信
+            try:
+                from notifier import send_admin_notification
+                send_admin_notification(email)
+            except Exception:
+                pass
+                
+        st.session_state["is_approved"] = appr.get("is_approved", False)
+        st.session_state["is_admin"] = appr.get("is_admin", False)
+
+    if not st.session_state["is_approved"]:
+        st.markdown(f"""
+        <div style='max-width: 500px; margin: 100px auto; text-align: center; background: var(--cathay-white); padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid rgba(0,163,82,0.3);'>
+            <div style='font-size: 4rem; margin-bottom: 20px;'>⏳</div>
+            <h2 style='color: #333333; margin-bottom: 10px;'>{t("wait_admin_title")}</h2>
+            <p style='color: var(--text-secondary); line-height: 1.6;'>
+                {t("wait_admin_desc")}
+            </p>
+            <br>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("🚪 " + t("logout"), type="secondary"):
+            from supabase_db import sign_out
+            sign_out()
+            for key in ["authenticated", "user_id", "user_email", "user_name", "access_token", "is_approved", "is_admin"]:
+                st.session_state.pop(key, None)
+            st.rerun()
+        return False
+
+    return True
+
+
+def render_user_info_sidebar():
+    """在側邊欄渲染用戶資訊 + 登出按鈕"""
+    from supabase_db import is_supabase_available
+    if not is_supabase_available():
+        return
+
+    email = st.session_state.get("user_email", "")
+    name  = st.session_state.get("user_name", email)
 
     st.markdown(f"""
-    <div style='margin-top:20px;font-size:0.72rem;
-                color:#888;text-align:center;'>
-        {t('disclaimer')}<br>{t('data_source')}
-    </div>""", unsafe_allow_html=True)
+    <div style='background:rgba(0,163,82,0.1);border:1px solid rgba(0,163,82,0.25);
+                border-radius:12px;padding:10px 14px;margin:8px 0;'>
+        <div style='font-size:.75rem;color:#64748b;'>{t("logged_in_as", email=email)}</div>
+        <div style='font-size:.9rem;color:#a78bfa;font-weight:600;'>👤 {name}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-
-# ── 主頁面 (Navigation) ──────────────────────────────────────────
-dashboard_page = st.Page("views/00_dashboard.py", title=t("nav_dashboard"), icon=":material/space_dashboard:", url_path="dashboard")
-portfolio_page = st.Page("views/01_portfolio.py", title=t("nav_portfolio"), icon=":material/business_center:")
-transactions_page = st.Page("views/02_transactions.py", title=t("nav_transactions"), icon=":material/receipt_long:")
-dividends_page = st.Page("views/03_dividends.py", title=t("nav_dividends"), icon=":material/paid:")
-watchlist_page = st.Page("views/04_watchlist.py", title=t("nav_watchlist"), icon=":material/trending_up:")
-settings_page = st.Page("views/05_settings.py", title=t("nav_settings"), icon=":material/settings:")
-
-admin_page = st.Page("views/06_admin.py", title=t("nav_admin"), icon=":material/admin_panel_settings:")
-
-
-nav_pages = [dashboard_page, portfolio_page, transactions_page, dividends_page, watchlist_page, settings_page]
-if st.session_state.get("is_admin", False):
-    nav_pages.insert(0, admin_page)
-
-pg = st.navigation(nav_pages)
-
-pg.run()
+    if st.button(f"🚪 {t('logout')}", use_container_width=True, type="secondary"):
+        from supabase_db import sign_out
+        sign_out()
+        for key in ["authenticated", "user_id", "user_email", "user_name", "access_token"]:
+            st.session_state.pop(key, None)
+        
+        import streamlit.components.v1 as components
+        components.html("<script>document.cookie = 'sb_refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; setTimeout(function(){ window.parent.location.reload(); }, 500);</script>")
