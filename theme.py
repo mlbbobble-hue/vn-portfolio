@@ -165,50 +165,56 @@ a[data-testid="stPageLink-NavLink"] span {
     font-weight: 500 !important;
 }
 
-/* 將側邊欄導覽列變成 App 風格的九宮格 (大圖示) */
+/* 側邊欄導覽列：精簡垂直選單（方案一）*/
 [data-testid="stSidebarNav"] ul {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
-    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    padding: 8px 4px !important;
 }
 [data-testid="stSidebarNav"] li {
-    background-color: var(--cathay-white) !important;
-    border-radius: 16px !important;
-    border: 1px solid var(--border-color) !important;
-    box-shadow: var(--shadow-soft) !important;
+    background-color: transparent !important;
+    border-radius: 10px !important;
+    border: none !important;
+    box-shadow: none !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 [data-testid="stSidebarNav"] a {
     display: flex !important;
-    flex-direction: column !important;
+    flex-direction: row !important;
     align-items: center !important;
-    justify-content: center !important;
-    padding: 16px 8px !important;
+    justify-content: flex-start !important;
+    padding: 10px 12px !important;
     background-color: transparent !important;
-    gap: 8px !important;
+    gap: 10px !important;
+    border-radius: 10px !important;
+    border-left: 3px solid transparent !important;
+    transition: background-color 0.15s ease !important;
 }
-/* 強制覆蓋被選中的背景色 */
+[data-testid="stSidebarNav"] a:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+/* 目前頁面：淡色底 + 左側色條標示，取代原本的九宮格外框 */
 [data-testid="stSidebarNav"] a[aria-current="page"] {
-    background-color: rgba(0, 163, 82, 0.05) !important;
-    border-radius: 16px !important;
-    border: 1px solid var(--cathay-green) !important;
+    background-color: rgba(0, 163, 82, 0.1) !important;
+    border-left: 3px solid var(--cathay-green) !important;
+    border-radius: 10px !important;
 }
 [data-testid="stSidebarNav"] a[aria-current="page"] span {
     color: var(--cathay-green) !important;
     font-weight: 700 !important;
 }
 [data-testid="stSidebarNav"] a > span:first-child { /* icon span */
-    font-size: 32px !important;
+    font-size: 20px !important;
     margin: 0 !important;
     line-height: 1 !important;
 }
 [data-testid="stSidebarNav"] a > span:last-child { /* text span */
-    font-size: 13px !important;
-    margin-top: 4px !important;
-    text-align: center !important;
-    white-space: normal !important;
+    font-size: 14px !important;
+    margin-top: 0 !important;
+    text-align: left !important;
+    white-space: nowrap !important;
     line-height: 1.2 !important;
 }
 
